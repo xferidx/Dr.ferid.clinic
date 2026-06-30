@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>عيادة الدكتور فريد مؤيد السعيد لطب الأسنان</title>
-    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome for Icons -->
@@ -198,7 +197,7 @@
                 <span class="text-sm font-black text-center mt-2">واتساب</span>
             </a>
 
-            <a href="https://t.me/+9647818653825" target="_blank" class="bg-white hover:bg-sky-50 text-sky-50 shadow-lg rounded-2xl p-4 flex flex-col items-center justify-center gap-2 transition-all transform hover:-translate-y-1 border border-slate-100" style="color: #0ea5e9;">
+            <a href="https://t.me/+9647818653825" target="_blank" class="bg-white hover:bg-sky-50 text-sky-500 shadow-lg rounded-2xl p-4 flex flex-col items-center justify-center gap-2 transition-all transform hover:-translate-y-1 border border-slate-100">
                 <div class="bg-sky-50 p-3 rounded-full mb-1"><i class="fa-brands fa-telegram text-3xl"></i></div>
                 <span class="text-sm font-black text-center mt-2">تلغرام</span>
             </a>
@@ -270,25 +269,13 @@
                     <p class="text-sm text-slate-500">يتم التحديث المباشر من العيادة</p>
                 </div>
             </div>
-            <div class="text-center bg-slate-50 px-6 py-2 rounded-xl border border-slate-100 relative">
-                <!-- Loading indicator for cloud data -->
-                <div id="waiting-loading" class="absolute inset-0 bg-slate-50 rounded-xl flex items-center justify-center">
-                    <i class="fa-solid fa-circle-notch fa-spin text-clinic text-xl"></i>
-                </div>
+            <div class="text-center bg-slate-50 px-6 py-2 rounded-xl border border-slate-100">
                 <span id="public-waiting-count" class="block text-3xl font-black text-clinic">0</span>
             </div>
         </section>
 
         <!-- Booking Form -->
-        <section id="booking-section" class="glass-panel rounded-3xl p-6 md:p-8 shadow-lg border border-slate-200 relative">
-             <!-- Booking Loading Overlay -->
-             <div id="booking-loading-overlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 rounded-3xl flex items-center justify-center hidden">
-                <div class="flex flex-col items-center gap-3">
-                    <i class="fa-solid fa-circle-notch fa-spin text-clinic text-4xl"></i>
-                    <p class="text-slate-800 font-bold">جاري تحميل البيانات...</p>
-                </div>
-            </div>
-
+        <section id="booking-section" class="glass-panel rounded-3xl p-6 md:p-8 shadow-lg border border-slate-200">
             <div class="flex items-center gap-3 mb-8 pb-4 border-b border-slate-100">
                 <div class="bg-clinic-light text-clinic p-3 rounded-xl shadow-inner">
                     <i class="fa-solid fa-calendar-check text-2xl"></i>
@@ -338,12 +325,7 @@
                 </div>
 
                 <!-- Times as Buttons -->
-                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 relative">
-                     <!-- Times Loading Overlay -->
-                     <div id="times-loading-overlay" class="absolute inset-0 bg-slate-50/80 backdrop-blur-sm z-10 rounded-2xl flex items-center justify-center hidden">
-                        <i class="fa-solid fa-circle-notch fa-spin text-clinic text-2xl"></i>
-                    </div>
-
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                     <div class="flex justify-between items-end mb-4">
                         <label class="block text-sm font-bold text-slate-700"><i class="fa-regular fa-clock ml-1 text-clinic"></i> اختر الوقت (5م - 9م) <span class="text-red-500">*</span></label>
                         <span class="text-xs font-bold text-clinic bg-clinic-light px-2 py-1 rounded-md">المدة 30 دقيقة</span>
@@ -358,9 +340,9 @@
                     </div>
                 </div>
 
-                <button type="button" id="submit-booking-btn" onclick="submitBooking()" class="w-full bg-gradient-to-r from-clinic to-clinic-dark hover:from-clinic-dark hover:to-slate-800 text-white font-black text-lg py-5 rounded-2xl shadow-xl transition-all transform hover:-translate-y-1 flex justify-center items-center gap-3 mt-6 border-b-4 border-slate-900/20 disabled:opacity-70 disabled:cursor-not-allowed">
+                <button type="button" onclick="submitBooking()" class="w-full bg-gradient-to-r from-clinic to-clinic-dark hover:from-clinic-dark hover:to-slate-800 text-white font-black text-lg py-5 rounded-2xl shadow-xl transition-all transform hover:-translate-y-1 flex justify-center items-center gap-3 mt-6 border-b-4 border-slate-900/20">
                     <i class="fa-regular fa-calendar-check text-2xl"></i>
-                    <span>تأكيد وحجز الموعد</span>
+                    تأكيد وحجز الموعد
                 </button>
             </form>
         </section>
@@ -376,11 +358,11 @@
             <div class="max-w-2xl mx-auto">
                 <div class="ba-slider" id="ba-slider">
                     <!-- After Image (Clean, white teeth) -->
-                    <img class="ba-after" src="https://i.ibb.co/35QTV1qJ/Screenshot-2026-06-30-013242.png" alt="After Treatment" onerror="this.src='https://placehold.co/800x450/ffffff/2563eb?text=بعد+العلاج'">
+                    <img class="ba-after" src="https://i.ibb.co/35QTV1qJ/Screenshot-2026-06-30-013242.png" alt="After Treatment">
                     
-                    <!-- Before Image Container -->
+                    <!-- Before Image Container (Yellowish/problematic simulation via CSS filter for demo if real image unavailable, using a slightly tinted version) -->
                     <div class="ba-before" id="ba-before">
-                        <img src="https://i.ibb.co/TDs3fLf0/Screenshot-2026-06-30-013224.png" alt="Before Treatment" id="ba-before-img" onerror="this.src='https://placehold.co/800x450/fef08a/a16207?text=قبل+العلاج'">
+                        <img src="https://i.ibb.co/TDs3fLf0/Screenshot-2026-06-30-013224.png" alt="Before Treatment" id="ba-before-img">
                         <div class="absolute top-4 right-4 bg-black/60 text-white text-xs font-bold px-2 py-1 rounded backdrop-blur-sm">قبل</div>
                     </div>
                     
@@ -413,15 +395,19 @@
             
             <!-- Grid container for 4 videos -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6" dir="ltr">
+                <!-- Video 1 -->
                 <div class="w-full flex justify-center bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 shadow-inner">
                     <iframe src="https://www.instagram.com/p/DYt1yTiivbF/embed/captioned/" class="w-full h-[600px] bg-white" frameborder="0" scrolling="no" allowtransparency="true"></iframe>
                 </div>
+                <!-- Video 2 -->
                 <div class="w-full flex justify-center bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 shadow-inner">
                     <iframe src="https://www.instagram.com/p/DZp6rxvCZHv/embed/captioned/" class="w-full h-[600px] bg-white" frameborder="0" scrolling="no" allowtransparency="true"></iframe>
                 </div>
+                <!-- Video 3 -->
                 <div class="w-full flex justify-center bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 shadow-inner">
                     <iframe src="https://www.instagram.com/p/CX-niGvqme7/embed/captioned/" class="w-full h-[600px] bg-white" frameborder="0" scrolling="no" allowtransparency="true"></iframe>
                 </div>
+                <!-- Video 4 -->
                 <div class="w-full flex justify-center bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 shadow-inner">
                     <iframe src="https://www.instagram.com/p/CunMmVMg1ba/embed/captioned/" class="w-full h-[600px] bg-white" frameborder="0" scrolling="no" allowtransparency="true"></iframe>
                 </div>
@@ -468,10 +454,12 @@
         <section class="text-center py-8">
             <h3 class="text-sm font-bold text-slate-400 mb-6 uppercase tracking-wider">شركاء النجاح في تقديم الرعاية</h3>
             <div class="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-70 hover:opacity-100 transition-opacity">
+                <!-- Generic placeholder or text styling for brands -->
                 <div class="flex items-center gap-2 font-black text-2xl text-slate-600">
                     <i class="fa-solid fa-shield-halved text-clinic"></i> BioMin
                 </div>
                 
+                <!-- Edelwhite (Clickable link as requested) -->
                 <a href="https://xferidx.github.io/Edelwhite/" target="_blank" class="flex flex-col items-center group transition-transform hover:scale-105">
                     <div class="text-3xl font-black tracking-tighter text-slate-800 group-hover:text-clinic transition-colors flex items-center gap-1">
                         <span class="text-red-500">+</span>edelwhite
@@ -498,24 +486,6 @@
             <h3 id="message-title" class="text-2xl font-black mb-3 text-slate-800"></h3>
             <p id="message-body" class="text-slate-600 mb-8 leading-relaxed font-medium"></p>
             <button onclick="closeMessageModal()" class="w-full bg-slate-800 text-white font-bold text-lg py-4 rounded-xl hover:bg-slate-900 transition-colors shadow-lg">موافق</button>
-        </div>
-    </div>
-
-    <!-- Confirmation Modal -->
-    <div id="confirm-modal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[110] p-4 backdrop-blur-md">
-        <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl transform transition-all scale-95 opacity-0 text-center" id="confirm-modal-content">
-            <div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6 text-amber-500 shadow-inner">
-                <i class="fa-solid fa-triangle-exclamation text-4xl"></i>
-            </div>
-            <h3 id="confirm-title" class="text-2xl font-black mb-3 text-slate-800">تأكيد</h3>
-            <p id="confirm-body" class="text-slate-600 mb-8 leading-relaxed font-medium">هل أنت متأكد؟</p>
-            <div class="flex gap-3">
-                <button id="confirm-cancel-btn" class="flex-1 bg-slate-100 text-slate-700 font-bold text-lg py-3 rounded-xl hover:bg-slate-200 transition-colors">إلغاء</button>
-                <button id="confirm-ok-btn" class="flex-1 bg-red-500 text-white font-bold text-lg py-3 rounded-xl hover:bg-red-600 transition-colors shadow-lg flex justify-center items-center gap-2">
-                    <span id="confirm-ok-text">نعم، متأكد</span>
-                    <i id="confirm-ok-spinner" class="fa-solid fa-circle-notch fa-spin hidden"></i>
-                </button>
-            </div>
         </div>
     </div>
 
@@ -554,15 +524,8 @@
                 </div>
 
                 <!-- Dashboard State -->
-                <div id="sec-dashboard-step" class="hidden space-y-6 relative">
-                    <!-- Dashboard Loading Overlay -->
-                     <div id="dashboard-loading-overlay" class="absolute inset-0 bg-slate-50/80 backdrop-blur-sm z-50 rounded-2xl flex items-center justify-center hidden">
-                        <div class="flex flex-col items-center gap-3">
-                            <i class="fa-solid fa-circle-notch fa-spin text-clinic text-4xl"></i>
-                            <p class="text-slate-800 font-bold">جاري مزامنة البيانات...</p>
-                        </div>
-                    </div>
-
+                <div id="sec-dashboard-step" class="hidden space-y-6">
+                    
                     <!-- Waiting List Control -->
                     <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
                         <h4 class="font-bold text-slate-800 mb-6 flex items-center gap-2">
@@ -574,10 +537,7 @@
                             <input type="number" id="sec-waiting-input" value="0" min="0" class="w-32 px-2 py-4 rounded-2xl border-2 border-slate-200 text-center text-4xl font-black focus:outline-none focus:border-clinic text-slate-800 bg-slate-50">
                             <button onclick="changeWaitingCount(1)" class="w-16 h-16 rounded-2xl bg-green-50 hover:bg-green-100 text-green-600 text-3xl font-black flex items-center justify-center transition-colors shadow-sm border border-green-100">+</button>
                         </div>
-                        <button id="save-waiting-btn" onclick="saveWaitingCount()" class="w-full bg-clinic text-white font-bold text-lg py-4 rounded-xl hover:bg-clinic-dark transition-colors shadow-md flex justify-center items-center gap-2 disabled:opacity-70">
-                            <span id="save-waiting-text">نشر العدد للمرضى</span>
-                            <i id="save-waiting-spinner" class="fa-solid fa-circle-notch fa-spin hidden"></i>
-                        </button>
+                        <button onclick="saveWaitingCount()" class="w-full bg-clinic text-white font-bold text-lg py-4 rounded-xl hover:bg-clinic-dark transition-colors shadow-md">نشر العدد للمرضى</button>
                     </div>
 
                     <!-- Bookings List -->
@@ -587,6 +547,7 @@
                                 <i class="fa-solid fa-list-check text-clinic text-xl"></i>
                                 سجل المواعيد المحجوزة
                             </h4>
+                            <button onclick="clearAllBookings()" class="text-sm font-bold text-red-500 hover:bg-red-50 px-4 py-2 rounded-lg transition-colors border border-red-100"><i class="fa-solid fa-trash-can mr-1"></i> مسح الكل</button>
                         </div>
                         
                         <div id="manager-bookings-list" class="space-y-4">
@@ -598,201 +559,18 @@
         </div>
     </div>
 
-    <!-- Firebase Imports -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs, deleteDoc, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Environment variables provided by the platform
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'clinic-app-default';
-        let firebaseConfig = null;
-        if (typeof __firebase_config !== 'undefined') {
-            try {
-                firebaseConfig = JSON.parse(__firebase_config);
-            } catch (e) {
-                console.error("Config parse error:", e);
-            }
-        }
-
-        // Initialize Firebase safely
-        let app, db, auth;
-        if (firebaseConfig) {
-            try {
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-            } catch (error) {
-                console.error("Firebase initialization failed:", error);
-            }
-        }
-        
-        // Ensure Auth Before Firestore Operations (RULE 3) with robust fallback
-        async function setupAuth() {
-            if (!auth) return;
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    try {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } catch (tokenError) {
-                        console.warn("Custom token failed, falling back to anonymous:", tokenError);
-                        await signInAnonymously(auth);
-                    }
-                } else {
-                    await signInAnonymously(auth);
-                }
-                
-                if (!auth.currentUser) {
-                    console.error("No user after auth attempt.");
-                    return;
-                }
-                console.log("Authenticated successfully.");
-                
-                // Once authenticated, start listening to cloud data
-                initCloudListeners();
-            } catch (error) {
-                console.error("Authentication Error:", error);
-            }
-        }
-
-        // Initialize Real-time Listeners (RULE 1: Strict Paths)
-        function initCloudListeners() {
-            if (!auth || !auth.currentUser) return;
-
-            // 1. Listen to Waiting Count (Public Data)
-            const statsDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicStats', 'current');
-            
-            onSnapshot(statsDocRef, (docSnap) => {
-                const loadingIndicator = document.getElementById('waiting-loading');
-                if (loadingIndicator) loadingIndicator.classList.add('hidden');
-
-                if (docSnap.exists()) {
-                    window.currentWaitingCount = docSnap.data().waitingCount || 0;
-                } else {
-                    window.currentWaitingCount = 0;
-                }
-                
-                // Update Public UI
-                const publicCountEl = document.getElementById('public-waiting-count');
-                if (publicCountEl) {
-                    // Animation effect on update
-                    publicCountEl.classList.add('scale-150', 'text-green-500');
-                    setTimeout(() => {
-                        publicCountEl.innerText = window.currentWaitingCount;
-                        publicCountEl.classList.remove('scale-150', 'text-green-500');
-                    }, 300);
-                }
-
-                // Update Secretary Input if modal is open
-                const secInput = document.getElementById('sec-waiting-input');
-                if (secInput) secInput.value = window.currentWaitingCount;
-
-            }, (error) => {
-                console.error("Listen error on waiting count:", error);
-            });
-
-            // 2. Listen to Bookings (Public Data)
-            const bookingsColRef = collection(db, 'artifacts', appId, 'public', 'data', 'bookings');
-            const q = query(bookingsColRef); // RULE 2: No Complex Queries
-            
-            onSnapshot(q, (querySnapshot) => {
-                window.cloudBookingsDB = {}; // Reset local master copy
-                
-                querySnapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    if (!window.cloudBookingsDB[data.date]) {
-                        window.cloudBookingsDB[data.date] = {};
-                    }
-                    window.cloudBookingsDB[data.date][data.time] = {
-                        id: docSnap.id,
-                        name: data.name,
-                        phone: data.phone,
-                        reasons: data.reasons,
-                        timestamp: data.timestamp
-                    };
-                });
-
-                // Update UIs dependent on bookings data
-                if (window.selectedDate && typeof window.generateTimeButtons === 'function') {
-                    window.generateTimeButtons(window.selectedDate);
-                }
-                if (typeof window.updateManagerBookingsView === 'function') {
-                    window.updateManagerBookingsView();
-                }
-
-                // Hide loading overlay if visible
-                const overlay = document.getElementById('dashboard-loading-overlay');
-                if (overlay) overlay.classList.add('hidden');
-
-            }, (error) => {
-                console.error("Listen error on bookings:", error);
-                const overlay = document.getElementById('dashboard-loading-overlay');
-                if (overlay) overlay.classList.add('hidden');
-            });
-        }
-
-        // --- Cloud Action Functions (Exposed to global scope) ---
-
-        window.cloudSaveBooking = async function(bookingData) {
-            if (!auth || !auth.currentUser) return false;
-            try {
-                const docId = `${bookingData.date}_${bookingData.time.replace(/[: ]/g, '')}`;
-                const bookingRef = doc(db, 'artifacts', appId, 'public', 'data', 'bookings', docId);
-                
-                await setDoc(bookingRef, {
-                    date: bookingData.date,
-                    time: bookingData.time,
-                    name: bookingData.name,
-                    phone: bookingData.phone,
-                    reasons: bookingData.reasons,
-                    timestamp: bookingData.timestamp
-                });
-                return true;
-            } catch (error) {
-                console.error("Error saving booking:", error);
-                return false;
-            }
-        };
-
-        window.cloudDeleteBooking = async function(docId) {
-            if (!auth || !auth.currentUser) return false;
-            try {
-                const bookingRef = doc(db, 'artifacts', appId, 'public', 'data', 'bookings', docId);
-                await deleteDoc(bookingRef);
-                return true;
-            } catch (error) {
-                console.error("Error deleting booking:", error);
-                return false;
-            }
-        };
-
-        window.cloudUpdateWaitingCount = async function(newCount) {
-             if (!auth || !auth.currentUser) return false;
-             try {
-                const statsDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicStats', 'current');
-                await setDoc(statsDocRef, { waitingCount: newCount }, { merge: true });
-                return true;
-             } catch (error) {
-                console.error("Error updating waiting count:", error);
-                return false;
-             }
-        };
-
-        // Start the Auth Process
-        setupAuth();
-    </script>
-
     <script>
-        // Global State Variables (Moved here to ensure they always load safely)
-        window.SECRETARY_CODE = "5422";
-        window.currentWaitingCount = 0;
-        window.selectedReasons = new Set();
-        window.selectedDate = null;
-        window.selectedTime = null;
-        window.cloudBookingsDB = {}; // Master record from Firestore
-        window.isAuthReady = false;
+        // --- State Management ---
+        const SECRETARY_CODE = "5422";
+        let currentWaitingCount = 0;
+        let selectedReasons = new Set();
+        let selectedDate = null;
+        let selectedTime = null;
 
-        window.TIME_SLOTS = [
+        // In-memory data store for bookings
+        let bookingsDB = JSON.parse(localStorage.getItem('clinicBookingsV2')) || {};
+
+        const TIME_SLOTS = [
             "05:00 PM", "05:30 PM", 
             "06:00 PM", "06:30 PM", 
             "07:00 PM", "07:30 PM", 
@@ -800,7 +578,6 @@
             "09:00 PM"
         ];
 
-        // --- Helper Functions ---
         function formatDateForDisplay(dateObj) {
             const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
             const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
@@ -815,6 +592,7 @@
         window.onload = function() {
             setupReasonsButtons();
             generateDateButtons();
+            updateManagerBookingsView();
             initBeforeAfterSlider();
         };
 
@@ -827,10 +605,9 @@
             
             let isDragging = false;
 
+            // Ensure before image stays correct width relative to container, not its cropped parent
             function updateImgWidth() {
-                if(beforeImg && slider) {
-                    beforeImg.style.width = slider.offsetWidth + 'px';
-                }
+                beforeImg.style.width = slider.offsetWidth + 'px';
             }
             window.addEventListener('resize', updateImgWidth);
             updateImgWidth();
@@ -839,18 +616,26 @@
                 if (!isDragging) return;
                 
                 let rect = slider.getBoundingClientRect();
+                // support touch and mouse
                 let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+                
                 let x = clientX - rect.left;
                 
+                // bounds
                 if (x < 0) x = 0;
                 if (x > rect.width) x = rect.width;
                 
+                // Set percentage (remember RTL means right=0, left=100%)
+                // Because CSS is `right: 0`, width of before block dictates how much is shown.
+                // In RTL layout, the right side is X=0 relative to reading, but getBoundingClientRect is LTR screen coordinates.
+                // Let's calculate percentage from right edge.
                 let percentage = ((rect.right - clientX) / rect.width) * 100;
                 
                 if (percentage < 0) percentage = 0;
                 if (percentage > 100) percentage = 100;
 
                 before.style.width = percentage + "%";
+                // Position handle (Left is relative to screen LTR, so we use (100-percentage) for left positioning)
                 handle.style.left = (100 - percentage) + "%";
             }
 
@@ -871,11 +656,11 @@
             btns.forEach(btn => {
                 btn.addEventListener('click', function() {
                     const val = this.getAttribute('data-value');
-                    if (window.selectedReasons.has(val)) {
-                        window.selectedReasons.delete(val);
+                    if (selectedReasons.has(val)) {
+                        selectedReasons.delete(val);
                         this.classList.remove('selected-btn', 'ring-2', 'ring-clinic', 'ring-offset-1');
                     } else {
-                        window.selectedReasons.add(val);
+                        selectedReasons.add(val);
                         this.classList.add('selected-btn', 'ring-2', 'ring-clinic', 'ring-offset-1');
                     }
                 });
@@ -919,16 +704,16 @@
                     this.querySelector('.text-clinic')?.classList.replace('text-clinic', 'text-white');
                     this.querySelector('.bg-clinic-light\\/50')?.classList.add('bg-white/20');
                     
-                    window.selectedDate = this.getAttribute('data-iso');
-                    window.selectedTime = null;
-                    window.generateTimeButtons(window.selectedDate);
+                    selectedDate = this.getAttribute('data-iso');
+                    selectedTime = null;
+                    generateTimeButtons(selectedDate);
                 });
 
                 container.appendChild(btn);
             }
         }
 
-        window.generateTimeButtons = function(dateIso) {
+        function generateTimeButtons(dateIso) {
             const container = document.getElementById('times-container');
             const emptyState = document.getElementById('times-empty-state');
             
@@ -936,9 +721,9 @@
             emptyState.classList.add('hidden');
             container.classList.remove('hidden');
 
-            const dateBookings = window.cloudBookingsDB[dateIso] || {};
+            const dateBookings = bookingsDB[dateIso] || {};
 
-            window.TIME_SLOTS.forEach(time => {
+            TIME_SLOTS.forEach(time => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 let displayTime = time.replace(' PM', ' م');
@@ -960,96 +745,79 @@
                     btn.addEventListener('click', function() {
                         document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('selected-btn', 'border-transparent'));
                         this.classList.add('selected-btn', 'border-transparent');
-                        window.selectedTime = time;
+                        selectedTime = time;
                     });
                 }
                 container.appendChild(btn);
             });
         }
 
-        window.submitBooking = async function() {
-            const btn = document.getElementById('submit-booking-btn');
-            const overlay = document.getElementById('booking-loading-overlay');
-            
+        function submitBooking() {
             const name = document.getElementById('patient-name').value.trim();
             const phone = document.getElementById('patient-phone').value.trim();
 
             if (!name || !phone) {
-                window.showMessage("بيانات ناقصة", "يرجى كتابة الاسم ورقم الهاتف.", "error");
+                showMessage("بيانات ناقصة", "يرجى كتابة الاسم ورقم الهاتف.", "error");
                 return;
             }
-            if (window.selectedReasons.size === 0) {
-                window.showMessage("بيانات ناقصة", "يرجى اختيار سبب الزيارة.", "error");
+            if (selectedReasons.size === 0) {
+                showMessage("بيانات ناقصة", "يرجى اختيار سبب الزيارة.", "error");
                 return;
             }
-            if (!window.selectedDate || !window.selectedTime) {
-                window.showMessage("بيانات ناقصة", "يرجى اختيار يوم ووقت الحجز من الخيارات المتاحة.", "error");
+            if (!selectedDate || !selectedTime) {
+                showMessage("بيانات ناقصة", "يرجى اختيار يوم ووقت الحجز.", "error");
                 return;
             }
 
-            // Check against current local state (optimistic check)
-            if (window.cloudBookingsDB[window.selectedDate] && window.cloudBookingsDB[window.selectedDate][window.selectedTime]) {
-                 window.showMessage("عذراً", "هذا الوقت تم حجزه للتو. يرجى اختيار وقت آخر.", "error");
-                 window.generateTimeButtons(window.selectedDate);
+            if (!bookingsDB[selectedDate]) bookingsDB[selectedDate] = {};
+            
+            if (bookingsDB[selectedDate][selectedTime]) {
+                 showMessage("عذراً", "هذا الوقت تم حجزه للتو. يرجى اختيار وقت آخر.", "error");
+                 generateTimeButtons(selectedDate);
                  return;
             }
 
-            // UI Loading State
-            btn.disabled = true;
-            overlay.classList.remove('hidden');
-
-            const reasonsArr = Array.from(window.selectedReasons);
+            const reasonsArr = Array.from(selectedReasons);
             
-            const newBooking = {
-                date: window.selectedDate,
-                time: window.selectedTime,
+            bookingsDB[selectedDate][selectedTime] = {
                 name: name,
                 phone: phone,
                 reasons: reasonsArr,
                 timestamp: new Date().toISOString()
             };
             
-            // Save to Cloud safely
-            let success = false;
-            if (typeof window.cloudSaveBooking === 'function') {
-                success = await window.cloudSaveBooking(newBooking);
-            } else {
-                console.error("Cloud functions are not available.");
-            }
+            localStorage.setItem('clinicBookingsV2', JSON.stringify(bookingsDB));
 
-            // UI Reset State
-            btn.disabled = false;
-            overlay.classList.add('hidden');
+            generateTimeButtons(selectedDate);
+            updateManagerBookingsView();
 
-            if (success) {
-                let displayTime = window.selectedTime.replace(' PM', ' م');
-                const waNumber = "9647818653825";
-                
-                const waMessage = `✨ *مرحباً عيادة د. فريد مؤيد السعيد* ✨%0Aأود تأكيد حجز موعدي:%0A%0A👤 *الاسم:* ${name}%0A📱 *الهاتف:* ${phone}%0A🗓 *التاريخ:* ${window.selectedDate}%0A⏰ *الوقت:* ${displayTime}%0A🦷 *نوع العلاج:* ${reasonsArr.join('، ')}%0A%0A💡 _ملاحظة: لقد تذكرت جلب الأشعة السابقة (إن وجدت)._%0A📍 *موقع العيادة:* https://maps.app.goo.gl/PMCV9rcQGc3XPrgN9?g_st=ac`;
-                
-                const waLink = `https://wa.me/${waNumber}?text=${waMessage}`;
+            let displayTime = selectedTime.replace(' PM', ' م');
+            const waNumber = "9647818653825";
+            
+            // Enhanced WhatsApp Message Format
+            const waMessage = `✨ *مرحباً عيادة د. فريد مؤيد السعيد* ✨%0Aأود تأكيد حجز موعدي:%0A%0A👤 *الاسم:* ${name}%0A📱 *الهاتف:* ${phone}%0A🗓 *التاريخ:* ${selectedDate}%0A⏰ *الوقت:* ${displayTime}%0A🦷 *نوع العلاج:* ${reasonsArr.join('، ')}%0A%0A💡 _ملاحظة: لقد تذكرت جلب الأشعة السابقة (إن وجدت)._%0A📍 *موقع العيادة:* https://maps.app.goo.gl/PMCV9rcQGc3XPrgN9?g_st=ac`;
+            
+            const waLink = `https://wa.me/${waNumber}?text=${waMessage}`;
 
-                window.showMessage(
-                    "تم حجز الموعد بنجاح!", 
-                    "سيتم تحويلك الآن إلى الواتساب لإرسال رسالة التأكيد التلقائية للعيادة.",
-                    "success"
-                );
+            showMessage(
+                "تم حجز الموعد بنجاح!", 
+                "سيتم تحويلك الآن إلى الواتساب لإرسال رسالة التأكيد التلقائية للعيادة.",
+                "success"
+            );
 
-                setTimeout(() => {
-                    window.open(waLink, '_blank');
-                    document.getElementById('booking-form').reset();
-                    window.selectedReasons.clear();
-                    document.querySelectorAll('.reason-btn').forEach(b => b.classList.remove('selected-btn', 'ring-2', 'ring-clinic', 'ring-offset-1'));
-                    window.selectedTime = null;
-                    window.closeMessageModal();
-                }, 3000);
-            } else {
-                window.showMessage("حدث خطأ", "تعذر تسجيل الموعد. تأكد من اتصالك بالإنترنت وحاول إعادة تحميل الصفحة.", "error");
-            }
+            setTimeout(() => {
+                window.open(waLink, '_blank');
+                document.getElementById('booking-form').reset();
+                selectedReasons.clear();
+                document.querySelectorAll('.reason-btn').forEach(b => b.classList.remove('selected-btn', 'ring-2', 'ring-clinic', 'ring-offset-1'));
+                selectedTime = null;
+                generateTimeButtons(selectedDate);
+                closeMessageModal();
+            }, 3000);
         }
 
         // --- Modal Helpers ---
-        window.showMessage = function(title, body, type = 'success') {
+        function showMessage(title, body, type = 'success') {
             const modal = document.getElementById('message-modal');
             const content = document.getElementById('message-modal-content');
             const icon = document.getElementById('message-icon');
@@ -1071,7 +839,7 @@
             }, 10);
         }
 
-        window.closeMessageModal = function() {
+        function closeMessageModal() {
             const modal = document.getElementById('message-modal');
             const content = document.getElementById('message-modal-content');
             content.classList.remove('scale-100', 'opacity-100');
@@ -1082,59 +850,8 @@
             }, 200);
         }
 
-        // Custom Confirm Modal Logic
-        let pendingConfirmAction = null;
-
-        window.showConfirmModal = function(title, message, actionCallback) {
-            document.getElementById('confirm-title').innerText = title;
-            document.getElementById('confirm-body').innerText = message;
-            pendingConfirmAction = actionCallback;
-
-            // Reset button state
-            const okBtn = document.getElementById('confirm-ok-btn');
-            document.getElementById('confirm-ok-text').classList.remove('hidden');
-            document.getElementById('confirm-ok-spinner').classList.add('hidden');
-            okBtn.disabled = false;
-
-            const modal = document.getElementById('confirm-modal');
-            const content = document.getElementById('confirm-modal-content');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            setTimeout(() => {
-                content.classList.remove('scale-95', 'opacity-0');
-                content.classList.add('scale-100', 'opacity-100');
-            }, 10);
-        }
-
-        window.closeConfirmModal = function() {
-            const modal = document.getElementById('confirm-modal');
-            const content = document.getElementById('confirm-modal-content');
-            content.classList.remove('scale-100', 'opacity-100');
-            content.classList.add('scale-95', 'opacity-0');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-                pendingConfirmAction = null;
-            }, 200);
-        }
-
-        document.getElementById('confirm-cancel-btn').addEventListener('click', window.closeConfirmModal);
-        document.getElementById('confirm-ok-btn').addEventListener('click', async () => {
-            if (pendingConfirmAction) {
-                // Show loading state on button
-                const okBtn = document.getElementById('confirm-ok-btn');
-                document.getElementById('confirm-ok-text').classList.add('hidden');
-                document.getElementById('confirm-ok-spinner').classList.remove('hidden');
-                okBtn.disabled = true;
-                
-                await pendingConfirmAction();
-            }
-            window.closeConfirmModal();
-        });
-
-
         // --- Manager Dashboard ---
-        window.openSecretaryModal = function() {
+        function openSecretaryModal() {
             document.getElementById('sec-password').value = '';
             document.getElementById('sec-login-step').classList.remove('hidden');
             document.getElementById('sec-dashboard-step').classList.add('hidden');
@@ -1145,35 +862,29 @@
             setTimeout(() => document.getElementById('sec-password').focus(), 100);
         }
 
-        window.closeSecretaryModal = function() {
+        function closeSecretaryModal() {
             const modal = document.getElementById('sec-modal');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
         }
 
         document.getElementById('sec-password').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') window.verifySecCode();
+            if (e.key === 'Enter') verifySecCode();
         });
 
-        window.verifySecCode = function() {
-            const code = document.getElementById('sec-password').value.trim(); // Trim added for safety
-            if (code === window.SECRETARY_CODE || code === "5422") {
+        function verifySecCode() {
+            const code = document.getElementById('sec-password').value;
+            if (code === SECRETARY_CODE) {
                 document.getElementById('sec-login-step').classList.add('hidden');
                 document.getElementById('sec-dashboard-step').classList.remove('hidden');
-                
-                // Show loading indicator until first snapshot arrives (handled in snapshot listener)
-                if (Object.keys(window.cloudBookingsDB).length === 0 && !document.getElementById('public-waiting-count').innerText) {
-                     document.getElementById('dashboard-loading-overlay').classList.remove('hidden');
-                }
-                
-                document.getElementById('sec-waiting-input').value = window.currentWaitingCount;
-                window.updateManagerBookingsView();
+                document.getElementById('sec-waiting-input').value = currentWaitingCount;
+                updateManagerBookingsView();
             } else {
-                window.showMessage('رمز خاطئ', 'الرجاء التأكد من الرمز والمحاولة مجدداً.', 'error');
+                showMessage('رمز خاطئ', 'الرجاء التأكد من الرمز والمحاولة مجدداً.', 'error');
             }
         }
 
-        window.changeWaitingCount = function(amount) {
+        function changeWaitingCount(amount) {
             const input = document.getElementById('sec-waiting-input');
             let val = parseInt(input.value) || 0;
             val += amount;
@@ -1181,44 +892,28 @@
             input.value = val;
         }
 
-        window.saveWaitingCount = async function() {
+        function saveWaitingCount() {
             const input = document.getElementById('sec-waiting-input');
-            const newCount = parseInt(input.value) || 0;
+            currentWaitingCount = parseInt(input.value) || 0;
             
-            const btn = document.getElementById('save-waiting-btn');
-            const text = document.getElementById('save-waiting-text');
-            const spinner = document.getElementById('save-waiting-spinner');
+            const publicCount = document.getElementById('public-waiting-count');
+            publicCount.classList.add('scale-150', 'text-green-500');
+            setTimeout(() => {
+                publicCount.innerText = currentWaitingCount;
+                publicCount.classList.remove('scale-150', 'text-green-500');
+            }, 300);
 
-            btn.disabled = true;
-            text.classList.add('hidden');
-            spinner.classList.remove('hidden');
-
-            let success = false;
-            if (typeof window.cloudUpdateWaitingCount === 'function') {
-                success = await window.cloudUpdateWaitingCount(newCount);
-            }
-
-            btn.disabled = false;
-            text.classList.remove('hidden');
-            spinner.classList.add('hidden');
-
-            if (success) {
-                window.showMessage('تم بنجاح', 'تم تحديث شاشة الانتظار للمرضى.', 'success');
-            } else {
-                window.showMessage('حدث خطأ', 'تعذر تحديث العدد، تأكد من اتصالك بالإنترنت وأعد المحاولة.', 'error');
-            }
+            showMessage('تم بنجاح', 'تم تحديث شاشة الانتظار للمرضى.', 'success');
         }
 
-        window.updateManagerBookingsView = function() {
+        function updateManagerBookingsView() {
             const listContainer = document.getElementById('manager-bookings-list');
             listContainer.innerHTML = '';
             let hasBookings = false;
-            
-            // Note: cloudBookingsDB is updated automatically by Firestore listener
-            const dates = Object.keys(window.cloudBookingsDB).sort();
+            const dates = Object.keys(bookingsDB).sort();
 
             dates.forEach(date => {
-                const timesForDate = window.cloudBookingsDB[date];
+                const timesForDate = bookingsDB[date];
                 if (Object.keys(timesForDate).length === 0) return;
                 
                 hasBookings = true;
@@ -1250,7 +945,7 @@
                             <span class="bg-clinic text-white font-black px-3 py-1.5 rounded-lg text-sm shadow-md whitespace-nowrap">
                                 <i class="fa-regular fa-clock ml-1"></i> ${displayTime}
                             </span>
-                            <button onclick="deleteBooking('${b.id}')" class="text-slate-400 hover:text-white hover:bg-red-500 px-2 py-1 rounded-md transition-colors text-xs font-bold border border-transparent hover:border-red-600" title="إلغاء الموعد">
+                            <button onclick="deleteBooking('${date}', '${time}')" class="text-slate-400 hover:text-white hover:bg-red-500 px-2 py-1 rounded-md transition-colors text-xs font-bold border border-transparent hover:border-red-600" title="إلغاء الموعد">
                                 <i class="fa-solid fa-trash-can ml-1"></i> حذف
                             </button>
                         </div>
@@ -1270,19 +965,23 @@
             }
         }
 
-        window.deleteBooking = function(docId) {
-            window.showConfirmModal('إلغاء الحجز', 'هل أنت متأكد من إلغاء هذا الحجز نهائياً من النظام؟', async () => {
-                let success = false;
-                if (typeof window.cloudDeleteBooking === 'function') {
-                    success = await window.cloudDeleteBooking(docId);
-                }
-                
-                if(success) {
-                    console.log("Booking deleted successfully.");
-                } else {
-                    window.showMessage("خطأ", "لم يتم الحذف. تأكد من اتصالك بالإنترنت أو أعد تحميل الصفحة.", "error");
-                }
-            });
+        window.deleteBooking = function(date, time) {
+            if(confirm('هل أنت متأكد من إلغاء هذا الحجز؟')) {
+                delete bookingsDB[date][time];
+                if (Object.keys(bookingsDB[date]).length === 0) delete bookingsDB[date];
+                localStorage.setItem('clinicBookingsV2', JSON.stringify(bookingsDB));
+                updateManagerBookingsView();
+                if (selectedDate === date) generateTimeButtons(date);
+            }
+        }
+
+        window.clearAllBookings = function() {
+            if(confirm('تحذير: سيتم مسح جميع السجلات المتاحة. هل أنت متأكد؟')) {
+                bookingsDB = {};
+                localStorage.removeItem('clinicBookingsV2');
+                updateManagerBookingsView();
+                if (selectedDate) generateTimeButtons(selectedDate);
+            }
         }
     </script>
 </body>
