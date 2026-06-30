@@ -382,23 +382,34 @@
 
         // Firebase Setup
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'clinic-default-app';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        let firebaseConfig = {};
+        try {
+            firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        } catch(e) {}
         
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        let app, auth, db;
+        try {
+            if (Object.keys(firebaseConfig).length > 0) {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+            }
+        } catch(e) {
+            console.error("Firebase Init Error:", e);
+        }
 
         // State Management
         window.SECRETARY_CODE = "5422";
-        window.currentWaitingCount = 0;
+        window.currentWaitingCount = parseInt(localStorage.getItem('clinicWaitingCount')) || 0;
         window.selectedReasons = new Set();
         window.selectedDate = null;
         window.selectedTime = null;
-        window.bookingsDB = {}; 
+        window.bookingsDB = JSON.parse(localStorage.getItem('clinicBookingsV2')) || {}; 
 
         const TIME_SLOTS = ["05:00 PM", "05:30 PM", "06:00 PM", "06:30 PM", "07:00 PM", "07:30 PM", "08:00 PM", "08:30 PM", "09:00 PM"];
 
         async function initCloudSync() {
+            if (!auth) return; // Fallback to local mode if Firebase failed
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
@@ -412,13 +423,14 @@
         }
 
         function startListeners() {
-            if (!auth.currentUser) return;
+            if (!auth.currentUser || !db) return;
             
             // Sync Waiting Room Instantly across all users
             const stateRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinic_state', 'waiting_room');
             onSnapshot(stateRef, (snapshot) => {
                 if (snapshot.exists()) {
                     window.currentWaitingCount = snapshot.data().count || 0;
+                    localStorage.setItem('clinicWaitingCount', window.currentWaitingCount);
                     const publicCount = document.getElementById('public-waiting-count');
                     if(publicCount) {
                         publicCount.innerText = window.currentWaitingCount;
@@ -440,33 +452,56 @@
                     window.bookingsDB[data.date][data.time] = data;
                 });
                 
+                localStorage.setItem('clinicBookingsV2', JSON.stringify(window.bookingsDB));
                 window.updateManagerBookingsView();
                 if (window.selectedDate) window.generateTimeButtons(window.selectedDate);
             }, (error) => console.error("Bookings Sync Error:", error));
         }
 
         window.cloudSaveWaitingCount = async (count) => {
-            if (!auth.currentUser) return;
+            window.currentWaitingCount = count;
+            localStorage.setItem('clinicWaitingCount', count);
+            const publicCount = document.getElementById('public-waiting-count');
+            if(publicCount) publicCount.innerText = count;
+            
+            if (!auth?.currentUser || !db) return;
             const stateRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinic_state', 'waiting_room');
             await setDoc(stateRef, { count: count }, { merge: true });
         };
 
         window.cloudAddBooking = async (dateIso, time, data) => {
-            if (!auth.currentUser) return;
+            if (!window.bookingsDB[dateIso]) window.bookingsDB[dateIso] = {};
+            window.bookingsDB[dateIso][time] = { ...data, date: dateIso, time: time };
+            localStorage.setItem('clinicBookingsV2', JSON.stringify(window.bookingsDB));
+            
+            if (!auth?.currentUser || !db) return;
             const docId = `${dateIso}_${time}`;
             const bookingRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinic_bookings', docId);
             await setDoc(bookingRef, { ...data, date: dateIso, time: time });
         };
 
         window.cloudDeleteBooking = async (dateIso, time) => {
-            if (!auth.currentUser) return;
+            if (window.bookingsDB[dateIso]) {
+                delete window.bookingsDB[dateIso][time];
+                if(Object.keys(window.bookingsDB[dateIso]).length === 0) delete window.bookingsDB[dateIso];
+                localStorage.setItem('clinicBookingsV2', JSON.stringify(window.bookingsDB));
+                window.updateManagerBookingsView();
+                if (window.selectedDate === dateIso) window.generateTimeButtons(dateIso);
+            }
+
+            if (!auth?.currentUser || !db) return;
             const docId = `${dateIso}_${time}`;
             const bookingRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinic_bookings', docId);
             await deleteDoc(bookingRef);
         };
 
         window.cloudClearAllBookings = async () => {
-            if (!auth.currentUser) return;
+            window.bookingsDB = {};
+            localStorage.setItem('clinicBookingsV2', JSON.stringify(window.bookingsDB));
+            window.updateManagerBookingsView();
+            if (window.selectedDate) window.generateTimeButtons(window.selectedDate);
+
+            if (!auth?.currentUser || !db) return;
             const bookingsCol = collection(db, 'artifacts', appId, 'public', 'data', 'clinic_bookings');
             const snapshot = await getDocs(bookingsCol);
             const promises = [];
@@ -481,13 +516,20 @@
             return { dayName: days[dateObj.getDay()], dayNum: dateObj.getDate(), month: months[dateObj.getMonth()], iso: dateObj.toISOString().split('T')[0] };
         }
 
-        window.onload = () => {
+        function initApp() {
             window.setupReasonsButtons();
             window.generateDateButtons();
             window.updateManagerBookingsView();
             window.initBeforeAfterSlider();
-            initCloudSync(); // Boot up cloud sync on load
-        };
+            
+            // Restore Waiting Count Initial UI
+            const publicCount = document.getElementById('public-waiting-count');
+            if(publicCount) publicCount.innerText = window.currentWaitingCount;
+            const secInput = document.getElementById('sec-waiting-input');
+            if (secInput) secInput.value = window.currentWaitingCount;
+
+            initCloudSync(); // Boot up cloud sync
+        }
 
         window.showConfirm = function(title, message, onYes) {
             const modal = document.getElementById('confirm-modal');
@@ -592,7 +634,7 @@
                 const isBooked = !!dateBookings[time];
                 if (isBooked) {
                     btn.className = 'py-3 px-1 rounded-xl border-2 border-slate-100 text-sm font-bold text-center disabled-time relative bg-slate-100';
-                    btn.innerHTML = `<span class="line-through decoration-slate-400">${time.replace(' PM', ' م')}</span><div class="absolute inset-0 flex items-center justify-center bg-slate-200/80"><span class="text-xs text-slate-600 font-black"><i class="fa-solid fa-lock mr-1"></i> محجوز</span></div>`;
+                    btn.innerHTML = `<span class="line-through decoration-slate-400 decoration-2">${time.replace(' PM', ' م')}</span><div class="absolute inset-0 flex items-center justify-center bg-slate-200/80 backdrop-blur-[1px]"><span class="text-xs text-slate-600 font-black tracking-wider"><i class="fa-solid fa-lock mr-1"></i> محجوز</span></div>`;
                     btn.disabled = true;
                 } else {
                     btn.className = 'py-3 px-1 rounded-xl border-2 border-slate-200 bg-white hover:border-clinic hover:text-clinic text-slate-700 text-sm font-black text-center transition-all time-btn shadow-sm';
@@ -651,9 +693,12 @@
             document.getElementById('booking-form').reset();
             window.selectedReasons.clear();
             document.querySelectorAll('.reason-btn').forEach(b => b.classList.remove('selected-btn', 'ring-2', 'ring-clinic', 'ring-offset-1'));
-            window.selectedTime = null;
             
-            window.showMessage("تم الحجز!", "تم تسجيل موعدك في النظام السحابي بنجاح.", "success");
+            const bookedDate = window.selectedDate;
+            window.selectedTime = null;
+            window.generateTimeButtons(bookedDate);
+            
+            window.showMessage("تم الحجز!", "تم تسجيل موعدك في النظام بنجاح.", "success");
         };
 
         window.showMessage = function(title, body, type) {
@@ -762,6 +807,13 @@
                 await window.cloudClearAllBookings();
             });
         };
+
+        // Initialize application after all script assignments are completely loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
     </script>
 </body>
 </html>
