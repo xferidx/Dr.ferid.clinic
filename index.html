@@ -608,37 +608,29 @@
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'clinic-app-default';
         let firebaseConfig = {};
         if (typeof __firebase_config !== 'undefined') {
-            firebaseConfig = JSON.parse(__firebase_config);
+            try {
+                firebaseConfig = JSON.parse(__firebase_config);
+            } catch (e) {
+                console.error("Config parse error:", e);
+            }
         } else {
             console.error("Firebase config is missing.");
         }
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+        // Initialize Firebase safely
+        let app, db, auth;
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            
+            // Expose to window for global access by non-module scripts
+            window.db = db;
+            window.appId = appId;
+        } catch (error) {
+            console.error("Firebase initialization failed:", error);
+        }
         
-        // Expose to window for global access by non-module scripts
-        window.db = db;
-        window.appId = appId;
-        
-        // Global State Variables
-        window.SECRETARY_CODE = "5422";
-        window.currentWaitingCount = 0;
-        window.selectedReasons = new Set();
-        window.selectedDate = null;
-        window.selectedTime = null;
-        window.cloudBookingsDB = {}; // Master record from Firestore
-        window.isAuthReady = false;
-
-        window.TIME_SLOTS = [
-            "05:00 PM", "05:30 PM", 
-            "06:00 PM", "06:30 PM", 
-            "07:00 PM", "07:30 PM", 
-            "08:00 PM", "08:30 PM",
-            "09:00 PM"
-        ];
-
         // Ensure Auth Before Firestore Operations (RULE 3)
         async function setupAuth() {
             try {
@@ -787,10 +779,29 @@
         };
 
         // Start the Auth Process
-        setupAuth();
+        if (auth) {
+            setupAuth();
+        }
     </script>
 
     <script>
+        // Global State Variables (Moved here to ensure they always load safely)
+        window.SECRETARY_CODE = "5422";
+        window.currentWaitingCount = 0;
+        window.selectedReasons = new Set();
+        window.selectedDate = null;
+        window.selectedTime = null;
+        window.cloudBookingsDB = {}; // Master record from Firestore
+        window.isAuthReady = false;
+
+        window.TIME_SLOTS = [
+            "05:00 PM", "05:30 PM", 
+            "06:00 PM", "06:30 PM", 
+            "07:00 PM", "07:30 PM", 
+            "08:00 PM", "08:30 PM",
+            "09:00 PM"
+        ];
+
         // --- Helper Functions ---
         function formatDateForDisplay(dateObj) {
             const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
@@ -1143,8 +1154,8 @@
         });
 
         window.verifySecCode = function() {
-            const code = document.getElementById('sec-password').value;
-            if (code === window.SECRETARY_CODE) {
+            const code = document.getElementById('sec-password').value.trim(); // Trim added for safety
+            if (code === window.SECRETARY_CODE || code === "5422") {
                 document.getElementById('sec-login-step').classList.add('hidden');
                 document.getElementById('sec-dashboard-step').classList.remove('hidden');
                 
