@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>عيادة الدكتور فريد مؤيد السعيد لطب الأسنان</title>
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome for Icons -->
@@ -20,9 +21,9 @@
                     },
                     colors: {
                         clinic: {
-                            light: '#dbeafe',
-                            DEFAULT: '#2563eb',
-                            dark: '#1e40af',
+                            light: '#dbeafe', // blue-100
+                            DEFAULT: '#2563eb', // blue-600
+                            dark: '#1e40af', // blue-800
                         },
                         gold: {
                             light: '#fef08a',
@@ -69,10 +70,12 @@
             border-color: #cbd5e1;
         }
 
+        /* Hero Image Overlay */
         .hero-overlay {
             background: linear-gradient(to right, rgba(30, 64, 175, 0.9), rgba(37, 99, 235, 0.7));
         }
 
+        /* Before/After Slider Styles */
         .ba-slider {
             position: relative;
             width: 100%;
@@ -99,10 +102,11 @@
             top: 0;
             right: 0;
             bottom: 0;
-            width: 50%;
+            width: 50%; /* Initial split */
             overflow: hidden;
             border-left: 3px solid white;
             box-shadow: -5px 0 15px rgba(0,0,0,0.2);
+            /* Important: the inner image needs to stay fixed relative to container */
         }
         .ba-before img {
             position: absolute;
@@ -129,31 +133,6 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             z-index: 10;
         }
-
-        /* Instagram embed fallback card styling */
-        .ig-fallback-card {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 0.75rem;
-            padding: 2.5rem 1.5rem;
-            min-height: 420px;
-            text-align: center;
-        }
-        .ig-fallback-icon {
-            width: 64px;
-            height: 64px;
-            border-radius: 18px;
-            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.75rem;
-        }
-        /* official instagram embed iframe inherits its own sizing; this just bounds the wrapper */
-        .instagram-media { margin: 0 auto !important; max-width: 100% !important; min-width: 0 !important; }
     </style>
 </head>
 <body class="text-slate-800 antialiased min-h-screen flex flex-col">
@@ -170,6 +149,7 @@
                     <p class="text-clinic text-xs font-bold">لصحة وتجميل الأسنان</p>
                 </div>
             </div>
+            <!-- Manager Login Trigger -->
             <button onclick="openSecretaryModal()" class="text-slate-400 hover:text-clinic transition-colors p-2 bg-slate-50 rounded-full hover:bg-clinic-light" title="الإدارة">
                 <i class="fa-solid fa-user-lock text-lg"></i>
             </button>
@@ -178,6 +158,7 @@
 
     <!-- Cinematic Hero Section -->
     <header class="relative bg-slate-900 text-white overflow-hidden">
+        <!-- Background Image (High Quality Dental Clinic) -->
         <div class="absolute inset-0 z-0">
             <img src="https://images.unsplash.com/photo-1606811841689-23dfddce3e95?q=80&w=2070&auto=format&fit=crop" alt="Clinic Background" class="w-full h-full object-cover opacity-60">
         </div>
@@ -212,12 +193,12 @@
                 <span class="text-sm font-black" dir="ltr">07758939998</span>
             </a>
 
-            <a href="https://wa.me/96477818653825" target="_blank" class="bg-white hover:bg-green-50 text-green-600 shadow-lg rounded-2xl p-4 flex flex-col items-center justify-center gap-2 transition-all transform hover:-translate-y-1 border border-slate-100">
+            <a href="https://wa.me/9647818653825" target="_blank" class="bg-white hover:bg-green-50 text-green-600 shadow-lg rounded-2xl p-4 flex flex-col items-center justify-center gap-2 transition-all transform hover:-translate-y-1 border border-slate-100">
                 <div class="bg-green-50 p-3 rounded-full mb-1"><i class="fa-brands fa-whatsapp text-3xl"></i></div>
                 <span class="text-sm font-black text-center mt-2">واتساب</span>
             </a>
 
-            <a href="https://t.me/+9647818653825" target="_blank" class="bg-white hover:bg-sky-50 text-sky-500 shadow-lg rounded-2xl p-4 flex flex-col items-center justify-center gap-2 transition-all transform hover:-translate-y-1 border border-slate-100">
+            <a href="https://t.me/+9647818653825" target="_blank" class="bg-white hover:bg-sky-50 text-sky-50 shadow-lg rounded-2xl p-4 flex flex-col items-center justify-center gap-2 transition-all transform hover:-translate-y-1 border border-slate-100" style="color: #0ea5e9;">
                 <div class="bg-sky-50 p-3 rounded-full mb-1"><i class="fa-brands fa-telegram text-3xl"></i></div>
                 <span class="text-sm font-black text-center mt-2">تلغرام</span>
             </a>
@@ -230,10 +211,12 @@
 
         <!-- Installment Banner -->
         <section class="relative rounded-[2rem] p-8 overflow-hidden shadow-2xl bg-gradient-to-br from-indigo-900 via-blue-900 to-blue-800 border border-indigo-400/30">
+            <!-- Glow Effects -->
             <div class="absolute top-0 right-0 -mr-20 -mt-20 w-72 h-72 rounded-full bg-yellow-400/20 blur-3xl animate-pulse"></div>
             <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-72 h-72 rounded-full bg-cyan-400/20 blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
 
             <div class="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
+                <!-- Text Content -->
                 <div class="text-center lg:text-right flex-1">
                     <div class="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-md mb-5 text-yellow-300 text-sm font-bold shadow-lg">
                         <i class="fa-solid fa-credit-card"></i>
@@ -247,7 +230,9 @@
                     </p>
                 </div>
 
+                <!-- Banks Logos / Cards -->
                 <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto justify-center">
+                    <!-- Bank 1: Rafidain -->
                     <div class="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 flex flex-col items-center gap-3 hover:bg-white/20 transition-all transform hover:-translate-y-2 shadow-xl flex-1 lg:flex-none lg:w-48 text-center group">
                         <div class="w-16 h-16 rounded-full bg-gradient-to-b from-white to-gray-200 flex items-center justify-center text-green-700 shadow-inner group-hover:scale-110 transition-transform">
                             <i class="fa-solid fa-landmark text-3xl"></i>
@@ -258,6 +243,7 @@
                         </div>
                     </div>
 
+                    <!-- Bank 2: Rasheed -->
                     <div class="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 flex flex-col items-center gap-3 hover:bg-white/20 transition-all transform hover:-translate-y-2 shadow-xl flex-1 lg:flex-none lg:w-48 text-center group">
                         <div class="w-16 h-16 rounded-full bg-gradient-to-b from-white to-gray-200 flex items-center justify-center text-blue-700 shadow-inner group-hover:scale-110 transition-transform">
                             <i class="fa-solid fa-building-columns text-3xl"></i>
@@ -302,6 +288,7 @@
             </div>
             
             <form id="booking-form" class="space-y-8">
+                <!-- User Details -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                         <label class="block text-sm font-bold text-slate-700 mb-2"><i class="fa-regular fa-user ml-1 text-clinic"></i> الاسم الكامل <span class="text-red-500">*</span></label>
@@ -313,6 +300,7 @@
                     </div>
                 </div>
 
+                <!-- Reasons as Buttons -->
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                     <label class="block text-sm font-bold text-slate-700 mb-3"><i class="fa-solid fa-stethoscope ml-1 text-clinic"></i> الغرض من الزيارة <span class="text-xs text-slate-400 font-normal">(يمكنك اختيار أكثر من خيار)</span> <span class="text-red-500">*</span></label>
                     <div class="flex flex-wrap gap-2" id="reasons-container">
@@ -329,21 +317,28 @@
                     </div>
                 </div>
 
+                <!-- Dates as Buttons (Horizontal Scroll) -->
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-3"><i class="fa-regular fa-calendar-days ml-1 text-clinic"></i> اختر اليوم <span class="text-red-500">*</span></label>
-                    <div class="flex overflow-x-auto gap-3 pb-4 hide-scrollbar px-1" id="dates-container"></div>
+                    <div class="flex overflow-x-auto gap-3 pb-4 hide-scrollbar px-1" id="dates-container">
+                        <!-- Dates injected by JS -->
+                    </div>
                 </div>
 
+                <!-- Times as Buttons -->
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                     <div class="flex justify-between items-end mb-4">
                         <label class="block text-sm font-bold text-slate-700"><i class="fa-regular fa-clock ml-1 text-clinic"></i> اختر الوقت (5م - 9م) <span class="text-red-500">*</span></label>
                         <span class="text-xs font-bold text-clinic bg-clinic-light px-2 py-1 rounded-md">المدة 30 دقيقة</span>
                     </div>
+                    <!-- Empty state before date selection -->
                     <div id="times-empty-state" class="text-sm text-slate-500 p-8 border-2 border-dashed border-slate-300 rounded-xl text-center bg-white flex flex-col items-center justify-center gap-2">
                         <i class="fa-solid fa-arrow-up text-xl text-slate-300 animate-bounce"></i>
                         الرجاء اختيار اليوم من الأعلى لعرض الأوقات المتاحة
                     </div>
-                    <div class="grid grid-cols-3 sm:grid-cols-4 gap-3 hidden" id="times-container"></div>
+                    <div class="grid grid-cols-3 sm:grid-cols-4 gap-3 hidden" id="times-container">
+                        <!-- Times injected by JS -->
+                    </div>
                 </div>
 
                 <button type="button" onclick="submitBooking()" class="w-full bg-gradient-to-r from-clinic to-clinic-dark hover:from-clinic-dark hover:to-slate-800 text-white font-black text-lg py-5 rounded-2xl shadow-xl transition-all transform hover:-translate-y-1 flex justify-center items-center gap-3 mt-6 border-b-4 border-slate-900/20">
@@ -363,13 +358,16 @@
             
             <div class="max-w-2xl mx-auto">
                 <div class="ba-slider" id="ba-slider">
-                    <img class="ba-after" src="https://i.ibb.co/35QTV1qJ/Screenshot-2026-06-30-013242.png" alt="After Treatment">
+                    <!-- After Image (Clean, white teeth) -->
+                    <img class="ba-after" src="https://i.ibb.co/35QTV1qJ/Screenshot-2026-06-30-013242.png" alt="After Treatment" onerror="this.src='https://placehold.co/800x450/ffffff/2563eb?text=بعد+العلاج'">
                     
+                    <!-- Before Image Container -->
                     <div class="ba-before" id="ba-before">
-                        <img src="https://i.ibb.co/TDs3fLf0/Screenshot-2026-06-30-013224.png" alt="Before Treatment" id="ba-before-img">
+                        <img src="https://i.ibb.co/TDs3fLf0/Screenshot-2026-06-30-013224.png" alt="Before Treatment" id="ba-before-img" onerror="this.src='https://placehold.co/800x450/fef08a/a16207?text=قبل+العلاج'">
                         <div class="absolute top-4 right-4 bg-black/60 text-white text-xs font-bold px-2 py-1 rounded backdrop-blur-sm">قبل</div>
                     </div>
                     
+                    <!-- Handle -->
                     <div class="ba-handle" id="ba-handle">
                         <i class="fa-solid fa-left-right"></i>
                     </div>
@@ -379,7 +377,7 @@
             </div>
         </section>
 
-        <!-- Instagram Videos Section (Official embed.js method) -->
+        <!-- Instagram Videos Section -->
         <section class="glass-panel rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200">
             <div class="flex items-center justify-between mb-8 pb-4 border-b border-slate-100">
                 <div class="flex items-center gap-3">
@@ -395,38 +393,21 @@
                     تابعنا للمزيد <i class="fa-solid fa-angle-left"></i>
                 </a>
             </div>
-
-            <!-- Grid of official Instagram embeds. If embed.js fails to load, the
-                 blockquote fallback links below remain clickable. -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="ig-grid">
-
-                <div class="w-full flex justify-center bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 shadow-inner p-2">
-                    <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/DYt1yTiivbF/" data-instgrm-version="14" style="width:100%;"></blockquote>
+            
+            <!-- Grid container for 4 videos -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6" dir="ltr">
+                <div class="w-full flex justify-center bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 shadow-inner">
+                    <iframe src="https://www.instagram.com/p/DYt1yTiivbF/embed/captioned/" class="w-full h-[600px] bg-white" frameborder="0" scrolling="no" allowtransparency="true"></iframe>
                 </div>
-
-                <div class="w-full flex justify-center bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 shadow-inner p-2">
-                    <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/DZp6rxvCZHv/" data-instgrm-version="14" style="width:100%;"></blockquote>
+                <div class="w-full flex justify-center bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 shadow-inner">
+                    <iframe src="https://www.instagram.com/p/DZp6rxvCZHv/embed/captioned/" class="w-full h-[600px] bg-white" frameborder="0" scrolling="no" allowtransparency="true"></iframe>
                 </div>
-
-                <div class="w-full flex justify-center bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 shadow-inner p-2">
-                    <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/CX-niGvqme7/" data-instgrm-version="14" style="width:100%;"></blockquote>
+                <div class="w-full flex justify-center bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 shadow-inner">
+                    <iframe src="https://www.instagram.com/p/CX-niGvqme7/embed/captioned/" class="w-full h-[600px] bg-white" frameborder="0" scrolling="no" allowtransparency="true"></iframe>
                 </div>
-
-                <div class="w-full flex justify-center bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 shadow-inner p-2">
-                    <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/CunMmVMg1ba/" data-instgrm-version="14" style="width:100%;"></blockquote>
+                <div class="w-full flex justify-center bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 shadow-inner">
+                    <iframe src="https://www.instagram.com/p/CunMmVMg1ba/embed/captioned/" class="w-full h-[600px] bg-white" frameborder="0" scrolling="no" allowtransparency="true"></iframe>
                 </div>
-
-            </div>
-
-            <!-- Fallback notice shown only if embeds fail to render after a timeout -->
-            <div id="ig-fallback-notice" class="hidden mt-4 text-center bg-pink-50 border border-pink-100 rounded-2xl p-5">
-                <p class="text-sm text-slate-600 font-bold mb-3">
-                    <i class="fa-solid fa-triangle-exclamation text-pink-500 ml-1"></i>
-                    تعذّر تحميل بعض الفيديوهات مباشرة من إنستغرام (قد يحدث هذا أحياناً بسبب قيود إنستغرام نفسها)
-                </p>
-                <a href="https://www.instagram.com/dr.ferid.clinic/" target="_blank" class="inline-flex items-center gap-2 bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 text-white font-bold px-5 py-3 rounded-xl shadow-md hover:opacity-90 transition-opacity">
-                    <i class="fa-brands fa-instagram"></i> مشاهدة جميع الفيديوهات على إنستغرام
-                </a>
             </div>
         </section>
 
@@ -503,6 +484,21 @@
         </div>
     </div>
 
+    <!-- Confirmation Modal (Replaces browser confirm()) -->
+    <div id="confirm-modal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[110] p-4 backdrop-blur-md">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl transform transition-all scale-95 opacity-0 text-center" id="confirm-modal-content">
+            <div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6 text-amber-500 shadow-inner">
+                <i class="fa-solid fa-triangle-exclamation text-4xl"></i>
+            </div>
+            <h3 id="confirm-title" class="text-2xl font-black mb-3 text-slate-800">تأكيد</h3>
+            <p id="confirm-body" class="text-slate-600 mb-8 leading-relaxed font-medium">هل أنت متأكد؟</p>
+            <div class="flex gap-3">
+                <button id="confirm-cancel-btn" class="flex-1 bg-slate-100 text-slate-700 font-bold text-lg py-3 rounded-xl hover:bg-slate-200 transition-colors">إلغاء</button>
+                <button id="confirm-ok-btn" class="flex-1 bg-red-500 text-white font-bold text-lg py-3 rounded-xl hover:bg-red-600 transition-colors shadow-lg">نعم، متأكد</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Manager (Secretary) Modal -->
     <div id="sec-modal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[100] p-4 backdrop-blur-md">
         <div class="bg-slate-50 rounded-3xl w-full max-w-3xl shadow-2xl max-h-[90vh] flex flex-col border border-slate-200">
@@ -522,6 +518,7 @@
             </div>
             
             <div class="p-6 overflow-y-auto">
+                <!-- Login State -->
                 <div id="sec-login-step" class="max-w-sm mx-auto py-10">
                     <div class="text-center mb-8">
                         <div class="w-20 h-20 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
@@ -536,8 +533,10 @@
                     </button>
                 </div>
 
+                <!-- Dashboard State -->
                 <div id="sec-dashboard-step" class="hidden space-y-6">
                     
+                    <!-- Waiting List Control -->
                     <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
                         <h4 class="font-bold text-slate-800 mb-6 flex items-center gap-2">
                             <i class="fa-solid fa-person-walking text-clinic text-xl"></i>
@@ -551,6 +550,7 @@
                         <button onclick="saveWaitingCount()" class="w-full bg-clinic text-white font-bold text-lg py-4 rounded-xl hover:bg-clinic-dark transition-colors shadow-md">نشر العدد للمرضى</button>
                     </div>
 
+                    <!-- Bookings List -->
                     <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
                         <div class="flex justify-between items-center mb-6">
                             <h4 class="font-bold text-slate-800 flex items-center gap-2 text-lg">
@@ -560,7 +560,9 @@
                             <button onclick="clearAllBookings()" class="text-sm font-bold text-red-500 hover:bg-red-50 px-4 py-2 rounded-lg transition-colors border border-red-100"><i class="fa-solid fa-trash-can mr-1"></i> مسح الكل</button>
                         </div>
                         
-                        <div id="manager-bookings-list" class="space-y-4"></div>
+                        <div id="manager-bookings-list" class="space-y-4">
+                            <!-- Bookings will be injected here -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -574,7 +576,9 @@
         let selectedDate = null;
         let selectedTime = null;
 
-        let bookingsDB = JSON.parse(localStorage.getItem('clinicBookingsV2')) || {};
+        // Using in-memory store according to platform policy for simple state
+        // If you need data persistence across reloads/devices, we can implement Firebase Storage
+        let bookingsDB = {}; 
 
         const TIME_SLOTS = [
             "05:00 PM", "05:30 PM", 
@@ -600,32 +604,7 @@
             generateDateButtons();
             updateManagerBookingsView();
             initBeforeAfterSlider();
-            loadInstagramEmbeds();
         };
-
-        /* ── Instagram embed loader with fallback ── */
-        function loadInstagramEmbeds() {
-            const script = document.createElement('script');
-            script.async = true;
-            script.src = "https://www.instagram.com/embed.js";
-            script.onerror = showIgFallback;
-            document.body.appendChild(script);
-
-            // If embed.js loaded but Instagram's servers refuse/are slow to render
-            // the actual posts within a few seconds, show the fallback link too
-            // (the blockquotes remain as clickable links regardless).
-            setTimeout(() => {
-                const grid = document.getElementById('ig-grid');
-                const renderedIframes = grid.querySelectorAll('iframe').length;
-                if (renderedIframes === 0) {
-                    showIgFallback();
-                }
-            }, 6000);
-        }
-
-        function showIgFallback() {
-            document.getElementById('ig-fallback-notice').classList.remove('hidden');
-        }
 
         function initBeforeAfterSlider() {
             const slider = document.getElementById('ba-slider');
@@ -636,7 +615,9 @@
             let isDragging = false;
 
             function updateImgWidth() {
-                beforeImg.style.width = slider.offsetWidth + 'px';
+                if(beforeImg && slider) {
+                    beforeImg.style.width = slider.offsetWidth + 'px';
+                }
             }
             window.addEventListener('resize', updateImgWidth);
             updateImgWidth();
@@ -646,7 +627,6 @@
                 
                 let rect = slider.getBoundingClientRect();
                 let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-                
                 let x = clientX - rect.left;
                 
                 if (x < 0) x = 0;
@@ -670,6 +650,7 @@
             window.addEventListener('mousemove', updateSlider);
             window.addEventListener('touchmove', updateSlider);
         }
+
 
         function setupReasonsButtons() {
             const btns = document.querySelectorAll('.reason-btn');
@@ -806,21 +787,18 @@
                 timestamp: new Date().toISOString()
             };
             
-            localStorage.setItem('clinicBookingsV2', JSON.stringify(bookingsDB));
-
             generateTimeButtons(selectedDate);
             updateManagerBookingsView();
 
             let displayTime = selectedTime.replace(' PM', ' م');
-            const waNumber = "96477818653825";
+            const waNumber = "9647818653825";
             
             const waMessage = `✨ *مرحباً عيادة د. فريد مؤيد السعيد* ✨%0Aأود تأكيد حجز موعدي:%0A%0A👤 *الاسم:* ${name}%0A📱 *الهاتف:* ${phone}%0A🗓 *التاريخ:* ${selectedDate}%0A⏰ *الوقت:* ${displayTime}%0A🦷 *نوع العلاج:* ${reasonsArr.join('، ')}%0A%0A💡 _ملاحظة: لقد تذكرت جلب الأشعة السابقة (إن وجدت)._%0A📍 *موقع العيادة:* https://maps.app.goo.gl/PMCV9rcQGc3XPrgN9?g_st=ac`;
-            
             const waLink = `https://wa.me/${waNumber}?text=${waMessage}`;
 
             showMessage(
-                "تم حجز الموعد بنجاح!", 
-                "سيتم تحويلك الآن إلى الواتساب لإرسال رسالة التأكيد التلقائية للعيادة.",
+                "تم تسجيل الموعد!", 
+                "تم تسجيل الموعد في النظام المؤقت. سيتم تحويلك للواتساب لإرسال رسالة التأكيد التلقائية.",
                 "success"
             );
 
@@ -867,6 +845,43 @@
                 modal.classList.remove('flex');
             }, 200);
         }
+
+        // Custom Confirm Modal Logic
+        let pendingConfirmAction = null;
+
+        function showConfirmModal(title, message, actionCallback) {
+            document.getElementById('confirm-title').innerText = title;
+            document.getElementById('confirm-body').innerText = message;
+            pendingConfirmAction = actionCallback;
+
+            const modal = document.getElementById('confirm-modal');
+            const content = document.getElementById('confirm-modal-content');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirm-modal');
+            const content = document.getElementById('confirm-modal-content');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                pendingConfirmAction = null;
+            }, 200);
+        }
+
+        document.getElementById('confirm-cancel-btn').addEventListener('click', closeConfirmModal);
+        document.getElementById('confirm-ok-btn').addEventListener('click', () => {
+            if (pendingConfirmAction) pendingConfirmAction();
+            closeConfirmModal();
+        });
+
 
         function openSecretaryModal() {
             document.getElementById('sec-password').value = '';
@@ -983,22 +998,20 @@
         }
 
         window.deleteBooking = function(date, time) {
-            if(confirm('هل أنت متأكد من إلغاء هذا الحجز؟')) {
+            showConfirmModal('إلغاء الحجز', 'هل أنت متأكد من إلغاء هذا الحجز؟', () => {
                 delete bookingsDB[date][time];
                 if (Object.keys(bookingsDB[date]).length === 0) delete bookingsDB[date];
-                localStorage.setItem('clinicBookingsV2', JSON.stringify(bookingsDB));
                 updateManagerBookingsView();
                 if (selectedDate === date) generateTimeButtons(date);
-            }
+            });
         }
 
         window.clearAllBookings = function() {
-            if(confirm('تحذير: سيتم مسح جميع السجلات المتاحة. هل أنت متأكد؟')) {
+            showConfirmModal('مسح السجلات', 'تحذير: سيتم مسح جميع السجلات المتاحة. هل أنت متأكد؟', () => {
                 bookingsDB = {};
-                localStorage.removeItem('clinicBookingsV2');
                 updateManagerBookingsView();
                 if (selectedDate) generateTimeButtons(selectedDate);
-            }
+            });
         }
     </script>
 </body>
