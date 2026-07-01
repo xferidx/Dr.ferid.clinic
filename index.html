@@ -77,7 +77,7 @@
     </header>
 
     <main class="container mx-auto px-4 py-10 flex-grow space-y-10 max-w-4xl -mt-10 relative z-20">
-        <section class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+        <section class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
             <a href="tel:077818653825" class="bg-white hover:bg-clinic-light text-clinic shadow-lg rounded-2xl p-4 flex flex-col items-center justify-center gap-2 transition-all transform hover:-translate-y-1 border border-slate-100">
                 <div class="bg-blue-50 p-3 rounded-full mb-1"><i class="fa-solid fa-phone-volume text-2xl"></i></div>
                 <span class="text-xs font-bold text-center">اتصال 1</span>
@@ -95,6 +95,10 @@
             <a href="https://t.me/+9647818653825" target="_blank" class="bg-white hover:bg-sky-50 text-sky-500 shadow-lg rounded-2xl p-4 flex flex-col items-center justify-center gap-2 transition-all transform hover:-translate-y-1 border border-slate-100">
                 <div class="bg-sky-50 p-3 rounded-full mb-1"><i class="fa-brands fa-telegram text-3xl"></i></div>
                 <span class="text-sm font-black text-center mt-2">تلغرام</span>
+            </a>
+            <a href="https://www.instagram.com/dr.ferid.clinic/" target="_blank" class="bg-white hover:bg-pink-50 text-pink-600 shadow-lg rounded-2xl p-4 flex flex-col items-center justify-center gap-2 transition-all transform hover:-translate-y-1 border border-slate-100">
+                <div class="p-3 rounded-full mb-1 bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600"><i class="fa-brands fa-instagram text-3xl text-white"></i></div>
+                <span class="text-sm font-black text-center mt-2">انستغرام</span>
             </a>
             <a href="https://maps.app.goo.gl/PMCV9rcQGc3XPrgN9?g_st=ac" target="_blank" class="bg-white hover:bg-red-50 text-red-500 shadow-lg rounded-2xl p-4 flex flex-col items-center justify-center gap-2 transition-all transform hover:-translate-y-1 border border-slate-100 col-span-2 sm:col-span-1 md:col-span-1">
                 <div class="bg-red-50 p-3 rounded-full mb-1"><i class="fa-solid fa-location-dot text-3xl"></i></div>
@@ -607,15 +611,23 @@
         window.generateDateButtons = function() {
             const container = document.getElementById('dates-container');
             const today = new Date();
-            for (let i = 0; i < 7; i++) {
+            let daysAdded = 0;
+            let dayOffset = 0;
+            while (daysAdded < 7) {
                 const d = new Date(today);
-                d.setDate(today.getDate() + i);
+                d.setDate(today.getDate() + dayOffset);
+
+                if (d.getDay() === 5) { // 5 = Friday, clinic holiday
+                    dayOffset++;
+                    continue;
+                }
+
                 const fDate = formatDateForDisplay(d);
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.className = 'flex-shrink-0 flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl border-2 border-slate-100 bg-white hover:bg-slate-50 transition-all min-w-[90px] date-btn shadow-sm';
                 btn.setAttribute('data-iso', fDate.iso);
-                btn.innerHTML = `<span class="text-xs font-bold text-slate-500 mb-1">${i === 0 ? "اليوم" : i === 1 ? "غداً" : fDate.dayName}</span><span class="text-2xl font-black text-slate-800 leading-none">${fDate.dayNum}</span><span class="text-xs font-bold text-clinic mt-1 bg-clinic-light/50 px-2 rounded">${fDate.month}</span>`;
+                btn.innerHTML = `<span class="text-xs font-bold text-slate-500 mb-1">${dayOffset === 0 ? "اليوم" : dayOffset === 1 ? "غداً" : fDate.dayName}</span><span class="text-2xl font-black text-slate-800 leading-none">${fDate.dayNum}</span><span class="text-xs font-bold text-clinic mt-1 bg-clinic-light/50 px-2 rounded">${fDate.month}</span>`;
                 btn.addEventListener('click', function() {
                     document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('selected-btn', 'border-transparent', 'scale-105'));
                     this.classList.add('selected-btn', 'border-transparent', 'scale-105');
@@ -624,6 +636,9 @@
                     window.generateTimeButtons(window.selectedDate);
                 });
                 container.appendChild(btn);
+
+                daysAdded++;
+                dayOffset++;
             }
         };
 
@@ -667,6 +682,10 @@
             
             if (!name || !phone || window.selectedReasons.size === 0 || !window.selectedDate || !window.selectedTime) {
                 window.showMessage("بيانات ناقصة", "يرجى ملء جميع الحقول واختيار الموعد.", "error");
+                return;
+            }
+            if (new Date(window.selectedDate + 'T00:00:00').getDay() === 5) {
+                window.showMessage("العيادة مغلقة", "العيادة مغلقة يوم الجمعة. يرجى اختيار يوم آخر.", "error");
                 return;
             }
             if (window.bookingsDB[window.selectedDate] && window.bookingsDB[window.selectedDate][window.selectedTime]) {
