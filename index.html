@@ -714,12 +714,19 @@
             document.getElementById('message-body').innerText = body;
             document.getElementById('message-icon').innerHTML = type === 'success' ? '<div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto text-green-500"><i class="fa-solid fa-check text-5xl"></i></div>' : '<div class="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto text-red-500"><i class="fa-solid fa-xmark text-5xl"></i></div>';
             modal.classList.remove('hidden'); modal.classList.add('flex');
-            setTimeout(() => document.getElementById('message-modal-content').classList.replace('scale-95', 'scale-100'), 10);
+            setTimeout(() => {
+                const content = document.getElementById('message-modal-content');
+                content.classList.replace('scale-95', 'scale-100');
+                content.classList.remove('opacity-0');
+            }, 10);
         };
 
         window.closeMessageModal = function() {
             document.getElementById('message-modal').classList.add('hidden');
             document.getElementById('message-modal').classList.remove('flex');
+            const content = document.getElementById('message-modal-content');
+            content.classList.add('opacity-0');
+            content.classList.replace('scale-100', 'scale-95');
         };
 
         window.openSecretaryModal = function() {
