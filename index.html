@@ -91,6 +91,7 @@
             </div>
             <div class="text-center bg-slate-50 px-6 py-2 rounded-xl border border-slate-100">
                 <span id="public-waiting-count" class="block text-3xl font-black text-clinic">0</span>
+                <span id="waiting-last-updated" class="block text-[11px] text-slate-400 mt-1 whitespace-nowrap">--</span>
             </div>
         </section>
 
@@ -382,7 +383,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase Setup
         // ⚠️ REPLACE the values below with YOUR OWN Firebase project config.
@@ -433,6 +434,46 @@
             }
         }
 
+        // Arabic-correct relative time text (handles the 3-10 plural / 11+ singular-accusative rule)
+        function arabicCountPhrase(count, forms) {
+            // forms = { one: 'دقيقة', two: 'دقيقتين', few: 'دقائق', many: 'دقيقة' }
+            if (count <= 0) return null;
+            if (count === 1) return forms.one;
+            if (count === 2) return forms.two;
+            if (count >= 3 && count <= 10) return `${count} ${forms.few}`;
+            return `${count} ${forms.many}`;
+        }
+
+        function formatArabicRelativeTime(date) {
+            if (!date) return '--';
+            const seconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
+            if (seconds < 15) return 'تم التحديث الآن';
+            if (seconds < 60) return 'تم التحديث منذ ثوانٍ';
+
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) {
+                const phrase = arabicCountPhrase(minutes, { one: 'دقيقة', two: 'دقيقتين', few: 'دقائق', many: 'دقيقة' });
+                return `تم التحديث منذ ${phrase}`;
+            }
+
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) {
+                const phrase = arabicCountPhrase(hours, { one: 'ساعة', two: 'ساعتين', few: 'ساعات', many: 'ساعة' });
+                return `تم التحديث منذ ${phrase}`;
+            }
+
+            const days = Math.floor(hours / 24);
+            const phrase = arabicCountPhrase(days, { one: 'يوم', two: 'يومين', few: 'أيام', many: 'يوم' });
+            return `تم التحديث منذ ${phrase}`;
+        }
+
+        window.lastWaitingUpdate = null;
+        function refreshLastUpdatedText() {
+            const el = document.getElementById('waiting-last-updated');
+            if (el) el.innerText = formatArabicRelativeTime(window.lastWaitingUpdate);
+        }
+        setInterval(refreshLastUpdatedText, 30000); // keep the text fresh even with no new writes
+
         function startListeners() {
             if (!auth.currentUser || !db) return;
             
@@ -440,7 +481,8 @@
             const stateRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinic_state', 'waiting_room');
             onSnapshot(stateRef, (snapshot) => {
                 if (snapshot.exists()) {
-                    window.currentWaitingCount = snapshot.data().count || 0;
+                    const data = snapshot.data();
+                    window.currentWaitingCount = data.count || 0;
                     localStorage.setItem('clinicWaitingCount', window.currentWaitingCount);
                     const publicCount = document.getElementById('public-waiting-count');
                     if(publicCount) {
@@ -450,6 +492,13 @@
                     }
                     const secInput = document.getElementById('sec-waiting-input');
                     if (secInput) secInput.value = window.currentWaitingCount;
+
+                    // data.updatedAt is null momentarily on the local (pending) write, then
+                    // resolves to the real server time once synced — only update when it's real.
+                    if (data.updatedAt && typeof data.updatedAt.toDate === 'function') {
+                        window.lastWaitingUpdate = data.updatedAt.toDate();
+                        refreshLastUpdatedText();
+                    }
                 }
             }, (error) => console.error("Waiting Sync Error:", error));
 
@@ -477,7 +526,7 @@
             
             if (!auth?.currentUser || !db) return;
             const stateRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinic_state', 'waiting_room');
-            await setDoc(stateRef, { count: count }, { merge: true });
+            await setDoc(stateRef, { count: count, updatedAt: serverTimestamp() }, { merge: true });
         };
 
         window.cloudAddBooking = async (dateIso, time, data) => {
