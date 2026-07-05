@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>عيادة الدكتور فريد مؤيد السعيد لطب الأسنان</title>
 
+    <script>
+        // Apply saved dark-mode preference immediately, before paint, to avoid a flash of light mode
+        if (localStorage.getItem('clinicDarkMode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-46PGQHDSX6"></script>
     <script>
@@ -48,6 +55,52 @@
         .ba-before { position: absolute; top: 0; right: 0; bottom: 0; width: 50%; overflow: hidden; border-left: 3px solid white; box-shadow: -5px 0 15px rgba(0,0,0,0.2); }
         .ba-before img { position: absolute; top: 0; right: 0; height: 100%; width: auto; max-width: none; }
         .ba-handle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #2563eb; cursor: ew-resize; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 10; }
+
+        /* ===== Dark Mode ===== */
+        html.dark body { background-color: #0f172a; color: #cbd5e1; }
+        html.dark .glass-nav { background: rgba(15, 23, 42, 0.9) !important; border-bottom: 1px solid rgba(255,255,255,0.08) !important; }
+        html.dark .glass-panel { background: rgba(30, 41, 59, 0.9) !important; border: 1px solid rgba(255,255,255,0.08) !important; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.3) !important; }
+        html.dark .bg-white { background-color: #1e293b !important; }
+        html.dark .bg-slate-50 { background-color: #1e293b !important; }
+        html.dark .bg-slate-100 { background-color: #334155 !important; }
+        html.dark .bg-slate-200 { background-color: #334155 !important; }
+        html.dark .bg-slate-800 { background-color: #0b1120 !important; }
+        html.dark .bg-slate-900 { background-color: #020617 !important; }
+        html.dark .border-slate-100 { border-color: #334155 !important; }
+        html.dark .border-slate-200 { border-color: #334155 !important; }
+        html.dark .border-slate-300 { border-color: #475569 !important; }
+        html.dark .border-slate-800 { border-color: #1e293b !important; }
+        html.dark .border-white { border-color: #1e293b !important; }
+        html.dark .text-slate-800 { color: #e2e8f0 !important; }
+        html.dark .text-slate-700 { color: #cbd5e1 !important; }
+        html.dark .text-slate-600 { color: #94a3b8 !important; }
+        html.dark .text-slate-500 { color: #94a3b8 !important; }
+        html.dark .text-slate-400 { color: #64748b !important; }
+        html.dark .text-slate-300 { color: #64748b !important; }
+        html.dark .bg-red-50 { background-color: #450a0a !important; }
+        html.dark .bg-red-100 { background-color: #450a0a !important; }
+        html.dark .bg-green-50 { background-color: #052e16 !important; }
+        html.dark .bg-green-100 { background-color: #052e16 !important; }
+        html.dark .bg-blue-50 { background-color: #172554 !important; }
+        html.dark .bg-sky-50 { background-color: #0c4a6e !important; }
+        html.dark .text-red-500 { color: #f87171 !important; }
+        html.dark .text-red-600 { color: #f87171 !important; }
+        html.dark .text-green-500 { color: #4ade80 !important; }
+        html.dark .text-green-600 { color: #4ade80 !important; }
+        html.dark .text-green-700 { color: #4ade80 !important; }
+        html.dark .text-sky-500 { color: #38bdf8 !important; }
+        html.dark .text-pink-600 { color: #f472b6 !important; }
+        html.dark .text-blue-700 { color: #60a5fa !important; }
+        html.dark .text-blue-100 { color: #93c5fd !important; }
+        html.dark .text-indigo-100 { color: #a5b4fc !important; }
+        html.dark .text-indigo-200 { color: #a5b4fc !important; }
+        html.dark .text-amber-600 { color: #fbbf24 !important; }
+        html.dark .border-red-100 { border-color: #7f1d1d !important; }
+        html.dark .border-green-100 { border-color: #14532d !important; }
+        html.dark .border-blue-100 { border-color: #1e3a8a !important; }
+        html.dark .border-indigo-400 { border-color: #818cf8 !important; }
+        html.dark .disabled-time { background-color: #334155 !important; color: #64748b !important; border-color: #475569 !important; }
+        html.dark .ba-slider { background: #334155 !important; }
     </style>
 </head>
 <body class="text-slate-800 antialiased min-h-screen flex flex-col">
@@ -63,9 +116,14 @@
                     <p class="text-clinic text-xs font-bold">لصحة وتجميل الأسنان</p>
                 </div>
             </div>
-            <button onclick="openSecretaryModal()" class="text-slate-400 hover:text-clinic transition-colors p-2 bg-slate-50 rounded-full hover:bg-clinic-light" title="الإدارة">
-                <i class="fa-solid fa-user-lock text-lg"></i>
-            </button>
+            <div class="flex items-center gap-2">
+                <button onclick="window.toggleDarkMode()" id="dark-toggle-btn" class="text-slate-400 hover:text-clinic transition-colors p-2 bg-slate-50 rounded-full hover:bg-clinic-light" title="الوضع الليلي">
+                    <i class="fa-solid fa-moon text-lg"></i>
+                </button>
+                <button onclick="openSecretaryModal()" class="text-slate-400 hover:text-clinic transition-colors p-2 bg-slate-50 rounded-full hover:bg-clinic-light" title="الإدارة">
+                    <i class="fa-solid fa-user-lock text-lg"></i>
+                </button>
+            </div>
         </div>
     </nav>
 
@@ -621,7 +679,8 @@
             window.generateDateButtons();
             window.updateManagerBookingsView();
             window.initBeforeAfterSlider();
-            
+            window.syncDarkModeIcon();
+
             // Restore Waiting Count Initial UI
             const publicCount = document.getElementById('public-waiting-count');
             if(publicCount) publicCount.innerText = window.currentWaitingCount;
@@ -630,6 +689,20 @@
 
             initCloudSync(); // Boot up cloud sync
         }
+
+        window.syncDarkModeIcon = function() {
+            const icon = document.querySelector('#dark-toggle-btn i');
+            if (!icon) return;
+            const isDark = document.documentElement.classList.contains('dark');
+            icon.classList.toggle('fa-moon', !isDark);
+            icon.classList.toggle('fa-sun', isDark);
+        };
+
+        window.toggleDarkMode = function() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('clinicDarkMode', isDark);
+            window.syncDarkModeIcon();
+        };
 
         window.showConfirm = function(title, message, onYes) {
             const modal = document.getElementById('confirm-modal');
