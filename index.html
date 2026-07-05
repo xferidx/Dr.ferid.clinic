@@ -6,8 +6,9 @@
     <title>عيادة الدكتور فريد مؤيد السعيد لطب الأسنان</title>
 
     <script>
-        // Apply saved dark-mode preference immediately, before paint, to avoid a flash of light mode
-        if (localStorage.getItem('clinicDarkMode') === 'true') {
+        // Dark mode is the default. Applied immediately, before paint, to avoid a flash of light mode.
+        // Only an explicit past choice of light mode (stored as 'false') keeps it off.
+        if (localStorage.getItem('clinicDarkMode') !== 'false') {
             document.documentElement.classList.add('dark');
         }
     </script>
@@ -101,6 +102,9 @@
         html.dark .border-indigo-400 { border-color: #818cf8 !important; }
         html.dark .disabled-time { background-color: #334155 !important; color: #64748b !important; border-color: #475569 !important; }
         html.dark .ba-slider { background: #334155 !important; }
+        /* Must come after the generic dark overrides above so the selection highlight always wins,
+           even though the buttons keep their old bg-white/border-slate-* classes alongside it. */
+        html.dark .selected-btn { background-color: #2563eb !important; border-color: #2563eb !important; color: white !important; }
     </style>
 </head>
 <body class="text-slate-800 antialiased min-h-screen flex flex-col">
@@ -791,7 +795,11 @@
                 btn.setAttribute('data-iso', fDate.iso);
                 btn.innerHTML = `<span class="text-xs font-bold text-slate-500 mb-1">${dayOffset === 0 ? "اليوم" : dayOffset === 1 ? "غداً" : fDate.dayName}</span><span class="text-2xl font-black text-slate-800 leading-none">${fDate.dayNum}</span><span class="text-xs font-bold text-clinic mt-1 bg-clinic-light/50 px-2 rounded">${fDate.month}</span>`;
                 btn.addEventListener('click', function() {
-                    document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('selected-btn', 'border-transparent', 'scale-105'));
+                    document.querySelectorAll('.date-btn').forEach(b => {
+                        b.classList.remove('selected-btn', 'border-transparent', 'scale-105');
+                        b.classList.add('border-slate-100', 'bg-white');
+                    });
+                    this.classList.remove('border-slate-100', 'bg-white');
                     this.classList.add('selected-btn', 'border-transparent', 'scale-105');
                     window.selectedDate = this.getAttribute('data-iso');
                     window.selectedTime = null;
@@ -825,11 +833,16 @@
                     btn.innerHTML = time.replace(' PM', ' م');
                     
                     if(window.selectedTime === time) {
+                        btn.classList.remove('border-slate-200', 'bg-white');
                         btn.classList.add('selected-btn', 'border-transparent');
                     }
                     
                     btn.addEventListener('click', function() {
-                        document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('selected-btn', 'border-transparent'));
+                        document.querySelectorAll('.time-btn').forEach(b => {
+                            b.classList.remove('selected-btn', 'border-transparent');
+                            b.classList.add('border-slate-200', 'bg-white');
+                        });
+                        this.classList.remove('border-slate-200', 'bg-white');
                         this.classList.add('selected-btn', 'border-transparent');
                         window.selectedTime = time;
                     });
