@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>عيادة الدكتور فريد مؤيد السعيد لطب الأسنان</title>
 
+    <!-- PWA: installable on Android & iPhone home screens -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e40af">
+    <link rel="icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-180.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="عيادة د. فريد">
+
     <script>
         // Dark mode is the default. Applied immediately, before paint, to avoid a flash of light mode.
         // Only an explicit past choice of light mode (stored as 'false') keeps it off.
@@ -1021,6 +1031,13 @@
             document.addEventListener('DOMContentLoaded', initApp);
         } else {
             initApp();
+        }
+
+        // Register service worker for installability (Add to Home Screen) and offline shell caching
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW registration failed:', err));
+            });
         }
     </script>
 </body>
