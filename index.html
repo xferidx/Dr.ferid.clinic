@@ -131,6 +131,10 @@
                 </div>
             </div>
             <div class="flex items-center gap-2">
+                <button onclick="window.installApp()" id="install-app-btn" class="flex items-center gap-2 text-white bg-clinic hover:bg-clinic-dark transition-colors px-3 py-2 rounded-full text-xs font-bold shadow-lg" title="تثبيت التطبيق">
+                    <i class="fa-solid fa-download"></i>
+                    <span class="hidden sm:inline">تثبيت التطبيق</span>
+                </button>
                 <button onclick="window.toggleDarkMode()" id="dark-toggle-btn" class="text-slate-400 hover:text-clinic transition-colors p-2 bg-slate-50 rounded-full hover:bg-clinic-light" title="الوضع الليلي">
                     <i class="fa-solid fa-moon text-lg"></i>
                 </button>
@@ -1039,6 +1043,44 @@
                 navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW registration failed:', err));
             });
         }
+
+        // The button is always visible. If the browser has a real install prompt ready, use it.
+        // Otherwise (iOS Safari, or Android before the browser is ready to offer it) show clear
+        // instructions instead of doing nothing when tapped.
+        let deferredInstallPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+        });
+
+        function isRunningStandalone() {
+            return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        }
+
+        window.installApp = async function() {
+            if (isRunningStandalone()) {
+                window.showMessage("مثبت بالفعل", "التطبيق مثبت بالفعل على جهازك.", "success");
+                return;
+            }
+
+            if (deferredInstallPrompt) {
+                deferredInstallPrompt.prompt();
+                await deferredInstallPrompt.userChoice;
+                deferredInstallPrompt = null;
+                return;
+            }
+
+            const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+            if (isIOS) {
+                window.showMessage("تثبيت التطبيق", "اضغط على أيقونة المشاركة (Share) في الأسفل، ثم اختر «إضافة إلى الشاشة الرئيسية».", "success");
+            } else {
+                window.showMessage("تثبيت التطبيق", "افتح قائمة المتصفح (⋮) واختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».", "success");
+            }
+        };
+
+        window.addEventListener('appinstalled', () => {
+            deferredInstallPrompt = null;
+        });
     </script>
 </body>
 </html>
