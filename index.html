@@ -1199,10 +1199,22 @@
         }
 
         window.searchPatients = function() {
-            const term = (document.getElementById('records-search-input').value || '').trim().toLowerCase();
-            const list = !term ? window.allPatients : window.allPatients.filter(p =>
-                (p.name || '').toLowerCase().includes(term) || (p.patientId || '').toLowerCase().includes(term)
-            );
+            const raw = (document.getElementById('records-search-input').value || '').trim();
+            const term = raw.toLowerCase();
+
+            let list;
+            if (!term) {
+                list = window.allPatients;
+            } else if (/^\d+$/.test(raw)) {
+                // Pure number typed (e.g. "5" or "005") -> match the exact patient ID only,
+                // ignoring any leading zeros, instead of any ID that merely contains that digit.
+                const targetNum = parseInt(raw, 10);
+                list = window.allPatients.filter(p => parseInt(p.patientId, 10) === targetNum);
+            } else {
+                list = window.allPatients.filter(p =>
+                    (p.name || '').toLowerCase().includes(term) || (p.patientId || '').toLowerCase().includes(term)
+                );
+            }
             renderPatientList(list);
         };
 
