@@ -548,9 +548,17 @@
                             </div>
                             <button onclick="window.deletePatientPrompt()" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors flex-shrink-0" title="Delete patient"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
-                        <button onclick="window.sendWhatsAppReminder()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl transition-colors shadow-md flex items-center justify-center gap-2 mt-4">
-                            <i class="fa-brands fa-whatsapp text-lg"></i> Send Denture Ready Reminder
-                        </button>
+                        <div class="grid grid-cols-3 gap-2 mt-4">
+                            <button onclick="window.sendWhatsAppReminder('تركيب')" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl transition-colors shadow-md flex flex-col items-center justify-center gap-1 text-sm">
+                                <i class="fa-brands fa-whatsapp text-lg"></i> تركيب
+                            </button>
+                            <button onclick="window.sendWhatsAppReminder('زراعة')" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl transition-colors shadow-md flex flex-col items-center justify-center gap-1 text-sm">
+                                <i class="fa-brands fa-whatsapp text-lg"></i> زراعة
+                            </button>
+                            <button onclick="window.sendWhatsAppReminder('تقويم')" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl transition-colors shadow-md flex flex-col items-center justify-center gap-1 text-sm">
+                                <i class="fa-brands fa-whatsapp text-lg"></i> تقويم
+                            </button>
+                        </div>
                     </div>
 
                     <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
@@ -1442,7 +1450,13 @@
             return digits;
         }
 
-        window.sendWhatsAppReminder = function() {
+        const WHATSAPP_MESSAGES = {
+            'تركيب': "تحية طيبة، معكم عيادة الدكتور فريد لطب الأسنان. لقد وصل تركيب الاسنان الخاص بكم. يرجى حجز موعدكم عبر هذا الرابط: https://xferidx.github.io/Dr.ferid.clinic/",
+            'زراعة': "تحية طيبة، معكم عيادة الدكتور فريد لطب الأسنان. موعد الزراعة يوم الأربعاء بعد الساعة ال 8 مساءا",
+            'تقويم': "تحية طيبة، معكم عيادة الدكتور فريد لطب الأسنان. موعد التقويم الأربعاء بعد الساعة 8 مساءا"
+        };
+
+        window.sendWhatsAppReminder = function(type) {
             const p = window.allPatients.find(x => x.id === window.currentDetailPatientId);
             if (!p) return;
             if (!p.phone || !p.phone.trim()) {
@@ -1450,7 +1464,7 @@
                 return;
             }
             const whatsappNumber = formatIraqiPhoneForWhatsApp(p.phone);
-            const message = "تحية طيبة، معكم عيادة الدكتور فريد لطب الأسنان. لقد وصل تركيب الاسنان الخاص بكم. يرجى حجز موعدكم عبر هذا الرابط: https://xferidx.github.io/Dr.ferid.clinic/";
+            const message = WHATSAPP_MESSAGES[type] || WHATSAPP_MESSAGES['تركيب'];
             const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
             window.open(url, '_blank');
         };
