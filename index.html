@@ -514,8 +514,8 @@
                         <input type="text" id="new-patient-name" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-clinic bg-white font-bold text-slate-800" placeholder="Patient name">
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-slate-500 mb-1 block">Patient ID</label>
-                        <input type="text" id="new-patient-id" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-clinic bg-white font-bold text-slate-800" placeholder="e.g. P-1023 (optional)">
+                        <label class="text-xs font-bold text-slate-500 mb-1 block">Patient ID (auto-assigned)</label>
+                        <input type="text" id="new-patient-id" readonly class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-slate-100 font-bold text-slate-500 cursor-not-allowed">
                     </div>
                     <div>
                         <label class="text-xs font-bold text-slate-500 mb-1 block">Phone Number</label>
@@ -1224,9 +1224,18 @@
             `).join('');
         }
 
+        function getNextPatientId() {
+            let maxId = 0;
+            window.allPatients.forEach(p => {
+                const n = parseInt(p.patientId, 10);
+                if (!isNaN(n) && n > maxId) maxId = n;
+            });
+            return String(maxId + 1);
+        }
+
         window.openAddPatientForm = function() {
             document.getElementById('new-patient-name').value = '';
-            document.getElementById('new-patient-id').value = '';
+            document.getElementById('new-patient-id').value = getNextPatientId();
             document.getElementById('new-patient-phone').value = '';
             recordsShowStep('records-add-step');
         };
@@ -1257,7 +1266,7 @@
                     createdAt: serverTimestamp(),
                     updatedAt: serverTimestamp()
                 });
-                window.showMessage('Patient Added', name + ' was saved successfully.', 'success');
+                window.showMessage('Patient Added', name + ' was saved as patient #' + patientId + '.', 'success');
                 window.backToPatientList();
             } catch (e) {
                 console.error(e);
