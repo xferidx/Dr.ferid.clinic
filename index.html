@@ -581,7 +581,7 @@
                 <div class="flex items-center gap-3">
                     <div class="bg-white/10 text-white p-3 rounded-xl"><i class="fa-solid fa-notes-medical text-xl"></i></div>
                     <div>
-                        <h3 class="text-xl font-black text-white">New Case Entry</h3>
+                        <h3 id="entry-modal-title" class="text-xl font-black text-white">New Case Entry</h3>
                         <p id="entry-modal-patient-name" class="text-xs text-slate-300 font-bold mt-0.5"></p>
                     </div>
                 </div>
@@ -601,23 +601,22 @@
 
                 <div>
                     <label class="text-xs font-black text-slate-500 mb-2 block uppercase tracking-wide">Teeth — Palmer Notation</label>
-                    <div class="bg-white border-2 border-slate-200 rounded-xl p-4 space-y-3 shadow-sm">
-                        <div>
-                            <p class="text-[10px] font-black text-slate-400 mb-1.5 tracking-wide">UPPER RIGHT</p>
-                            <div class="flex gap-1.5 flex-wrap" id="ur-teeth-row"></div>
+                    <div class="bg-white border-2 border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                        <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200 bg-slate-50">
+                            <p class="text-center font-black text-slate-600 py-2 text-[11px] uppercase tracking-wide">Upper Right</p>
+                            <p class="text-center font-black text-slate-600 py-2 text-[11px] uppercase tracking-wide">Upper Left</p>
                         </div>
-                        <div>
-                            <p class="text-[10px] font-black text-slate-400 mb-1.5 tracking-wide">UPPER LEFT</p>
-                            <div class="flex gap-1.5 flex-wrap" id="ul-teeth-row"></div>
+                        <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
+                            <div class="flex gap-1 p-2 overflow-x-auto justify-end" id="ur-teeth-row"></div>
+                            <div class="flex gap-1 p-2 overflow-x-auto justify-start" id="ul-teeth-row"></div>
                         </div>
-                        <div class="border-t border-dashed border-slate-300"></div>
-                        <div>
-                            <p class="text-[10px] font-black text-slate-400 mb-1.5 tracking-wide">LOWER RIGHT</p>
-                            <div class="flex gap-1.5 flex-wrap" id="lr-teeth-row"></div>
+                        <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
+                            <div class="flex gap-1 p-2 overflow-x-auto justify-end" id="lr-teeth-row"></div>
+                            <div class="flex gap-1 p-2 overflow-x-auto justify-start" id="ll-teeth-row"></div>
                         </div>
-                        <div>
-                            <p class="text-[10px] font-black text-slate-400 mb-1.5 tracking-wide">LOWER LEFT</p>
-                            <div class="flex gap-1.5 flex-wrap" id="ll-teeth-row"></div>
+                        <div class="grid grid-cols-2 divide-x divide-slate-200 bg-slate-50">
+                            <p class="text-center font-black text-slate-600 py-2 text-[11px] uppercase tracking-wide">Lower Right</p>
+                            <p class="text-center font-black text-slate-600 py-2 text-[11px] uppercase tracking-wide">Lower Left</p>
                         </div>
                     </div>
                 </div>
@@ -1414,7 +1413,10 @@
                             ${(entry.remaining && entry.remaining > 0) ? `<span class="bg-red-100 text-red-600 font-black text-sm px-3 py-1.5 rounded-lg">${Number(entry.remaining).toLocaleString()}</span>` : ''}
                         </div>
                     </div>
-                    <button onclick="window.deleteCaseEntry('${entry.id}')" class="text-slate-300 hover:text-red-500 transition-colors flex-shrink-0" title="Delete entry"><i class="fa-solid fa-trash-can"></i></button>
+                    <div class="flex flex-col gap-2 flex-shrink-0">
+                        <button onclick="window.openAddCaseEntryForm('${entry.id}')" class="text-slate-300 hover:text-clinic transition-colors" title="Edit entry"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="window.deleteCaseEntry('${entry.id}')" class="text-slate-300 hover:text-red-500 transition-colors" title="Delete entry"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
                 </div>
             `).join('');
         };
@@ -1424,16 +1426,27 @@
         // We use plain quadrant-labeled rows instead of the bracket symbols, which render inconsistently across devices.
         window.selectedTeeth = new Set();
 
-        function toothButtonHtml(id, label) {
-            return `<button type="button" onclick="window.toggleTooth('${id}')" data-tooth="${id}" class="tooth-btn w-9 h-9 flex-shrink-0 rounded-lg border-2 border-slate-200 bg-white text-slate-600 text-sm font-bold hover:border-clinic transition-colors">${label}</button>`;
+        // Corner-bracket marks matching standard Palmer notation charts: the bracket "hugs" each
+        // number from the side facing the dental midline (┐┌ for the upper arch, ┘└ for the lower arch).
+        const PALMER_BRACKETS = {
+            UR: (n) => `${n}<span class="opacity-40 font-normal">┐</span>`,
+            UL: (n) => `<span class="opacity-40 font-normal">┌</span>${n}`,
+            LR: (n) => `${n}<span class="opacity-40 font-normal">┘</span>`,
+            LL: (n) => `<span class="opacity-40 font-normal">└</span>${n}`
+        };
+
+        function toothButtonHtml(id, quadrant, num) {
+            const label = PALMER_BRACKETS[quadrant](num);
+            return `<button type="button" onclick="window.toggleTooth('${id}')" data-tooth="${id}" class="tooth-btn w-8 h-8 flex-shrink-0 rounded-md border-2 border-slate-200 bg-white text-slate-700 text-xs font-bold hover:border-clinic transition-colors flex items-center justify-center">${label}</button>`;
         }
 
         function renderToothChart() {
-            // UR and LR shown outward-to-midline (8..1), UL and LL shown midline-outward (1..8) — standard chart layout
-            document.getElementById('ur-teeth-row').innerHTML = [8,7,6,5,4,3,2,1].map(n => toothButtonHtml('UR' + n, n)).join('');
-            document.getElementById('ul-teeth-row').innerHTML = [1,2,3,4,5,6,7,8].map(n => toothButtonHtml('UL' + n, n)).join('');
-            document.getElementById('lr-teeth-row').innerHTML = [8,7,6,5,4,3,2,1].map(n => toothButtonHtml('LR' + n, n)).join('');
-            document.getElementById('ll-teeth-row').innerHTML = [1,2,3,4,5,6,7,8].map(n => toothButtonHtml('LL' + n, n)).join('');
+            // Right-side columns run 8→1 outward-to-midline; left-side columns run 1→8 midline-outward —
+            // tooth "1" always sits closest to the centre divider on both sides, matching a real chart.
+            document.getElementById('ur-teeth-row').innerHTML = [8,7,6,5,4,3,2,1].map(n => toothButtonHtml('UR' + n, 'UR', n)).join('');
+            document.getElementById('ul-teeth-row').innerHTML = [1,2,3,4,5,6,7,8].map(n => toothButtonHtml('UL' + n, 'UL', n)).join('');
+            document.getElementById('lr-teeth-row').innerHTML = [8,7,6,5,4,3,2,1].map(n => toothButtonHtml('LR' + n, 'LR', n)).join('');
+            document.getElementById('ll-teeth-row').innerHTML = [1,2,3,4,5,6,7,8].map(n => toothButtonHtml('LL' + n, 'LL', n)).join('');
         }
 
         window.toggleTooth = function(id) {
@@ -1441,31 +1454,49 @@
             if (window.selectedTeeth.has(id)) {
                 window.selectedTeeth.delete(id);
                 btn.classList.remove('bg-clinic', 'border-clinic', 'text-white');
-                btn.classList.add('bg-white', 'border-slate-200', 'text-slate-600');
+                btn.classList.add('bg-white', 'border-slate-200', 'text-slate-700');
             } else {
                 window.selectedTeeth.add(id);
                 btn.classList.add('bg-clinic', 'border-clinic', 'text-white');
-                btn.classList.remove('bg-white', 'border-slate-200', 'text-slate-600');
+                btn.classList.remove('bg-white', 'border-slate-200', 'text-slate-700');
             }
         };
 
-        function resetToothChart() {
-            window.selectedTeeth = new Set();
+        // Sets the chart's visual selection directly (used both to clear it for a new entry,
+        // and to pre-select the saved teeth when editing an existing one).
+        function setSelectedTeethVisual(teethArray) {
+            window.selectedTeeth = new Set(teethArray || []);
             document.querySelectorAll('.tooth-btn').forEach(btn => {
-                btn.classList.remove('bg-clinic', 'border-clinic', 'text-white');
-                btn.classList.add('bg-white', 'border-slate-200', 'text-slate-600');
+                const id = btn.getAttribute('data-tooth');
+                if (window.selectedTeeth.has(id)) {
+                    btn.classList.add('bg-clinic', 'border-clinic', 'text-white');
+                    btn.classList.remove('bg-white', 'border-slate-200', 'text-slate-700');
+                } else {
+                    btn.classList.remove('bg-clinic', 'border-clinic', 'text-white');
+                    btn.classList.add('bg-white', 'border-slate-200', 'text-slate-700');
+                }
             });
         }
 
-        window.openAddCaseEntryForm = function() {
+        function resetToothChart() {
+            setSelectedTeethVisual([]);
+        }
+
+        window.editingEntryId = null;
+
+        window.openAddCaseEntryForm = function(editEntryId) {
             const p = window.allPatients.find(x => x.id === window.currentDetailPatientId);
+            const existingEntry = editEntryId && p ? (p.caseHistory || []).find(e => e.id === editEntryId) : null;
+            window.editingEntryId = existingEntry ? editEntryId : null;
+
+            document.getElementById('entry-modal-title').textContent = existingEntry ? 'Edit Case Entry' : 'New Case Entry';
             document.getElementById('entry-modal-patient-name').textContent = p ? p.name + (p.patientId ? ' · ID ' + p.patientId : '') : '';
-            document.getElementById('new-entry-date').value = new Date().toISOString().split('T')[0];
-            document.getElementById('new-entry-notes').value = '';
-            document.getElementById('new-entry-paid').value = '';
-            document.getElementById('new-entry-remaining').value = '';
-            document.getElementById('new-entry-procedure').value = '';
-            resetToothChart();
+            document.getElementById('new-entry-date').value = existingEntry ? existingEntry.date : new Date().toISOString().split('T')[0];
+            document.getElementById('new-entry-notes').value = existingEntry ? (existingEntry.notes || '') : '';
+            document.getElementById('new-entry-paid').value = existingEntry && existingEntry.paid ? existingEntry.paid : '';
+            document.getElementById('new-entry-remaining').value = existingEntry && existingEntry.remaining ? existingEntry.remaining : '';
+            document.getElementById('new-entry-procedure').value = existingEntry ? (existingEntry.procedure || '') : '';
+            setSelectedTeethVisual(existingEntry ? existingEntry.teeth : []);
             document.getElementById('add-entry-modal').classList.remove('hidden');
             document.getElementById('add-entry-modal').classList.add('flex');
             setTimeout(() => document.getElementById('new-entry-notes').focus(), 50);
@@ -1495,12 +1526,20 @@
             const p = window.allPatients.find(x => x.id === window.currentDetailPatientId);
             if (!p || !db) return;
 
-            const entryId = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-            const updatedHistory = [...(p.caseHistory || []), { id: entryId, date, notes, paid, remaining, teeth, procedure }];
+            let updatedHistory;
+            if (window.editingEntryId) {
+                updatedHistory = (p.caseHistory || []).map(e =>
+                    e.id === window.editingEntryId ? { ...e, date, notes, paid, remaining, teeth, procedure } : e
+                );
+            } else {
+                const entryId = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+                updatedHistory = [...(p.caseHistory || []), { id: entryId, date, notes, paid, remaining, teeth, procedure }];
+            }
 
             try {
                 const patientRef = doc(db, 'artifacts', appId, 'public', 'data', 'patient_records', p.id);
                 await setDoc(patientRef, { caseHistory: updatedHistory, updatedAt: serverTimestamp() }, { merge: true });
+                window.editingEntryId = null;
                 window.cancelAddCaseEntry();
             } catch (e) {
                 console.error(e);
