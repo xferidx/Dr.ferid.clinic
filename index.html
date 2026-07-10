@@ -601,17 +601,23 @@
 
                 <div>
                     <label class="text-xs font-black text-slate-500 mb-2 block uppercase tracking-wide">Teeth — Palmer Notation</label>
-                    <div class="bg-white border-2 border-slate-200 rounded-xl p-4 space-y-2 overflow-x-auto shadow-sm">
-                        <div class="flex justify-center items-center gap-1.5 min-w-max">
-                            <div class="flex gap-1.5" id="ur-teeth-row"></div>
-                            <div class="w-px h-7 bg-slate-300 mx-1.5"></div>
-                            <div class="flex gap-1.5" id="ul-teeth-row"></div>
+                    <div class="bg-white border-2 border-slate-200 rounded-xl p-4 space-y-3 shadow-sm">
+                        <div>
+                            <p class="text-[10px] font-black text-slate-400 mb-1.5 tracking-wide">UPPER RIGHT</p>
+                            <div class="flex gap-1.5 flex-wrap" id="ur-teeth-row"></div>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-black text-slate-400 mb-1.5 tracking-wide">UPPER LEFT</p>
+                            <div class="flex gap-1.5 flex-wrap" id="ul-teeth-row"></div>
                         </div>
                         <div class="border-t border-dashed border-slate-300"></div>
-                        <div class="flex justify-center items-center gap-1.5 min-w-max">
-                            <div class="flex gap-1.5" id="lr-teeth-row"></div>
-                            <div class="w-px h-7 bg-slate-300 mx-1.5"></div>
-                            <div class="flex gap-1.5" id="ll-teeth-row"></div>
+                        <div>
+                            <p class="text-[10px] font-black text-slate-400 mb-1.5 tracking-wide">LOWER RIGHT</p>
+                            <div class="flex gap-1.5 flex-wrap" id="lr-teeth-row"></div>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-black text-slate-400 mb-1.5 tracking-wide">LOWER LEFT</p>
+                            <div class="flex gap-1.5 flex-wrap" id="ll-teeth-row"></div>
                         </div>
                     </div>
                 </div>
@@ -634,7 +640,7 @@
                     </div>
                     <div>
                         <label class="text-xs font-black text-red-500 mb-1.5 block uppercase tracking-wide">Amount Remaining (IQD)</label>
-                        <input type="number" id="new-entry-remaining" min="0" class="w-full px-4 py-3 rounded-xl border-2 border-red-200 focus:outline-none focus:border-red-400 bg-red-50 font-black text-red-600 shadow-sm" placeholder="Leave blank if fully paid">
+                        <input type="number" id="new-entry-remaining" min="0" class="w-full px-4 py-3 rounded-xl border-2 border-red-200 focus:outline-none focus:border-red-400 bg-red-50 font-black text-red-600 shadow-sm" placeholder="0">
                     </div>
                 </div>
             </div>
@@ -1403,16 +1409,9 @@
                     <div class="flex-grow border-l border-slate-200 pl-4">
                         <p class="text-slate-700 text-sm whitespace-pre-wrap">${escapeHtml(entry.notes || '')}</p>
                         ${entry.teeth && entry.teeth.length ? `<p class="text-xs font-bold text-slate-500 mt-2">Teeth: ${entry.teeth.join(', ')}${entry.procedure ? ' · ' + escapeHtml(entry.procedure) : ''}</p>` : (entry.procedure ? `<p class="text-xs font-bold text-slate-500 mt-2">${escapeHtml(entry.procedure)}</p>` : '')}
-                        <div class="grid ${(entry.remaining && entry.remaining > 0) ? 'grid-cols-2' : 'grid-cols-1'} gap-2 mt-3">
-                            <div class="bg-green-50 rounded-lg px-3 py-1.5 text-center">
-                                <p class="text-[10px] text-green-700 font-bold uppercase tracking-wide">Paid</p>
-                                <p class="text-sm font-black text-green-600">${Number(entry.paid || 0).toLocaleString()} IQD</p>
-                            </div>
-                            ${(entry.remaining && entry.remaining > 0) ? `
-                            <div class="bg-red-50 rounded-lg px-3 py-1.5 text-center">
-                                <p class="text-[10px] text-red-500 font-bold uppercase tracking-wide">Remaining</p>
-                                <p class="text-sm font-black text-red-500">${Number(entry.remaining).toLocaleString()} IQD</p>
-                            </div>` : ''}
+                        <div class="flex gap-2 mt-3">
+                            <span class="bg-green-100 text-green-700 font-black text-sm px-3 py-1.5 rounded-lg">${Number(entry.paid || 0).toLocaleString()}</span>
+                            ${(entry.remaining && entry.remaining > 0) ? `<span class="bg-red-100 text-red-600 font-black text-sm px-3 py-1.5 rounded-lg">${Number(entry.remaining).toLocaleString()}</span>` : ''}
                         </div>
                     </div>
                     <button onclick="window.deleteCaseEntry('${entry.id}')" class="text-slate-300 hover:text-red-500 transition-colors flex-shrink-0" title="Delete entry"><i class="fa-solid fa-trash-can"></i></button>
@@ -1426,7 +1425,7 @@
         window.selectedTeeth = new Set();
 
         function toothButtonHtml(id, label) {
-            return `<button type="button" onclick="window.toggleTooth('${id}')" data-tooth="${id}" class="tooth-btn w-8 h-8 flex-shrink-0 rounded-md border-2 border-slate-200 bg-white text-slate-600 text-xs font-bold hover:border-clinic transition-colors">${label}</button>`;
+            return `<button type="button" onclick="window.toggleTooth('${id}')" data-tooth="${id}" class="tooth-btn w-9 h-9 flex-shrink-0 rounded-lg border-2 border-slate-200 bg-white text-slate-600 text-sm font-bold hover:border-clinic transition-colors">${label}</button>`;
         }
 
         function renderToothChart() {
