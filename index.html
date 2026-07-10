@@ -577,6 +577,32 @@
                                 <label class="text-xs font-bold text-slate-500 mb-1 block">Notes</label>
                                 <textarea id="new-entry-notes" rows="3" class="w-full px-3 py-2 rounded-lg border-2 border-slate-200 focus:outline-none focus:border-clinic bg-white font-bold text-slate-800" placeholder="Treatment notes..."></textarea>
                             </div>
+                            <div>
+                                <label class="text-xs font-bold text-slate-500 mb-2 block">Teeth — Palmer Notation (tap one or more)</label>
+                                <div class="bg-white border-2 border-slate-200 rounded-lg p-3 space-y-1 overflow-x-auto">
+                                    <div class="flex justify-center items-center gap-1 min-w-max">
+                                        <div class="flex gap-1" id="ur-teeth-row"></div>
+                                        <div class="w-px h-6 bg-slate-300 mx-1"></div>
+                                        <div class="flex gap-1" id="ul-teeth-row"></div>
+                                    </div>
+                                    <div class="border-t border-dashed border-slate-300"></div>
+                                    <div class="flex justify-center items-center gap-1 min-w-max">
+                                        <div class="flex gap-1" id="lr-teeth-row"></div>
+                                        <div class="w-px h-6 bg-slate-300 mx-1"></div>
+                                        <div class="flex gap-1" id="ll-teeth-row"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-slate-500 mb-1 block">Procedure</label>
+                                <select id="new-entry-procedure" class="w-full px-3 py-2 rounded-lg border-2 border-slate-200 focus:outline-none focus:border-clinic bg-white font-bold text-slate-800">
+                                    <option value="">-- Select procedure --</option>
+                                    <option value="Exo">Exo (Extraction)</option>
+                                    <option value="Filling">Filling</option>
+                                    <option value="Endo">Endo (Root Canal)</option>
+                                    <option value="S+P">S+P (Scaling &amp; Polishing)</option>
+                                </select>
+                            </div>
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <label class="text-xs font-bold text-slate-500 mb-1 block">Amount Paid (IQD)</label>
@@ -848,6 +874,7 @@
             window.updateManagerBookingsView();
             window.initBeforeAfterSlider();
             window.syncDarkModeIcon();
+            renderToothChart();
 
             // Restore Waiting Count Initial UI
             const publicCount = document.getElementById('public-waiting-count');
@@ -1217,14 +1244,31 @@
             return div.innerHTML;
         }
 
+        function getLastVisitDate(patient) {
+            const history = patient.caseHistory || [];
+            if (history.length === 0) return null;
+            return history.reduce((latest, e) => (e.date && (!latest || e.date > latest)) ? e.date : latest, null);
+        }
+
         window.searchPatients = function() {
             const raw = (document.getElementById('records-search-input').value || '').trim();
             const term = raw.toLowerCase();
 
-            let list;
             if (!term) {
-                list = window.allPatients;
-            } else if (/^\d+$/.test(raw)) {
+                // Nothing typed: show only the last 20 patients who actually visited (by most
+                // recent case entry date), not the full patient list — search to find anyone else.
+                const visited = window.allPatients
+                    .map(p => ({ p, lastVisit: getLastVisitDate(p) }))
+                    .filter(x => x.lastVisit)
+                    .sort((a, b) => b.lastVisit.localeCompare(a.lastVisit))
+                    .slice(0, 20)
+                    .map(x => x.p);
+                renderPatientList(visited, true);
+                return;
+            }
+
+            let list;
+            if (/^\d+$/.test(raw)) {
                 // Pure number typed (e.g. "5" or "005") -> match the exact patient ID only,
                 // ignoring any leading zeros, instead of any ID that merely contains that digit.
                 const targetNum = parseInt(raw, 10);
@@ -1234,17 +1278,24 @@
                     (p.name || '').toLowerCase().includes(term) || (p.patientId || '').toLowerCase().includes(term)
                 );
             }
-            renderPatientList(list);
+            renderPatientList(list, false);
         };
 
-        function renderPatientList(list) {
+        function renderPatientList(list, isRecentView) {
             const container = document.getElementById('records-patient-list');
+            const heading = isRecentView
+                ? `<p class="text-xs font-bold text-slate-400 mb-1">Last ${list.length} patients visited — search by name or ID to find anyone else</p>`
+                : '';
+
             if (!list || list.length === 0) {
-                container.innerHTML = `<p class="text-center text-slate-400 font-bold py-10">No patients found.</p>`;
+                container.innerHTML = heading + (isRecentView
+                    ? `<p class="text-center text-slate-400 font-bold py-10">No recent visits yet. Search by name or ID to find a patient.</p>`
+                    : `<p class="text-center text-slate-400 font-bold py-10">No patients found.</p>`);
                 return;
             }
-            const sorted = [...list].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-            container.innerHTML = sorted.map(p => `
+
+            const sorted = isRecentView ? list : [...list].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            container.innerHTML = heading + sorted.map(p => `
                 <button onclick="window.openPatientDetail('${p.id}')" class="w-full text-left bg-white border border-slate-200 rounded-xl p-4 flex justify-between items-center hover:border-clinic transition-colors shadow-sm">
                     <div>
                         <p class="font-black text-slate-800">${escapeHtml(p.name)}</p>
@@ -1332,9 +1383,16 @@
                     </div>
                     <div class="flex-grow border-l border-slate-200 pl-4">
                         <p class="text-slate-700 text-sm whitespace-pre-wrap">${escapeHtml(entry.notes || '')}</p>
-                        <div class="flex gap-4 mt-2 text-xs font-bold">
-                            <span class="text-green-600">Paid: ${Number(entry.paid || 0).toLocaleString()} IQD</span>
-                            <span class="text-red-500">Remaining: ${Number(entry.remaining || 0).toLocaleString()} IQD</span>
+                        ${entry.teeth && entry.teeth.length ? `<p class="text-xs font-bold text-slate-500 mt-2">Teeth: ${entry.teeth.join(', ')}${entry.procedure ? ' · ' + escapeHtml(entry.procedure) : ''}</p>` : (entry.procedure ? `<p class="text-xs font-bold text-slate-500 mt-2">${escapeHtml(entry.procedure)}</p>` : '')}
+                        <div class="grid grid-cols-2 gap-2 mt-3">
+                            <div class="bg-green-50 rounded-lg px-3 py-1.5 text-center">
+                                <p class="text-[10px] text-green-700 font-bold uppercase tracking-wide">Paid</p>
+                                <p class="text-sm font-black text-green-600">${Number(entry.paid || 0).toLocaleString()} IQD</p>
+                            </div>
+                            <div class="bg-red-50 rounded-lg px-3 py-1.5 text-center">
+                                <p class="text-[10px] text-red-500 font-bold uppercase tracking-wide">Remaining</p>
+                                <p class="text-sm font-black text-red-500">${Number(entry.remaining || 0).toLocaleString()} IQD</p>
+                            </div>
                         </div>
                     </div>
                     <button onclick="window.deleteCaseEntry('${entry.id}')" class="text-slate-300 hover:text-red-500 transition-colors flex-shrink-0" title="Delete entry"><i class="fa-solid fa-trash-can"></i></button>
@@ -1342,11 +1400,51 @@
             `).join('');
         };
 
+        // Palmer notation: each quadrant numbered 1-8 from the midline outward,
+        // traditionally shown with a bracket indicating the quadrant (⌐8 7 6 5 4 3 2 1 | 1 2 3 4 5 6 7 8⌐ etc).
+        // We use plain quadrant-labeled rows instead of the bracket symbols, which render inconsistently across devices.
+        window.selectedTeeth = new Set();
+
+        function toothButtonHtml(id, label) {
+            return `<button type="button" onclick="window.toggleTooth('${id}')" data-tooth="${id}" class="tooth-btn w-8 h-8 flex-shrink-0 rounded-md border-2 border-slate-200 bg-white text-slate-600 text-xs font-bold hover:border-clinic transition-colors">${label}</button>`;
+        }
+
+        function renderToothChart() {
+            // UR and LR shown outward-to-midline (8..1), UL and LL shown midline-outward (1..8) — standard chart layout
+            document.getElementById('ur-teeth-row').innerHTML = [8,7,6,5,4,3,2,1].map(n => toothButtonHtml('UR' + n, n)).join('');
+            document.getElementById('ul-teeth-row').innerHTML = [1,2,3,4,5,6,7,8].map(n => toothButtonHtml('UL' + n, n)).join('');
+            document.getElementById('lr-teeth-row').innerHTML = [8,7,6,5,4,3,2,1].map(n => toothButtonHtml('LR' + n, n)).join('');
+            document.getElementById('ll-teeth-row').innerHTML = [1,2,3,4,5,6,7,8].map(n => toothButtonHtml('LL' + n, n)).join('');
+        }
+
+        window.toggleTooth = function(id) {
+            const btn = document.querySelector(`.tooth-btn[data-tooth="${id}"]`);
+            if (window.selectedTeeth.has(id)) {
+                window.selectedTeeth.delete(id);
+                btn.classList.remove('bg-clinic', 'border-clinic', 'text-white');
+                btn.classList.add('bg-white', 'border-slate-200', 'text-slate-600');
+            } else {
+                window.selectedTeeth.add(id);
+                btn.classList.add('bg-clinic', 'border-clinic', 'text-white');
+                btn.classList.remove('bg-white', 'border-slate-200', 'text-slate-600');
+            }
+        };
+
+        function resetToothChart() {
+            window.selectedTeeth = new Set();
+            document.querySelectorAll('.tooth-btn').forEach(btn => {
+                btn.classList.remove('bg-clinic', 'border-clinic', 'text-white');
+                btn.classList.add('bg-white', 'border-slate-200', 'text-slate-600');
+            });
+        }
+
         window.openAddCaseEntryForm = function() {
             document.getElementById('new-entry-date').value = new Date().toISOString().split('T')[0];
             document.getElementById('new-entry-notes').value = '';
             document.getElementById('new-entry-paid').value = '';
             document.getElementById('new-entry-remaining').value = '';
+            document.getElementById('new-entry-procedure').value = '';
+            resetToothChart();
             document.getElementById('add-entry-form').classList.remove('hidden');
         };
 
@@ -1359,6 +1457,13 @@
             const notes = document.getElementById('new-entry-notes').value.trim();
             const paid = parseFloat(document.getElementById('new-entry-paid').value) || 0;
             const remaining = parseFloat(document.getElementById('new-entry-remaining').value) || 0;
+            const procedure = document.getElementById('new-entry-procedure').value;
+            const quadrantOrder = { UR: 0, UL: 1, LR: 2, LL: 3 };
+            const teeth = Array.from(window.selectedTeeth).sort((a, b) => {
+                const qa = a.slice(0, 2), qb = b.slice(0, 2);
+                if (qa !== qb) return quadrantOrder[qa] - quadrantOrder[qb];
+                return parseInt(a.slice(2), 10) - parseInt(b.slice(2), 10);
+            });
             if (!date) {
                 window.showMessage('Missing Date', 'Please select a date for this entry.', 'error');
                 return;
@@ -1367,7 +1472,7 @@
             if (!p || !db) return;
 
             const entryId = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-            const updatedHistory = [...(p.caseHistory || []), { id: entryId, date, notes, paid, remaining }];
+            const updatedHistory = [...(p.caseHistory || []), { id: entryId, date, notes, paid, remaining, teeth, procedure }];
 
             try {
                 const patientRef = doc(db, 'artifacts', appId, 'public', 'data', 'patient_records', p.id);
@@ -1452,8 +1557,8 @@
 
         const WHATSAPP_MESSAGES = {
             'تركيب': "تحية طيبة، معكم عيادة الدكتور فريد لطب الأسنان. لقد وصل تركيب الاسنان الخاص بكم. يرجى حجز موعدكم عبر هذا الرابط: https://xferidx.github.io/Dr.ferid.clinic/",
-            'زراعة': "تحية طيبة، معكم عيادة الدكتور فريد لطب الأسنان. موعد الزراعة يوم الأربعاء بعد الساعة ال 8 مساءا",
-            'تقويم': "تحية طيبة، معكم عيادة الدكتور فريد لطب الأسنان. موعد التقويم الأربعاء بعد الساعة 8 مساءا"
+            'زراعة': "تحية طيبة، معكم عيادة الدكتور فريد لطب الأسنان. موعد الزراعة يوم الأربعاء بعد الساعة ال 8 مساءا. يرجى حجز موعدكم عبر الرابط https://xferidx.github.io/Dr.ferid.clinic/",
+            'تقويم': "تحية طيبة، معكم عيادة الدكتور فريد لطب الأسنان. موعد التقويم الأربعاء بعد الساعة 8 مساءا. يرجى حجز موعدكم عبر الرابط https://xferidx.github.io/Dr.ferid.clinic/"
         };
 
         window.sendWhatsAppReminder = function(type) {
