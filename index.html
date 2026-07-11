@@ -436,18 +436,13 @@
                         <p class="text-xs text-slate-500 font-bold">للسكرتارية فقط</p>
                     </div>
                 </div>
-                <button onclick="closeSecretaryModal()" class="text-slate-400 hover:text-white hover:bg-red-500 transition-colors p-2 bg-slate-100 rounded-full shadow-inner w-10 h-10 flex items-center justify-center"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <div class="flex items-center gap-2">
+                    <button onclick="window.staffLogout()" class="text-xs font-bold text-slate-400 hover:text-red-500 transition-colors px-3 py-2 rounded-lg hover:bg-red-50">تسجيل خروج</button>
+                    <button onclick="closeSecretaryModal()" class="text-slate-400 hover:text-white hover:bg-red-500 transition-colors p-2 bg-slate-100 rounded-full shadow-inner w-10 h-10 flex items-center justify-center"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
             </div>
             <div class="p-6 overflow-y-auto">
-                <div id="sec-login-step" class="max-w-sm mx-auto py-10">
-                    <div class="text-center mb-8">
-                        <div class="w-20 h-20 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner"><i class="fa-solid fa-lock text-4xl text-slate-400"></i></div>
-                        <p class="text-slate-600 font-bold">الرجاء إدخال رمز الدخول السري</p>
-                    </div>
-                    <input type="password" id="sec-password" class="w-full px-4 py-5 rounded-2xl border-2 border-slate-200 mb-6 text-center tracking-[1em] text-3xl font-black focus:outline-none focus:border-clinic transition-colors shadow-sm bg-white" placeholder="****" maxlength="4">
-                    <button onclick="verifySecCode()" class="w-full bg-slate-800 text-white font-black text-lg py-4 rounded-2xl hover:bg-slate-900 transition-colors flex items-center justify-center gap-2 shadow-lg"><i class="fa-solid fa-arrow-right-to-bracket"></i> دخول</button>
-                </div>
-                <div id="sec-dashboard-step" class="hidden space-y-6">
+                <div id="sec-dashboard-step" class="space-y-6">
                     <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
                         <h4 class="font-bold text-slate-800 mb-6 flex items-center gap-2"><i class="fa-solid fa-person-walking text-clinic text-xl"></i> تحديث صالة الانتظار</h4>
                         <div class="flex items-center justify-center gap-6 mb-6">
@@ -469,6 +464,24 @@
         </div>
     </div>
 
+    <!-- Staff Login Modal (shared by Admin Panel and Patient Records) -->
+    <div id="staff-login-modal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[130] p-4 backdrop-blur-md">
+        <div class="bg-white rounded-3xl w-full max-w-sm shadow-2xl border border-slate-200 p-8">
+            <div class="text-center mb-6">
+                <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner"><i class="fa-solid fa-lock text-4xl text-slate-400"></i></div>
+                <h3 class="text-lg font-black text-slate-800">Staff Login</h3>
+                <p class="text-sm text-slate-500 font-bold mt-1">دخول الموظفين</p>
+            </div>
+            <div class="space-y-3">
+                <input type="email" id="staff-login-email" autocomplete="username" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-clinic bg-white font-bold text-slate-800" placeholder="Email">
+                <input type="password" id="staff-login-password" autocomplete="current-password" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-clinic bg-white font-bold text-slate-800" placeholder="Password">
+                <p id="staff-login-error" class="hidden text-red-500 text-sm font-bold text-center"></p>
+                <button onclick="window.staffLogin()" class="w-full bg-slate-800 text-white font-black text-lg py-4 rounded-2xl hover:bg-slate-900 transition-colors flex items-center justify-center gap-2 shadow-lg"><i class="fa-solid fa-arrow-right-to-bracket"></i> Login</button>
+                <button onclick="window.closeStaffLoginModal()" class="w-full text-slate-400 font-bold py-2 hover:text-slate-600 transition-colors text-sm">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Patient Records Modal (English / LTR) -->
     <div id="records-modal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[100] p-4 backdrop-blur-md" dir="ltr" lang="en">
         <div class="bg-slate-50 rounded-3xl w-full max-w-3xl shadow-2xl max-h-[90vh] flex flex-col border border-slate-200">
@@ -480,19 +493,13 @@
                         <p class="text-xs text-slate-500 font-bold">Staff only</p>
                     </div>
                 </div>
-                <button onclick="window.closeRecordsModal()" class="text-slate-400 hover:text-white hover:bg-red-500 transition-colors p-2 bg-slate-100 rounded-full shadow-inner w-10 h-10 flex items-center justify-center"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <div class="flex items-center gap-2">
+                    <button onclick="window.staffLogout()" class="text-xs font-bold text-slate-400 hover:text-red-500 transition-colors px-3 py-2 rounded-lg hover:bg-red-50">Log Out</button>
+                    <button onclick="window.closeRecordsModal()" class="text-slate-400 hover:text-white hover:bg-red-500 transition-colors p-2 bg-slate-100 rounded-full shadow-inner w-10 h-10 flex items-center justify-center"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
             </div>
 
             <div class="p-6 overflow-y-auto">
-                <!-- Login step -->
-                <div id="records-login-step" class="max-w-sm mx-auto py-10">
-                    <div class="text-center mb-8">
-                        <div class="w-20 h-20 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner"><i class="fa-solid fa-lock text-4xl text-slate-400"></i></div>
-                        <p class="text-slate-600 font-bold">Enter the access code</p>
-                    </div>
-                    <input type="password" id="records-password" class="w-full px-4 py-5 rounded-2xl border-2 border-slate-200 mb-6 text-center tracking-[1em] text-3xl font-black focus:outline-none focus:border-clinic transition-colors shadow-sm bg-white" placeholder="****" maxlength="4">
-                    <button onclick="window.verifyRecordsCode()" class="w-full bg-slate-800 text-white font-black text-lg py-4 rounded-2xl hover:bg-slate-900 transition-colors flex items-center justify-center gap-2 shadow-lg"><i class="fa-solid fa-arrow-right-to-bracket"></i> Enter</button>
-                </div>
 
                 <!-- Patient list step -->
                 <div id="records-list-step" class="hidden space-y-5">
@@ -687,7 +694,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase Setup
@@ -720,8 +727,6 @@
         }
 
         // State Management
-        window.SECRETARY_CODE = "5422";
-        window.RECORDS_CODE = "5544";
         window.allPatients = [];
         window.currentDetailPatientId = null;
         window.currentWaitingCount = parseInt(localStorage.getItem('clinicWaitingCount')) || 0;
@@ -732,16 +737,37 @@
 
         const TIME_SLOTS = ["05:00 PM", "05:30 PM", "06:00 PM", "06:30 PM", "07:00 PM", "07:30 PM", "08:00 PM", "08:30 PM", "09:00 PM"];
 
-        async function initCloudSync() {
+        // A real (non-anonymous) signed-in user is staff — patients booking appointments
+        // are always anonymous, so this cleanly tells the two apart.
+        window.isStaffLoggedIn = function() {
+            return !!(auth && auth.currentUser && !auth.currentUser.isAnonymous);
+        };
+
+        // Remembers which panel the person wanted to open, so after a successful staff login
+        // they land straight in it instead of just closing the login box.
+        window.pendingStaffAction = null;
+
+        function initCloudSync() {
             if (!auth) return; // Fallback to local mode if Firebase failed
-            try {
-                await signInAnonymously(auth);
-                startListeners();
-                cleanupPastBookings(); // purge yesterday-and-earlier bookings, keep today & future
-            } catch(e) {
-                console.error("Firebase Auth Error:", e);
-            }
+            // onAuthStateChanged fires once immediately with whatever session Firebase already has
+            // persisted (staff login OR a prior anonymous visitor) before we decide what to do —
+            // this is what makes "stay logged in" actually work, instead of overwriting a staff
+            // session with a fresh anonymous one on every page load.
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    startListeners();
+                    cleanupPastBookings(); // purge yesterday-and-earlier bookings, keep today & future
+                    window.updateStaffUI();
+                } else {
+                    try {
+                        await signInAnonymously(auth);
+                    } catch (e) {
+                        console.error("Anonymous Auth Error:", e);
+                    }
+                }
+            });
         }
+
 
         // Arabic-correct relative time text (handles the 3-10 plural / 11+ singular-accusative rule)
         function arabicCountPhrase(count, forms) {
@@ -1173,10 +1199,76 @@
             content.classList.replace('scale-100', 'scale-95');
         };
 
+        window.openStaffLoginModal = function() {
+            document.getElementById('staff-login-email').value = '';
+            document.getElementById('staff-login-password').value = '';
+            document.getElementById('staff-login-error').classList.add('hidden');
+            document.getElementById('staff-login-modal').classList.remove('hidden');
+            document.getElementById('staff-login-modal').classList.add('flex');
+        };
+
+        window.closeStaffLoginModal = function() {
+            document.getElementById('staff-login-modal').classList.add('hidden');
+            document.getElementById('staff-login-modal').classList.remove('flex');
+            window.pendingStaffAction = null;
+        };
+
+        window.staffLogin = async function() {
+            const email = document.getElementById('staff-login-email').value.trim();
+            const password = document.getElementById('staff-login-password').value;
+            const errorEl = document.getElementById('staff-login-error');
+            errorEl.classList.add('hidden');
+
+            if (!email || !password) {
+                errorEl.textContent = 'Please enter both email and password.';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+            if (!auth) return;
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                // onAuthStateChanged picks up the new session automatically (updates UI, listeners, etc).
+                document.getElementById('staff-login-modal').classList.add('hidden');
+                document.getElementById('staff-login-modal').classList.remove('flex');
+
+                const action = window.pendingStaffAction;
+                window.pendingStaffAction = null;
+                if (action === 'secretary') window.openSecretaryModal();
+                else if (action === 'records') window.openRecordsModal();
+            } catch (e) {
+                console.error(e);
+                errorEl.textContent = 'Incorrect email or password.';
+                errorEl.classList.remove('hidden');
+            }
+        };
+
+        window.staffLogout = async function() {
+            if (!auth) return;
+            try {
+                window.closeSecretaryModal();
+                window.closeRecordsModal();
+                await signOut(auth);
+                // onAuthStateChanged fires with user = null, which signs back in anonymously
+                // automatically — so booking/waiting-count keep working right away on this device.
+                window.updateStaffUI();
+            } catch (e) {
+                console.error(e);
+            }
+        };
+
+        window.updateStaffUI = function() {
+            // Placeholder hook for any staff-only UI state that should react to login/logout
+            // (e.g. showing a "Staff" badge in the nav later). Currently a no-op beyond re-checking state.
+        };
+
         window.openSecretaryModal = function() {
-            document.getElementById('sec-password').value = '';
-            document.getElementById('sec-login-step').classList.remove('hidden');
-            document.getElementById('sec-dashboard-step').classList.add('hidden');
+            if (!window.isStaffLoggedIn()) {
+                window.pendingStaffAction = 'secretary';
+                window.openStaffLoginModal();
+                return;
+            }
+            document.getElementById('sec-waiting-input').value = window.currentWaitingCount;
             document.getElementById('sec-modal').classList.remove('hidden');
             document.getElementById('sec-modal').classList.add('flex');
         };
@@ -1184,16 +1276,6 @@
         window.closeSecretaryModal = function() {
             document.getElementById('sec-modal').classList.add('hidden');
             document.getElementById('sec-modal').classList.remove('flex');
-        };
-
-        window.verifySecCode = function() {
-            if (document.getElementById('sec-password').value === window.SECRETARY_CODE) {
-                document.getElementById('sec-login-step').classList.add('hidden');
-                document.getElementById('sec-dashboard-step').classList.remove('hidden');
-                document.getElementById('sec-waiting-input').value = window.currentWaitingCount;
-            } else {
-                window.showMessage('رمز خاطئ', 'الرجاء التأكد من الرمز.', 'error');
-            }
         };
 
         window.changeWaitingCount = function(amount) {
@@ -1269,15 +1351,20 @@
         // ===================== Patient Records (English / staff only) =====================
 
         function recordsShowStep(stepId) {
-            ['records-login-step', 'records-list-step', 'records-add-step', 'records-detail-step'].forEach(id => {
+            ['records-list-step', 'records-add-step', 'records-detail-step'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
             });
             document.getElementById(stepId).classList.remove('hidden');
         }
 
         window.openRecordsModal = function() {
-            document.getElementById('records-password').value = '';
-            recordsShowStep('records-login-step');
+            if (!window.isStaffLoggedIn()) {
+                window.pendingStaffAction = 'records';
+                window.openStaffLoginModal();
+                return;
+            }
+            recordsShowStep('records-list-step');
+            window.searchPatients();
             document.getElementById('records-modal').classList.remove('hidden');
             document.getElementById('records-modal').classList.add('flex');
         };
@@ -1286,15 +1373,6 @@
             document.getElementById('records-modal').classList.add('hidden');
             document.getElementById('records-modal').classList.remove('flex');
             window.currentDetailPatientId = null;
-        };
-
-        window.verifyRecordsCode = function() {
-            if (document.getElementById('records-password').value === window.RECORDS_CODE) {
-                recordsShowStep('records-list-step');
-                window.searchPatients();
-            } else {
-                window.showMessage('Incorrect Code', 'Please check the access code and try again.', 'error');
-            }
         };
 
         function escapeHtml(str) {
