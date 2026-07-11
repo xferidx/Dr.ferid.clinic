@@ -534,7 +534,15 @@
                     <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
                         <div class="flex justify-between items-start">
                             <div class="flex-grow">
-                                <h4 id="detail-patient-name" class="text-xl font-black text-slate-800"></h4>
+                                <div class="flex items-center gap-2">
+                                    <h4 id="detail-patient-name" class="text-xl font-black text-slate-800"></h4>
+                                    <button onclick="window.toggleNameEdit()" class="text-xs font-bold text-clinic hover:underline flex-shrink-0">Edit</button>
+                                </div>
+                                <div id="name-edit-row" class="hidden mt-2 flex gap-2 max-w-xs">
+                                    <input type="text" id="edit-name-input" class="flex-grow px-3 py-2 rounded-lg border-2 border-slate-200 focus:outline-none focus:border-clinic bg-white font-bold text-slate-800 text-sm" placeholder="Full name">
+                                    <button onclick="window.savePatientName()" class="bg-clinic text-white font-bold px-4 py-2 rounded-lg text-sm hover:bg-clinic-dark transition-colors">Save</button>
+                                </div>
+
                                 <p id="detail-patient-id" class="text-sm text-slate-500 font-bold mt-1"></p>
 
                                 <div class="flex items-center gap-2 mt-1">
@@ -1391,6 +1399,22 @@
                 window.showMessage('Not Connected', 'Please check your internet connection.', 'error');
                 return;
             }
+
+            const duplicates = window.allPatients.filter(p => (p.name || '').trim().toLowerCase() === name.toLowerCase());
+            if (duplicates.length > 0) {
+                const existingList = duplicates.map(p => `#${p.patientId || '?'}${p.phone ? ' (' + p.phone + ')' : ''}`).join(', ');
+                window.showConfirm(
+                    'Possible Duplicate',
+                    `A patient named "${name}" already exists: ${existingList}. Add another patient with the same name anyway?`,
+                    () => actuallySaveNewPatient(name, patientId, phone)
+                );
+                return;
+            }
+
+            actuallySaveNewPatient(name, patientId, phone);
+        };
+
+        async function actuallySaveNewPatient(name, patientId, phone) {
             try {
                 const newRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'patient_records'));
                 await setDoc(newRef, {
@@ -1597,6 +1621,54 @@
                 }
             });
         };
+
+        window.toggleNameEdit = function() {
+            const p = window.allPatients.find(x => x.id === window.currentDetailPatientId);
+            const row = document.getElementById('name-edit-row');
+            const input = document.getElementById('edit-name-input');
+            const isHidden = row.classList.contains('hidden');
+            if (isHidden) {
+                input.value = (p && p.name) ? p.name : '';
+                row.classList.remove('hidden');
+                input.focus();
+            } else {
+                row.classList.add('hidden');
+            }
+        };
+
+        window.savePatientName = async function() {
+            const p = window.allPatients.find(x => x.id === window.currentDetailPatientId);
+            if (!p || !db) return;
+            const name = document.getElementById('edit-name-input').value.trim();
+            if (!name) {
+                window.showMessage('Missing Name', "Name can't be empty.", 'error');
+                return;
+            }
+
+            const duplicates = window.allPatients.filter(x => x.id !== p.id && (x.name || '').trim().toLowerCase() === name.toLowerCase());
+            if (duplicates.length > 0) {
+                const existingList = duplicates.map(x => `#${x.patientId || '?'}${x.phone ? ' (' + x.phone + ')' : ''}`).join(', ');
+                window.showConfirm(
+                    'Possible Duplicate',
+                    `Another patient named "${name}" already exists: ${existingList}. Rename this patient to "${name}" anyway?`,
+                    () => actuallySavePatientName(p, name)
+                );
+                return;
+            }
+            actuallySavePatientName(p, name);
+        };
+
+        async function actuallySavePatientName(p, name) {
+            try {
+                const patientRef = doc(db, 'artifacts', appId, 'public', 'data', 'patient_records', p.id);
+                await setDoc(patientRef, { name, updatedAt: serverTimestamp() }, { merge: true });
+                document.getElementById('name-edit-row').classList.add('hidden');
+                window.showMessage('Saved', 'Patient name updated.', 'success');
+            } catch (e) {
+                console.error(e);
+                window.showMessage('Save Failed', 'Could not save the name. Please try again.', 'error');
+            }
+        }
 
         window.togglePhoneEdit = function() {
             const p = window.allPatients.find(x => x.id === window.currentDetailPatientId);
