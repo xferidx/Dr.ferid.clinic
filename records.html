@@ -392,7 +392,20 @@
 
         window.allPatients = [];
         window.currentDetailPatientId = null;
-        const appId_unused = null; // (appId already defined above)
+
+        // Safety net: if anything unexpected throws anywhere on this page, show it instead of
+        // leaving buttons that silently appear to do nothing.
+        window.addEventListener('error', (e) => {
+            console.error('Page error:', e.message);
+            const errorEl = document.getElementById('staff-login-error');
+            if (errorEl && document.getElementById('records-login-section') && !document.getElementById('records-login-section').classList.contains('hidden')) {
+                errorEl.textContent = 'Something went wrong: ' + e.message;
+                errorEl.classList.remove('hidden');
+            }
+        });
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('Unhandled rejection:', e.reason);
+        });
 
         window.syncDarkModeIcon = function() {
             const icon = document.querySelector('#dark-toggle-btn i');
@@ -514,7 +527,11 @@
                 errorEl.classList.remove('hidden');
                 return;
             }
-            if (!auth) return;
+            if (!auth) {
+                errorEl.textContent = 'Connection error — could not reach Firebase. Check your internet connection and reload the page.';
+                errorEl.classList.remove('hidden');
+                return;
+            }
             try {
                 await signInWithEmailAndPassword(auth, email, password);
                 // onAuthStateChanged handles showing the main section
