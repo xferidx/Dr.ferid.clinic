@@ -563,17 +563,30 @@
                             </div>
                             <button onclick="window.deletePatientPrompt()" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors flex-shrink-0" title="Delete patient"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
-                        <div class="grid grid-cols-3 gap-2 mt-4">
-                            <button onclick="window.sendWhatsAppReminder('تركيب')" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl transition-colors shadow-md flex flex-col items-center justify-center gap-1 text-sm">
-                                <i class="fa-brands fa-whatsapp text-lg"></i> تركيب
+                        <div class="grid grid-cols-4 gap-1.5 mt-4">
+                            <button onclick="window.sendWhatsAppReminder('تركيب')" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded-lg transition-colors shadow-md flex flex-col items-center justify-center gap-0.5 text-[11px]">
+                                <i class="fa-brands fa-whatsapp text-sm"></i> تركيب
                             </button>
-                            <button onclick="window.sendWhatsAppReminder('زراعة')" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl transition-colors shadow-md flex flex-col items-center justify-center gap-1 text-sm">
-                                <i class="fa-brands fa-whatsapp text-lg"></i> زراعة
+                            <button onclick="window.sendWhatsAppReminder('زراعة')" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded-lg transition-colors shadow-md flex flex-col items-center justify-center gap-0.5 text-[11px]">
+                                <i class="fa-brands fa-whatsapp text-sm"></i> زراعة
                             </button>
-                            <button onclick="window.sendWhatsAppReminder('تقويم')" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl transition-colors shadow-md flex flex-col items-center justify-center gap-1 text-sm">
-                                <i class="fa-brands fa-whatsapp text-lg"></i> تقويم
+                            <button onclick="window.sendWhatsAppReminder('تقويم')" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded-lg transition-colors shadow-md flex flex-col items-center justify-center gap-0.5 text-[11px]">
+                                <i class="fa-brands fa-whatsapp text-sm"></i> تقويم
                             </button>
+                            <button onclick="document.getElementById('general-photo-input').click()" class="bg-clinic hover:bg-clinic-dark text-white font-bold py-2 rounded-lg transition-colors shadow-md flex flex-col items-center justify-center gap-0.5 text-[11px]">
+                                <i class="fa-solid fa-camera text-sm"></i> Photo
+                            </button>
+                            <input type="file" id="general-photo-input" accept="image/*" multiple class="hidden" onchange="window.handleGeneralPhotoSelect(event)">
                         </div>
+
+                        <div id="general-photos-section" class="hidden mt-4">
+                            <p class="text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">Patient Photos</p>
+                            <div id="general-photos-row" class="flex flex-wrap gap-2"></div>
+                        </div>
+
+                        <button onclick="window.openPatientSummary()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl transition-colors shadow-md flex items-center justify-center gap-2 mt-4">
+                            <i class="fa-solid fa-file-lines"></i> Patient Summary
+                        </button>
                     </div>
 
                     <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
@@ -1543,6 +1556,20 @@
             document.getElementById('detail-patient-id').textContent = p.patientId ? 'ID: ' + p.patientId : 'No ID assigned';
             document.getElementById('detail-patient-phone').textContent = p.phone ? 'Phone: ' + p.phone : 'No phone on file';
 
+            const generalSection = document.getElementById('general-photos-section');
+            const generalRow = document.getElementById('general-photos-row');
+            const generalPhotos = p.generalPhotos || [];
+            if (generalPhotos.length > 0) {
+                generalSection.classList.remove('hidden');
+                generalRow.innerHTML = generalPhotos.map((ph, i) => `
+                    <div class="relative w-16 h-16">
+                        <a href="${ph.url}" target="_blank"><img src="${ph.url}" class="w-16 h-16 object-cover rounded-lg border border-slate-200"></a>
+                        <button onclick="window.deleteGeneralPhoto(${i})" class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] shadow-md"><i class="fa-solid fa-xmark"></i></button>
+                    </div>`).join('');
+            } else {
+                generalSection.classList.add('hidden');
+            }
+
             const entries = [...(p.caseHistory || [])].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
             const historyContainer = document.getElementById('case-history-list');
             if (entries.length === 0) {
@@ -1831,6 +1858,9 @@
                     for (const entry of (p.caseHistory || [])) {
                         await deletePhotosForEntry(entry);
                     }
+                    for (const ph of (p.generalPhotos || [])) {
+                        try { await deleteObject(ref(storage, ph.path)); } catch (e) { console.warn('Photo delete failed:', e); }
+                    }
                     window.backToPatientList();
                 } catch (e) {
                     console.error(e);
@@ -1944,6 +1974,123 @@
             const whatsappNumber = formatIraqiPhoneForWhatsApp(p.phone);
             const message = WHATSAPP_MESSAGES[type] || WHATSAPP_MESSAGES['تركيب'];
             const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+            window.open(url, '_blank');
+        };
+
+        // Standalone patient photos — not tied to any single case entry, uploaded directly from the patient's page.
+        window.handleGeneralPhotoSelect = async function(event) {
+            const files = Array.from(event.target.files || []);
+            event.target.value = '';
+            const p = window.allPatients.find(x => x.id === window.currentDetailPatientId);
+            if (!p || !db || !storage || files.length === 0) return;
+
+            try {
+                const uploaded = [];
+                for (let i = 0; i < files.length; i++) {
+                    const blob = await compressImage(files[i]);
+                    const path = `patient_photos/${p.id}/general/${Date.now()}_${i}.jpg`;
+                    const storageRef = ref(storage, path);
+                    await uploadBytes(storageRef, blob);
+                    const url = await getDownloadURL(storageRef);
+                    uploaded.push({ url, path });
+                }
+                const updatedPhotos = [...(p.generalPhotos || []), ...uploaded];
+                const patientRef = doc(db, 'artifacts', appId, 'public', 'data', 'patient_records', p.id);
+                await setDoc(patientRef, { generalPhotos: updatedPhotos, updatedAt: serverTimestamp() }, { merge: true });
+            } catch (e) {
+                console.error(e);
+                window.showMessage('Upload Failed', 'Could not upload photo(s). Please try again.', 'error');
+            }
+        };
+
+        window.deleteGeneralPhoto = function(index) {
+            const p = window.allPatients.find(x => x.id === window.currentDetailPatientId);
+            if (!p) return;
+            window.showConfirm('Delete Photo', 'Remove this photo?', async () => {
+                const photos = [...(p.generalPhotos || [])];
+                const removed = photos.splice(index, 1)[0];
+                try {
+                    const patientRef = doc(db, 'artifacts', appId, 'public', 'data', 'patient_records', p.id);
+                    await setDoc(patientRef, { generalPhotos: photos, updatedAt: serverTimestamp() }, { merge: true });
+                    if (removed && storage) {
+                        try { await deleteObject(ref(storage, removed.path)); } catch (e) { console.warn('Photo delete failed:', e); }
+                    }
+                } catch (e) {
+                    console.error(e);
+                    window.showMessage('Delete Failed', 'Could not delete this photo. Please try again.', 'error');
+                }
+            });
+        };
+
+        // Builds a clean, old-index-card-style history sheet for a patient and opens it
+        // as its own page — fast to scan, and printable if a paper copy is ever needed.
+        window.openPatientSummary = function() {
+            const p = window.allPatients.find(x => x.id === window.currentDetailPatientId);
+            if (!p) return;
+
+            const entries = [...(p.caseHistory || [])].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+            let totalPaid = 0, totalRemaining = 0;
+            const rows = entries.map(e => {
+                totalPaid += Number(e.paid || 0);
+                totalRemaining += Number(e.remaining || 0);
+                const treatment = [e.teeth && e.teeth.length ? 'Teeth: ' + e.teeth.join(', ') : '', e.procedure || ''].filter(Boolean).join(' · ') || '—';
+                return `<tr>
+                    <td>${escapeHtml(e.date || '')}</td>
+                    <td>${escapeHtml(treatment)}</td>
+                    <td>${escapeHtml(e.notes || '')}</td>
+                    <td class="paid">${Number(e.paid || 0).toLocaleString()}</td>
+                    <td class="remaining">${e.remaining > 0 ? Number(e.remaining).toLocaleString() : '—'}</td>
+                </tr>`;
+            }).join('');
+
+            const html = `<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${escapeHtml(p.name)} — Patient Summary</title>
+<style>
+  body { font-family: Georgia, 'Times New Roman', serif; background:#f4f1ea; color:#2b2b2b; margin:0; padding:24px; }
+  .card { max-width: 800px; margin: 0 auto; background:#fffdf8; border: 2px solid #3a3226; border-radius: 6px; padding: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+  .clinic-name { text-align:center; font-size:12px; letter-spacing:2px; text-transform:uppercase; color:#8a7a5c; margin: 0 0 6px; }
+  h1 { text-align:center; font-size:22px; margin: 0 0 20px; border-bottom: 2px solid #3a3226; padding-bottom:16px; }
+  .info-row { display:flex; justify-content:space-between; font-size:14px; padding: 6px 0; border-bottom: 1px dashed #ccc; }
+  .info-label { font-weight:bold; color:#5c5142; }
+  table { width:100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
+  th { text-align:left; border-bottom: 2px solid #3a3226; padding: 8px 6px; font-size: 11px; text-transform:uppercase; letter-spacing:0.5px; color:#5c5142; }
+  td { padding: 10px 6px; border-bottom: 1px solid #ddd; vertical-align:top; }
+  tr:nth-child(even) { background: #f7f3ea; }
+  .paid { color:#1f7a3d; font-weight:bold; white-space:nowrap; }
+  .remaining { color:#b3261e; font-weight:bold; white-space:nowrap; }
+  tfoot td { font-weight:bold; border-top: 2px solid #3a3226; border-bottom:none; padding-top: 12px; }
+  .totals-label { text-align:right; }
+  .print-btn { display:block; margin: 24px auto 0; padding: 10px 28px; background:#3a3226; color:#fff; border:none; border-radius:6px; font-size:14px; cursor:pointer; font-family: inherit; }
+  .print-btn:hover { background:#2b2419; }
+  @media print { .print-btn { display:none; } body { background:#fff; padding:0; } .card { box-shadow:none; border:none; } }
+</style>
+</head>
+<body>
+  <div class="card">
+    <p class="clinic-name">Dr. Ferid Dental Clinic</p>
+    <h1>Patient History Sheet</h1>
+    <div class="info-row"><span class="info-label">Name</span><span>${escapeHtml(p.name || '')}</span></div>
+    <div class="info-row"><span class="info-label">Patient ID</span><span>${escapeHtml(p.patientId || '—')}</span></div>
+    <div class="info-row"><span class="info-label">Phone</span><span>${escapeHtml(p.phone || '—')}</span></div>
+    <div class="info-row"><span class="info-label">Total Visits</span><span>${entries.length}</span></div>
+
+    <table>
+      <thead><tr><th>Date</th><th>Treatment</th><th>Notes</th><th>Paid</th><th>Remaining</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="5" style="text-align:center;color:#999;">No case history yet.</td></tr>'}</tbody>
+      ${entries.length ? `<tfoot><tr><td colspan="3" class="totals-label">Totals</td><td class="paid">${totalPaid.toLocaleString()}</td><td class="remaining">${totalRemaining > 0 ? totalRemaining.toLocaleString() : '—'}</td></tr></tfoot>` : ''}
+    </table>
+
+    <button class="print-btn" onclick="window.print()">Print This Sheet</button>
+  </div>
+</body>
+</html>`;
+
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
             window.open(url, '_blank');
         };
 
