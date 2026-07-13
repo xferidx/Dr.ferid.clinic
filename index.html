@@ -867,7 +867,7 @@
                 if (window.selectedDate) window.generateTimeButtons(window.selectedDate);
             }, (error) => console.error("Bookings Sync Error:", error));
 
-            // Sync Patient Records Instantly (staff-only feature, PIN protected in the UI)
+            // Sync Patient Records Instantly (staff-only feature, real login required)
             const recordsCol = collection(db, 'artifacts', appId, 'public', 'data', 'patient_records');
             onSnapshot(recordsCol, (snapshot) => {
                 window.allPatients = [];
@@ -878,7 +878,13 @@
                     window.searchPatients();
                 }
                 if (window.currentDetailPatientId) window.refreshDetailView();
-            }, (error) => console.error("Patient Records Sync Error:", error));
+            }, (error) => {
+                console.error("Patient Records Sync Error:", error);
+                const container = document.getElementById('records-patient-list');
+                if (container && error.code === 'permission-denied') {
+                    container.innerHTML = `<div class="text-center py-10"><p class="text-red-500 font-bold mb-2">Access denied — you're not logged in as staff.</p><p class="text-slate-400 text-sm">Close this and log in again from the lock icon.</p></div>`;
+                }
+            });
         }
 
         // Automatically clears bookings for days that have already finished (yesterday and earlier),
