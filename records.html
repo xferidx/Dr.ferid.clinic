@@ -782,7 +782,6 @@
                     <div class="flex-grow border-l border-slate-200 pl-4">
                         <p class="text-slate-700 text-sm whitespace-pre-wrap">${escapeHtml(entry.notes || '')}</p>
                         ${entry.teeth && entry.teeth.length ? `<p class="text-xs font-bold text-slate-500 mt-2">Teeth: ${entry.teeth.join(', ')}${entry.procedure ? ' · ' + escapeHtml(entry.procedure) : ''}</p>` : (entry.procedure ? `<p class="text-xs font-bold text-slate-500 mt-2">${escapeHtml(entry.procedure)}</p>` : '')}
-                        ${entry.canalDetails && Object.keys(entry.canalDetails).length ? `<div class="mt-2 space-y-1">${Object.entries(entry.canalDetails).map(([tooth, canals]) => `<p class="text-xs text-slate-500"><span class="font-bold">${tooth}:</span> ${Object.entries(canals).map(([c, v]) => `${c} (${v.wl || '—'}/${v.file || '—'})`).join(', ')}</p>`).join('')}</div>` : ''}
                         <div class="flex gap-2 mt-3">
                             <span class="bg-green-100 text-green-700 font-black text-sm px-3 py-1.5 rounded-lg">${Number(entry.paid || 0).toLocaleString()}</span>
                             ${(entry.remaining && entry.remaining > 0) ? `<span class="bg-red-100 text-red-600 font-black text-sm px-3 py-1.5 rounded-lg">${Number(entry.remaining).toLocaleString()}</span>` : ''}
@@ -944,6 +943,35 @@
             });
         }
 
+        // Formats the canal boxes as readable text and merges them into the Notes field itself,
+        // so the printed Patient Summary (which only prints Notes) shows the canal details too.
+        // Markers let us cleanly replace a previous canal block on edit instead of duplicating it.
+        const CANAL_BLOCK_START = '----- Canal Details -----';
+        const CANAL_BLOCK_END = '----- End Canal Details -----';
+
+        function buildCanalBlockText(canalDetails) {
+            const toothIds = Object.keys(canalDetails);
+            if (toothIds.length === 0) return '';
+            const lines = [CANAL_BLOCK_START];
+            toothIds.forEach(toothId => {
+                lines.push(`${toothLabel(toothId)} (${toothId}):`);
+                Object.entries(canalDetails[toothId]).forEach(([canal, vals]) => {
+                    lines.push(`  ${canal} — WL: ${vals.wl || '—'}, File: ${vals.file || '—'}`);
+                });
+            });
+            lines.push(CANAL_BLOCK_END);
+            return lines.join('\n');
+        }
+
+        function stripCanalBlock(notesText) {
+            const startIdx = notesText.indexOf(CANAL_BLOCK_START);
+            const endIdx = notesText.indexOf(CANAL_BLOCK_END);
+            if (startIdx === -1 || endIdx === -1) return notesText.trim();
+            const before = notesText.slice(0, startIdx);
+            const after = notesText.slice(endIdx + CANAL_BLOCK_END.length);
+            return (before + after).trim();
+        }
+
         // Sets the chart's visual selection directly (used both to clear it for a new entry,
         // and to pre-select the saved teeth when editing an existing one).
         function setSelectedTeethVisual(teethArray) {
@@ -999,7 +1027,7 @@
             document.getElementById('entry-modal-title').textContent = existingEntry ? 'Edit Case Entry' : 'New Case Entry';
             document.getElementById('entry-modal-patient-name').textContent = p ? p.name + (p.patientId ? ' · ID ' + p.patientId : '') : '';
             document.getElementById('new-entry-date').value = existingEntry ? existingEntry.date : new Date().toISOString().split('T')[0];
-            document.getElementById('new-entry-notes').value = existingEntry ? (existingEntry.notes || '') : '';
+            document.getElementById('new-entry-notes').value = existingEntry ? stripCanalBlock(existingEntry.notes || '') : '';
             document.getElementById('new-entry-paid').value = existingEntry && existingEntry.paid ? existingEntry.paid : '';
             document.getElementById('new-entry-remaining').value = existingEntry && existingEntry.remaining ? existingEntry.remaining : '';
             document.getElementById('new-entry-procedure').value = existingEntry ? (existingEntry.procedure || '') : '';
@@ -1019,7 +1047,7 @@
 
         window.saveCaseEntry = async function() {
             const date = document.getElementById('new-entry-date').value;
-            const notes = document.getElementById('new-entry-notes').value.trim();
+            const rawNotes = document.getElementById('new-entry-notes').value.trim();
             const paid = parseFloat(document.getElementById('new-entry-paid').value) || 0;
             const remaining = parseFloat(document.getElementById('new-entry-remaining').value) || 0;
             const procedure = document.getElementById('new-entry-procedure').value;
@@ -1030,6 +1058,13 @@
                 return parseInt(a.slice(2), 10) - parseInt(b.slice(2), 10);
             });
             const canalDetails = procedure === 'Endo' ? collectCanalDetails() : {};
+
+            // Strip any previously auto-generated canal block from what's typed, then prepend a
+            // fresh one built from the current box values — keeps edits from duplicating the block.
+            const cleanTypedNotes = stripCanalBlock(rawNotes);
+            const canalBlockText = buildCanalBlockText(canalDetails);
+            const notes = canalBlockText ? (canalBlockText + (cleanTypedNotes ? '\n\n' + cleanTypedNotes : '')) : cleanTypedNotes;
+
             if (!date) {
                 window.showMessage('Missing Date', 'Please select a date for this entry.', 'error');
                 return;
