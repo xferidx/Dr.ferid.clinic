@@ -736,7 +736,6 @@
             window.updateManagerBookingsView();
             window.initBeforeAfterSlider();
             window.syncDarkModeIcon();
-            renderToothChart();
 
             // Restore Waiting Count Initial UI
             const publicCount = document.getElementById('public-waiting-count');
@@ -1156,6 +1155,13 @@
         window.addEventListener('appinstalled', () => {
             deferredInstallPrompt = null;
         });
+
+        // Initialize application after all script assignments are completely loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
     </script>
 </body>
 </html>
