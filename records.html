@@ -517,6 +517,10 @@
             });
         }
 
+        window.syncDarkModeIcon = window.syncDarkModeIcon || function() {};
+        window.syncDarkModeIcon();
+        initRecordsAuth();
+
         window.staffLogin = async function() {
             const email = document.getElementById('staff-login-email').value.trim();
             const password = document.getElementById('staff-login-password').value;
@@ -534,6 +538,10 @@
             }
             try {
                 await signInWithEmailAndPassword(auth, email, password);
+                console.log('Login succeeded, user:', auth.currentUser);
+                errorEl.textContent = 'Login successful — loading records...';
+                errorEl.classList.remove('hidden', 'text-red-500');
+                errorEl.classList.add('text-green-600');
                 // onAuthStateChanged handles showing the main section
             } catch (e) {
                 console.error(e);
