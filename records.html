@@ -276,7 +276,7 @@
 
                 <div>
                     <label class="text-xs font-black text-slate-500 mb-1.5 block uppercase tracking-wide">Procedure</label>
-                    <select id="new-entry-procedure" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-clinic bg-white font-bold text-slate-800 shadow-sm">
+                    <select id="new-entry-procedure" onchange="window.renderCanalDetails()" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-clinic bg-white font-bold text-slate-800 shadow-sm">
                         <option value="">-- Select procedure --</option>
                         <option value="Exo">Exo (Extraction)</option>
                         <option value="Filling">Filling</option>
@@ -337,6 +337,12 @@
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Canal details: only shown for Endo procedure, one card per selected tooth -->
+                <div id="canal-details-section" class="hidden">
+                    <label class="text-xs font-black text-slate-500 mb-2 block uppercase tracking-wide">Canal Details</label>
+                    <div id="canal-details-list" class="space-y-3"></div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
@@ -776,6 +782,7 @@
                     <div class="flex-grow border-l border-slate-200 pl-4">
                         <p class="text-slate-700 text-sm whitespace-pre-wrap">${escapeHtml(entry.notes || '')}</p>
                         ${entry.teeth && entry.teeth.length ? `<p class="text-xs font-bold text-slate-500 mt-2">Teeth: ${entry.teeth.join(', ')}${entry.procedure ? ' · ' + escapeHtml(entry.procedure) : ''}</p>` : (entry.procedure ? `<p class="text-xs font-bold text-slate-500 mt-2">${escapeHtml(entry.procedure)}</p>` : '')}
+                        ${entry.canalDetails && Object.keys(entry.canalDetails).length ? `<div class="mt-2 space-y-1">${Object.entries(entry.canalDetails).map(([tooth, canals]) => `<p class="text-xs text-slate-500"><span class="font-bold">${tooth}:</span> ${Object.entries(canals).map(([c, v]) => `${c} (${v.wl || '—'}/${v.file || '—'})`).join(', ')}</p>`).join('')}</div>` : ''}
                         <div class="flex gap-2 mt-3">
                             <span class="bg-green-100 text-green-700 font-black text-sm px-3 py-1.5 rounded-lg">${Number(entry.paid || 0).toLocaleString()}</span>
                             ${(entry.remaining && entry.remaining > 0) ? `<span class="bg-red-100 text-red-600 font-black text-sm px-3 py-1.5 rounded-lg">${Number(entry.remaining).toLocaleString()}</span>` : ''}
@@ -825,7 +832,117 @@
                 btn.classList.add('bg-clinic', 'border-clinic', 'text-white');
                 btn.classList.remove('bg-white', 'border-slate-200', 'text-slate-700');
             }
+            window.renderCanalDetails();
         };
+
+        // Standard canal counts by tooth type — a practical starting template, not a diagnostic
+        // rule. Incisors/canines: 1 canal. Premolars: 2 upper / 1 lower (typical). Molars: 4 upper
+        // (MB1, MB2, DB, P) / 3 lower (MB, ML, D). Real anatomy varies case to case — adjust the
+        // WL/File values freely; this just saves retyping the canal names every time.
+        function getCanalsForTooth(toothId) {
+            const quadrant = toothId.slice(0, 2);
+            const num = parseInt(toothId.slice(2), 10);
+            const isUpper = quadrant === 'UR' || quadrant === 'UL';
+            if (num >= 1 && num <= 3) return ['Canal'];
+            if (num === 4 || num === 5) return isUpper ? ['MB', 'P'] : ['Canal'];
+            if (num >= 6 && num <= 8) return isUpper ? ['MB1', 'MB2', 'DB', 'P'] : ['MB', 'ML', 'D'];
+            return ['Canal'];
+        }
+
+        function toothLabel(toothId) {
+            const quadrant = toothId.slice(0, 2);
+            const num = toothId.slice(2);
+            const names = { UR: 'Upper Right', UL: 'Upper Left', LR: 'Lower Right', LL: 'Lower Left' };
+            return `${names[quadrant]} ${num}`;
+        }
+
+        function sortedSelectedTeeth() {
+            const quadrantOrder = { UR: 0, UL: 1, LR: 2, LL: 3 };
+            return Array.from(window.selectedTeeth).sort((a, b) => {
+                const qa = a.slice(0, 2), qb = b.slice(0, 2);
+                if (qa !== qb) return quadrantOrder[qa] - quadrantOrder[qb];
+                return parseInt(a.slice(2), 10) - parseInt(b.slice(2), 10);
+            });
+        }
+
+        // Renders one card per selected tooth with WL/File boxes per canal, only when the
+        // procedure is Endo. Preserves already-typed values when teeth are added/removed rather
+        // than wiping the whole section on every toggle.
+        window.renderCanalDetails = function() {
+            const procedure = document.getElementById('new-entry-procedure').value;
+            const section = document.getElementById('canal-details-section');
+            const list = document.getElementById('canal-details-list');
+
+            if (procedure !== 'Endo' || window.selectedTeeth.size === 0) {
+                section.classList.add('hidden');
+                return;
+            }
+            section.classList.remove('hidden');
+
+            const selectedSorted = sortedSelectedTeeth();
+
+            list.querySelectorAll('[data-canal-tooth]').forEach(card => {
+                if (!window.selectedTeeth.has(card.getAttribute('data-canal-tooth'))) card.remove();
+            });
+
+            selectedSorted.forEach(toothId => {
+                if (list.querySelector(`[data-canal-tooth="${toothId}"]`)) return; // keep existing values
+                const canals = getCanalsForTooth(toothId);
+                const card = document.createElement('div');
+                card.setAttribute('data-canal-tooth', toothId);
+                card.className = 'bg-white border-2 border-slate-200 rounded-xl p-4 shadow-sm';
+                card.innerHTML = `
+                    <p class="font-black text-slate-800 text-sm mb-3">${toothLabel(toothId)} (${toothId})</p>
+                    <div class="space-y-2">
+                        ${canals.map(canal => `
+                            <div class="grid grid-cols-3 gap-2 items-center">
+                                <p class="text-xs font-bold text-slate-500">${canal}</p>
+                                <input type="number" step="0.1" data-canal="${canal}" data-field="wl" class="canal-input px-2 py-2 rounded-lg border-2 border-slate-200 focus:outline-none focus:border-clinic bg-slate-50 font-bold text-slate-800 text-sm" placeholder="WL">
+                                <input type="text" data-canal="${canal}" data-field="file" class="canal-input px-2 py-2 rounded-lg border-2 border-slate-200 focus:outline-none focus:border-clinic bg-slate-50 font-bold text-slate-800 text-sm" placeholder="File">
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+
+            // Keep card order matching quadrant/tooth order regardless of toggle order
+            selectedSorted.forEach(toothId => {
+                const card = list.querySelector(`[data-canal-tooth="${toothId}"]`);
+                if (card) list.appendChild(card);
+            });
+        };
+
+        function collectCanalDetails() {
+            const details = {};
+            document.querySelectorAll('#canal-details-list [data-canal-tooth]').forEach(card => {
+                const toothId = card.getAttribute('data-canal-tooth');
+                const canalData = {};
+                const canalNames = new Set();
+                card.querySelectorAll('.canal-input').forEach(input => canalNames.add(input.getAttribute('data-canal')));
+                canalNames.forEach(canal => {
+                    const wl = card.querySelector(`.canal-input[data-canal="${canal}"][data-field="wl"]`).value;
+                    const file = card.querySelector(`.canal-input[data-canal="${canal}"][data-field="file"]`).value;
+                    if (wl || file) canalData[canal] = { wl, file };
+                });
+                if (Object.keys(canalData).length > 0) details[toothId] = canalData;
+            });
+            return details;
+        }
+
+        function populateCanalDetails(canalDetails) {
+            if (!canalDetails) return;
+            Object.entries(canalDetails).forEach(([toothId, canals]) => {
+                const card = document.querySelector(`#canal-details-list [data-canal-tooth="${toothId}"]`);
+                if (!card) return;
+                Object.entries(canals).forEach(([canal, vals]) => {
+                    const wlInput = card.querySelector(`.canal-input[data-canal="${canal}"][data-field="wl"]`);
+                    const fileInput = card.querySelector(`.canal-input[data-canal="${canal}"][data-field="file"]`);
+                    if (wlInput && vals.wl) wlInput.value = vals.wl;
+                    if (fileInput && vals.file) fileInput.value = vals.file;
+                });
+            });
+        }
 
         // Sets the chart's visual selection directly (used both to clear it for a new entry,
         // and to pre-select the saved teeth when editing an existing one).
@@ -887,6 +1004,9 @@
             document.getElementById('new-entry-remaining').value = existingEntry && existingEntry.remaining ? existingEntry.remaining : '';
             document.getElementById('new-entry-procedure').value = existingEntry ? (existingEntry.procedure || '') : '';
             setSelectedTeethVisual(existingEntry ? existingEntry.teeth : []);
+            document.getElementById('canal-details-list').innerHTML = '';
+            window.renderCanalDetails();
+            if (existingEntry && existingEntry.canalDetails) populateCanalDetails(existingEntry.canalDetails);
             document.getElementById('add-entry-modal').classList.remove('hidden');
             document.getElementById('add-entry-modal').classList.add('flex');
             setTimeout(() => document.getElementById('new-entry-notes').focus(), 50);
@@ -909,6 +1029,7 @@
                 if (qa !== qb) return quadrantOrder[qa] - quadrantOrder[qb];
                 return parseInt(a.slice(2), 10) - parseInt(b.slice(2), 10);
             });
+            const canalDetails = procedure === 'Endo' ? collectCanalDetails() : {};
             if (!date) {
                 window.showMessage('Missing Date', 'Please select a date for this entry.', 'error');
                 return;
@@ -924,10 +1045,10 @@
                     // Spreading ...e first preserves any older fields (like photos from before this
                     // feature was removed) that aren't explicitly touched here.
                     updatedHistory = (p.caseHistory || []).map(e =>
-                        e.id === window.editingEntryId ? { ...e, date, notes, paid, remaining, teeth, procedure } : e
+                        e.id === window.editingEntryId ? { ...e, date, notes, paid, remaining, teeth, procedure, canalDetails } : e
                     );
                 } else {
-                    updatedHistory = [...(p.caseHistory || []), { id: entryId, date, notes, paid, remaining, teeth, procedure }];
+                    updatedHistory = [...(p.caseHistory || []), { id: entryId, date, notes, paid, remaining, teeth, procedure, canalDetails }];
                 }
 
                 const patientRef = doc(db, 'artifacts', appId, 'public', 'data', 'patient_records', p.id);
@@ -1197,10 +1318,9 @@
             if (!p) return;
 
             const entries = [...(p.caseHistory || [])].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
-            let totalPaid = 0, totalRemaining = 0;
+            let totalPaid = 0;
             const rows = entries.map(e => {
                 totalPaid += Number(e.paid || 0);
-                totalRemaining += Number(e.remaining || 0);
                 const treatment = [e.teeth && e.teeth.length ? 'Teeth: ' + e.teeth.join(', ') : '', e.procedure || ''].filter(Boolean).join(' · ') || '—';
                 return `<tr>
                     <td>${escapeHtml(e.date || '')}</td>
@@ -1249,7 +1369,7 @@
     <table>
       <thead><tr><th>Date</th><th>Treatment</th><th>Notes</th><th>Paid</th><th>Remaining</th></tr></thead>
       <tbody>${rows || '<tr><td colspan="5" style="text-align:center;color:#999;">No case history yet.</td></tr>'}</tbody>
-      ${entries.length ? `<tfoot><tr><td colspan="3" class="totals-label">Totals</td><td class="paid">${totalPaid.toLocaleString()}</td><td class="remaining">${totalRemaining > 0 ? totalRemaining.toLocaleString() : '—'}</td></tr></tfoot>` : ''}
+      ${entries.length ? `<tfoot><tr><td colspan="3" class="totals-label">Total Paid</td><td class="paid">${totalPaid.toLocaleString()}</td><td></td></tr></tfoot>` : ''}
     </table>
 
     <button class="print-btn" onclick="window.print()">Print This Sheet</button>
