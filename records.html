@@ -280,7 +280,8 @@
                         <option value="">-- Select procedure --</option>
                         <option value="Exo">Exo (Extraction)</option>
                         <option value="Filling">Filling</option>
-                        <option value="Endo">Endo (Root Canal)</option>
+                        <option value="Instrumentation">Instrumentation (Endo)</option>
+                        <option value="Obturation">Obturation (Endo)</option>
                         <option value="S+P">S+P (Scaling &amp; Polishing)</option>
                         <option value="Implants">Implants</option>
                         <option value="Crown & Bridge">Crown &amp; Bridge</option>
@@ -872,7 +873,7 @@
             const section = document.getElementById('canal-details-section');
             const list = document.getElementById('canal-details-list');
 
-            if (procedure !== 'Endo' || window.selectedTeeth.size === 0) {
+            if ((procedure !== 'Instrumentation' && procedure !== 'Obturation') || window.selectedTeeth.size === 0) {
                 section.classList.add('hidden');
                 return;
             }
@@ -1057,7 +1058,7 @@
                 if (qa !== qb) return quadrantOrder[qa] - quadrantOrder[qb];
                 return parseInt(a.slice(2), 10) - parseInt(b.slice(2), 10);
             });
-            const canalDetails = procedure === 'Endo' ? collectCanalDetails() : {};
+            const canalDetails = (procedure === 'Instrumentation' || procedure === 'Obturation') ? collectCanalDetails() : {};
 
             // Strip any previously auto-generated canal block from what's typed, then prepend a
             // fresh one built from the current box values — keeps edits from duplicating the block.
@@ -1261,10 +1262,10 @@
 
             const results = [];
             window.allPatients.forEach(p => {
-                const endoEntries = (p.caseHistory || []).filter(e => e.procedure === 'Endo' && e.date >= cutoffIso && e.date <= todayIso);
+                const endoEntries = (p.caseHistory || []).filter(e => (e.procedure === 'Instrumentation' || e.procedure === 'Obturation') && e.date >= cutoffIso && e.date <= todayIso);
                 if (endoEntries.length > 0) {
                     const mostRecent = endoEntries.sort((a, b) => b.date.localeCompare(a.date))[0];
-                    results.push({ patient: p, date: mostRecent.date });
+                    results.push({ patient: p, date: mostRecent.date, procedure: mostRecent.procedure });
                 }
             });
             results.sort((a, b) => b.date.localeCompare(a.date));
@@ -1277,7 +1278,7 @@
                     <div class="bg-white border border-slate-200 rounded-xl p-4 flex justify-between items-center shadow-sm gap-3">
                         <button onclick="window.openPatientDetail('${r.patient.id}')" class="text-left flex-grow">
                             <p class="font-black text-slate-800">${escapeHtml(r.patient.name)}</p>
-                            <p class="text-xs text-slate-500 font-bold">${r.patient.patientId ? 'ID: ' + escapeHtml(r.patient.patientId) : ''} · Endo on ${r.date}</p>
+                            <p class="text-xs text-slate-500 font-bold">${r.patient.patientId ? 'ID: ' + escapeHtml(r.patient.patientId) : ''} · ${escapeHtml(r.procedure)} on ${r.date}</p>
                         </button>
                         <button onclick="window.sendEndoReminder('${r.patient.id}')" class="bg-green-500 hover:bg-green-600 text-white font-bold px-4 py-2.5 rounded-lg text-sm flex items-center gap-2 flex-shrink-0"><i class="fa-brands fa-whatsapp"></i> Remind</button>
                     </div>
