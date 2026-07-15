@@ -110,7 +110,6 @@
                     <input type="text" id="records-search-input" oninput="window.searchPatients()" placeholder="Search by name or ID..." class="w-full pl-11 pr-4 py-3 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-clinic bg-white font-bold text-slate-800 shadow-sm">
                 </div>
                 <button onclick="window.openAddPatientForm()" class="bg-clinic text-white font-bold px-5 py-3 rounded-xl hover:bg-clinic-dark transition-colors shadow-md whitespace-nowrap"><i class="fa-solid fa-plus mr-1"></i> Add Patient</button>
-                <button onclick="window.openEndoFollowups()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-5 py-3 rounded-xl transition-colors shadow-md whitespace-nowrap"><i class="fa-solid fa-tooth mr-1"></i> Endo Follow-Ups</button>
             </div>
 
             <!-- Recent visits: today / yesterday / 2 days ago -->
@@ -132,20 +131,19 @@
                         <div id="twodaysago-visits-list" class="space-y-2"></div>
                     </div>
                 </div>
+
+                <!-- Endo follow-ups: always visible, no button needed -->
+                <div id="endo-followup-dashboard-section" class="hidden mt-6">
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="fa-solid fa-tooth text-amber-500"></i>
+                        <h3 class="text-sm font-black text-slate-700 uppercase tracking-wide">Endo Follow-Ups Needed</h3>
+                    </div>
+                    <div id="endo-followup-dashboard-list" class="space-y-2"></div>
+                </div>
             </div>
 
             <!-- Search results (shown instead of recent-visits while searching) -->
             <div id="records-list-step" class="hidden space-y-3"></div>
-
-            <!-- Endo follow-up list -->
-            <div id="endo-followup-step" class="hidden space-y-4">
-                <button onclick="window.backToPatientList()" class="text-sm font-bold text-slate-500 hover:text-clinic flex items-center gap-1"><i class="fa-solid fa-arrow-left"></i> Back</button>
-                <div>
-                    <h3 class="text-lg font-black text-slate-800">Endo Follow-Ups</h3>
-                    <p class="text-sm text-slate-500 font-bold">Patients with a root canal (Endo) procedure in the past 30 days</p>
-                </div>
-                <div id="endo-followup-list" class="space-y-3"></div>
-            </div>
 
             <!-- Add patient form -->
             <div id="records-add-step" class="hidden max-w-md mx-auto space-y-4 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
@@ -618,6 +616,8 @@
             renderCol('today-visits-list', buckets[todayIso]);
             renderCol('yesterday-visits-list', buckets[yestIso]);
             renderCol('twodaysago-visits-list', buckets[twoIso]);
+
+            renderEndoFollowupDashboard();
         }
 
         window.searchPatients = function() {
@@ -685,7 +685,6 @@
             document.getElementById('records-list-step').classList.add('hidden');
             document.getElementById('records-add-step').classList.add('hidden');
             document.getElementById('records-detail-step').classList.add('hidden');
-            document.getElementById('endo-followup-step').classList.add('hidden');
             document.getElementById(stepId).classList.remove('hidden');
         }
 
@@ -944,33 +943,36 @@
             });
         }
 
-        // Formats the canal boxes as readable text and merges them into the Notes field itself,
-        // so the printed Patient Summary (which only prints Notes) shows the canal details too.
-        // Markers let us cleanly replace a previous canal block on edit instead of duplicating it.
-        const CANAL_BLOCK_START = '----- Canal Details -----';
-        const CANAL_BLOCK_END = '----- End Canal Details -----';
-
-        function buildCanalBlockText(canalDetails) {
+        // Formats the canal boxes as a brief code and merges it into the Notes field itself,
+        // so the printed Patient Summary (which only prints Notes) shows it too.
+        // Format: (MB 22 F2 / DB 22 F2 / P 23 F5) — Obturation visits get an "Obt." prefix,
+        // Instrumentation visits get no prefix at all.
+        function buildCanalCode(canalDetails, procedure) {
             const toothIds = Object.keys(canalDetails);
             if (toothIds.length === 0) return '';
-            const lines = [CANAL_BLOCK_START];
-            toothIds.forEach(toothId => {
-                lines.push(`${toothLabel(toothId)} (${toothId}):`);
-                Object.entries(canalDetails[toothId]).forEach(([canal, vals]) => {
-                    lines.push(`  ${canal} — WL: ${vals.wl || '—'}, File: ${vals.file || '—'}`);
-                });
+            const groups = toothIds.map(toothId => {
+                const canalsText = Object.entries(canalDetails[toothId]).map(([canal, vals]) => {
+                    let part = canal;
+                    if (vals.wl) part += ' ' + vals.wl;
+                    if (vals.file) part += ' F' + vals.file;
+                    return part;
+                }).join(' / ');
+                const bracket = `(${canalsText})`;
+                return toothIds.length > 1 ? `${toothId} ${bracket}` : bracket;
             });
-            lines.push(CANAL_BLOCK_END);
-            return lines.join('\n');
+            const combined = groups.join('  ');
+            return procedure === 'Obturation' ? `Obt. ${combined}` : combined;
         }
 
+        // The canal code is always saved as its own first paragraph (separated from free-typed
+        // notes by a blank line) — stripping just checks whether that first paragraph looks like
+        // a generated code, so re-editing never duplicates it.
         function stripCanalBlock(notesText) {
-            const startIdx = notesText.indexOf(CANAL_BLOCK_START);
-            const endIdx = notesText.indexOf(CANAL_BLOCK_END);
-            if (startIdx === -1 || endIdx === -1) return notesText.trim();
-            const before = notesText.slice(0, startIdx);
-            const after = notesText.slice(endIdx + CANAL_BLOCK_END.length);
-            return (before + after).trim();
+            const parts = notesText.split('\n\n');
+            if (parts.length > 0 && /^(Obt\.\s*)?(\S+\s+)?\(/.test(parts[0].trim())) {
+                return parts.slice(1).join('\n\n').trim();
+            }
+            return notesText.trim();
         }
 
         // Sets the chart's visual selection directly (used both to clear it for a new entry,
@@ -1063,7 +1065,7 @@
             // Strip any previously auto-generated canal block from what's typed, then prepend a
             // fresh one built from the current box values — keeps edits from duplicating the block.
             const cleanTypedNotes = stripCanalBlock(rawNotes);
-            const canalBlockText = buildCanalBlockText(canalDetails);
+            const canalBlockText = buildCanalCode(canalDetails, procedure);
             const notes = canalBlockText ? (canalBlockText + (cleanTypedNotes ? '\n\n' + cleanTypedNotes : '')) : cleanTypedNotes;
 
             if (!date) {
@@ -1252,39 +1254,60 @@
             window.open(url, '_blank');
         };
 
-        // Finds every patient with an Endo (root canal) entry dated within the last 30 days,
-        // so follow-up reminders don't get missed.
-        window.openEndoFollowups = function() {
-            const cutoff = new Date();
-            cutoff.setDate(cutoff.getDate() - 30);
-            const cutoffIso = cutoff.toISOString().split('T')[0];
-            const todayIso = new Date().toISOString().split('T')[0];
+        // Finds patients needing an Endo follow-up: their most recent Instrumentation/Obturation
+        // entry was 2-30 days ago (today/yesterday excluded — too soon for a "don't forget"
+        // nudge), not already dismissed, oldest visit first, capped at 30 so the list stays usable.
+        function renderEndoFollowupDashboard() {
+            const oldCutoff = new Date();
+            oldCutoff.setDate(oldCutoff.getDate() - 30);
+            const oldCutoffIso = oldCutoff.toISOString().split('T')[0];
+
+            const recentCutoff = new Date();
+            recentCutoff.setDate(recentCutoff.getDate() - 2);
+            const recentCutoffIso = recentCutoff.toISOString().split('T')[0];
 
             const results = [];
             window.allPatients.forEach(p => {
-                const endoEntries = (p.caseHistory || []).filter(e => (e.procedure === 'Instrumentation' || e.procedure === 'Obturation') && e.date >= cutoffIso && e.date <= todayIso);
-                if (endoEntries.length > 0) {
-                    const mostRecent = endoEntries.sort((a, b) => b.date.localeCompare(a.date))[0];
-                    results.push({ patient: p, date: mostRecent.date, procedure: mostRecent.procedure });
-                }
+                (p.caseHistory || []).forEach(e => {
+                    if ((e.procedure === 'Instrumentation' || e.procedure === 'Obturation') &&
+                        e.date >= oldCutoffIso && e.date <= recentCutoffIso && !e.reminderDismissed) {
+                        results.push({ patient: p, entry: e });
+                    }
+                });
             });
-            results.sort((a, b) => b.date.localeCompare(a.date));
+            results.sort((a, b) => a.entry.date.localeCompare(b.entry.date)); // oldest first
+            const capped = results.slice(0, 30);
 
-            const container = document.getElementById('endo-followup-list');
-            if (results.length === 0) {
-                container.innerHTML = `<p class="text-center text-slate-400 font-bold py-10">No Endo procedures in the past 30 days.</p>`;
-            } else {
-                container.innerHTML = results.map(r => `
-                    <div class="bg-white border border-slate-200 rounded-xl p-4 flex justify-between items-center shadow-sm gap-3">
-                        <button onclick="window.openPatientDetail('${r.patient.id}')" class="text-left flex-grow">
-                            <p class="font-black text-slate-800">${escapeHtml(r.patient.name)}</p>
-                            <p class="text-xs text-slate-500 font-bold">${r.patient.patientId ? 'ID: ' + escapeHtml(r.patient.patientId) : ''} · ${escapeHtml(r.procedure)} on ${r.date}</p>
-                        </button>
-                        <button onclick="window.sendEndoReminder('${r.patient.id}')" class="bg-green-500 hover:bg-green-600 text-white font-bold px-4 py-2.5 rounded-lg text-sm flex items-center gap-2 flex-shrink-0"><i class="fa-brands fa-whatsapp"></i> Remind</button>
-                    </div>
-                `).join('');
+            const section = document.getElementById('endo-followup-dashboard-section');
+            const container = document.getElementById('endo-followup-dashboard-list');
+            if (capped.length === 0) {
+                section.classList.add('hidden');
+                return;
             }
-            recordsShowStep('endo-followup-step');
+            section.classList.remove('hidden');
+            container.innerHTML = capped.map(r => `
+                <div class="bg-white border border-slate-200 rounded-xl p-3 flex justify-between items-center shadow-sm gap-2">
+                    <button onclick="window.openPatientDetail('${r.patient.id}')" class="text-left flex-grow min-w-0">
+                        <p class="font-black text-slate-800 text-sm truncate">${escapeHtml(r.patient.name)}</p>
+                        <p class="text-[11px] text-slate-500 font-bold">${r.patient.patientId ? 'ID: ' + escapeHtml(r.patient.patientId) : ''} · ${escapeHtml(r.entry.procedure)} on ${r.entry.date}</p>
+                    </button>
+                    <button onclick="window.sendEndoReminder('${r.patient.id}')" class="bg-green-500 hover:bg-green-600 text-white font-bold px-3 py-2 rounded-lg text-sm flex-shrink-0" title="Send WhatsApp reminder"><i class="fa-brands fa-whatsapp"></i></button>
+                    <button onclick="window.dismissEndoReminder('${r.patient.id}', '${r.entry.id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold px-3 py-2 rounded-lg text-sm flex-shrink-0" title="Hide — already messaged or visit completed"><i class="fa-solid fa-eye-slash"></i></button>
+                </div>
+            `).join('');
+        }
+
+        window.dismissEndoReminder = async function(patientId, entryId) {
+            const p = window.allPatients.find(x => x.id === patientId);
+            if (!p || !db) return;
+            const updatedHistory = (p.caseHistory || []).map(e => e.id === entryId ? { ...e, reminderDismissed: true } : e);
+            try {
+                const patientRef = doc(db, 'artifacts', appId, 'public', 'data', 'patient_records', p.id);
+                await setDoc(patientRef, { caseHistory: updatedHistory, updatedAt: serverTimestamp() }, { merge: true });
+            } catch (e) {
+                console.error(e);
+                window.showMessage('Failed', 'Could not update. Please try again.', 'error');
+            }
         };
 
         window.sendEndoReminder = function(patientId) {
