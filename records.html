@@ -274,7 +274,7 @@
 
                 <div>
                     <label class="text-xs font-black text-slate-500 mb-1.5 block uppercase tracking-wide">Procedure</label>
-                    <select id="new-entry-procedure" onchange="window.renderCanalDetails()" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-clinic bg-white font-bold text-slate-800 shadow-sm">
+                    <select id="new-entry-procedure" onchange="window.onProcedureChange()" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-clinic bg-white font-bold text-slate-800 shadow-sm">
                         <option value="">-- Select procedure --</option>
                         <option value="Exo">Exo (Extraction)</option>
                         <option value="Filling">Filling</option>
@@ -338,10 +338,38 @@
                     </div>
                 </div>
 
-                <!-- Canal details: only shown for Endo procedure, one card per selected tooth -->
+                <!-- Canal details: only shown for Instrumentation/Obturation, one card per selected tooth -->
                 <div id="canal-details-section" class="hidden">
                     <label class="text-xs font-black text-slate-500 mb-2 block uppercase tracking-wide">Canal Details</label>
                     <div id="canal-details-list" class="space-y-3"></div>
+                    <datalist id="file-options-instrumentation">
+                        <option value="S1"><option value="S2"><option value="F1"><option value="F2"><option value="F3">
+                    </datalist>
+                    <datalist id="file-options-obturation">
+                        <option value="F1"><option value="F2"><option value="F3"><option value="F4"><option value="F5">
+                    </datalist>
+                </div>
+
+                <!-- Filling materials: only shown for Filling procedure -->
+                <div id="filling-materials-section" class="hidden">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-xs font-black text-slate-500 block uppercase tracking-wide">Filling Materials</label>
+                        <button type="button" onclick="window.openMaterialsModal()" class="text-xs font-bold text-clinic hover:underline">Manage</button>
+                    </div>
+                    <div class="bg-white border-2 border-slate-200 rounded-xl p-4 shadow-sm grid grid-cols-3 gap-2">
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 mb-1 uppercase">Bond</p>
+                            <select id="filling-bond-select" class="w-full px-2 py-2 rounded-lg border-2 border-slate-200 focus:outline-none focus:border-clinic bg-slate-50 font-bold text-slate-800 text-sm"></select>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 mb-1 uppercase">Composite</p>
+                            <select id="filling-composite-select" class="w-full px-2 py-2 rounded-lg border-2 border-slate-200 focus:outline-none focus:border-clinic bg-slate-50 font-bold text-slate-800 text-sm"></select>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 mb-1 uppercase">Flowable</p>
+                            <select id="filling-flowable-select" class="w-full px-2 py-2 rounded-lg border-2 border-slate-200 focus:outline-none focus:border-clinic bg-slate-50 font-bold text-slate-800 text-sm"></select>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
@@ -362,6 +390,49 @@
             </div>
         </div>
     </div>
+
+    <!-- Materials Management Modal -->
+    <div id="materials-modal" class="fixed inset-0 bg-slate-900/70 hidden items-center justify-center z-[160] p-4 backdrop-blur-md" dir="ltr" lang="en">
+        <div class="bg-white rounded-3xl w-full max-w-2xl shadow-2xl max-h-[90vh] flex flex-col border border-slate-200">
+            <div class="p-6 border-b border-slate-200 flex justify-between items-center">
+                <h3 class="text-lg font-black text-slate-800">Filling Materials</h3>
+                <button onclick="window.closeMaterialsModal()" class="text-slate-400 hover:text-white hover:bg-red-500 transition-colors p-2 bg-slate-100 rounded-full w-10 h-10 flex items-center justify-center"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <p class="text-xs text-slate-500 font-bold mb-4">The first item in each list is the default that appears automatically on a new Filling entry. Use the arrows to reorder.</p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div>
+                        <p class="text-xs font-black text-slate-500 uppercase mb-2">Bond</p>
+                        <div id="materials-bond-list" class="space-y-2 mb-3"></div>
+                        <div class="flex gap-1">
+                            <input type="text" id="materials-bond-new" class="flex-grow px-2 py-2 rounded-lg border-2 border-slate-200 focus:outline-none focus:border-clinic text-sm font-bold text-slate-800" placeholder="Add...">
+                            <button onclick="window.addMaterial('bond')" class="bg-clinic text-white px-3 rounded-lg hover:bg-clinic-dark transition-colors"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-xs font-black text-slate-500 uppercase mb-2">Composite</p>
+                        <div id="materials-composite-list" class="space-y-2 mb-3"></div>
+                        <div class="flex gap-1">
+                            <input type="text" id="materials-composite-new" class="flex-grow px-2 py-2 rounded-lg border-2 border-slate-200 focus:outline-none focus:border-clinic text-sm font-bold text-slate-800" placeholder="Add...">
+                            <button onclick="window.addMaterial('composite')" class="bg-clinic text-white px-3 rounded-lg hover:bg-clinic-dark transition-colors"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-xs font-black text-slate-500 uppercase mb-2">Flowable</p>
+                        <div id="materials-flowable-list" class="space-y-2 mb-3"></div>
+                        <div class="flex gap-1">
+                            <input type="text" id="materials-flowable-new" class="flex-grow px-2 py-2 rounded-lg border-2 border-slate-200 focus:outline-none focus:border-clinic text-sm font-bold text-slate-800" placeholder="Add...">
+                            <button onclick="window.addMaterial('flowable')" class="bg-clinic text-white px-3 rounded-lg hover:bg-clinic-dark transition-colors"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 border-t border-slate-200">
+                <button onclick="window.saveMaterials()" class="w-full bg-clinic text-white font-black py-3.5 rounded-xl hover:bg-clinic-dark transition-colors shadow-lg">Save</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -501,6 +572,13 @@
             });
         }
 
+        const DEFAULT_MATERIALS = {
+            bond: ['Premio'],
+            composite: ['Toko', 'LS II'],
+            flowable: ['GC Flo']
+        };
+        window.fillingMaterials = DEFAULT_MATERIALS;
+
         function startRecordsListener() {
             const recordsCol = collection(db, 'artifacts', appId, 'public', 'data', 'patient_records');
             onSnapshot(recordsCol, (snapshot) => {
@@ -520,6 +598,18 @@
                     document.getElementById('recent-visits-section').innerHTML = `<div class="text-center py-10"><p class="text-red-500 font-bold mb-2">Access denied — you're not logged in as staff.</p><p class="text-slate-400 text-sm">Log out and log back in.</p></div>`;
                 }
             });
+
+            const materialsRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinic_state', 'filling_materials');
+            onSnapshot(materialsRef, (snap) => {
+                window.fillingMaterials = snap.exists() ? snap.data() : DEFAULT_MATERIALS;
+                if (!document.getElementById('filling-materials-section').classList.contains('hidden')) {
+                    window.renderFillingMaterialsFields();
+                }
+                if (!document.getElementById('materials-modal').classList.contains('hidden')) {
+                    window.materialsDraft = JSON.parse(JSON.stringify(window.fillingMaterials));
+                    renderMaterialsModalLists();
+                }
+            }, (error) => console.error('Materials Sync Error:', error));
         }
 
         window.syncDarkModeIcon = window.syncDarkModeIcon || function() {};
@@ -864,20 +954,46 @@
             });
         }
 
+        // Mesial canals (MB1, MB2, MB, ML) default to F2 during Obturation; distal/palatal
+        // canals (DB, D, P) default to F3 — the two most common finishing sizes in practice.
+        function isMesialCanal(canalName) {
+            return canalName.startsWith('M');
+        }
+
+        function defaultFileFor(procedure, canalName) {
+            if (procedure === 'Instrumentation') return 'S1';
+            if (procedure === 'Obturation') return isMesialCanal(canalName) ? 'F2' : 'F3';
+            return '';
+        }
+
+        window.adjustWL = function(toothId, canal, delta) {
+            const card = document.querySelector(`#canal-details-list [data-canal-tooth="${toothId}"]`);
+            if (!card) return;
+            const input = card.querySelector(`.canal-input[data-canal="${canal}"][data-field="wl"]`);
+            if (!input) return;
+            let val = parseFloat(input.value);
+            if (isNaN(val)) val = 21;
+            val = Math.round((val + delta) * 10) / 10;
+            if (val < 0) val = 0;
+            input.value = val;
+        };
+
         // Renders one card per selected tooth with WL/File boxes per canal, only when the
-        // procedure is Endo. Preserves already-typed values when teeth are added/removed rather
-        // than wiping the whole section on every toggle.
+        // procedure is Instrumentation or Obturation. Preserves already-typed values when teeth
+        // are added/removed rather than wiping the whole section on every toggle.
         window.renderCanalDetails = function() {
             const procedure = document.getElementById('new-entry-procedure').value;
             const section = document.getElementById('canal-details-section');
             const list = document.getElementById('canal-details-list');
+            const isEndoPhase = procedure === 'Instrumentation' || procedure === 'Obturation';
 
-            if ((procedure !== 'Instrumentation' && procedure !== 'Obturation') || window.selectedTeeth.size === 0) {
+            if (!isEndoPhase || window.selectedTeeth.size === 0) {
                 section.classList.add('hidden');
                 return;
             }
             section.classList.remove('hidden');
 
+            const fileListId = procedure === 'Instrumentation' ? 'file-options-instrumentation' : 'file-options-obturation';
             const selectedSorted = sortedSelectedTeeth();
 
             list.querySelectorAll('[data-canal-tooth]').forEach(card => {
@@ -892,12 +1008,18 @@
                 card.className = 'bg-white border-2 border-slate-200 rounded-xl p-4 shadow-sm';
                 card.innerHTML = `
                     <p class="font-black text-slate-800 text-sm mb-3">${toothLabel(toothId)} (${toothId})</p>
-                    <div class="space-y-2">
+                    <div class="space-y-3">
                         ${canals.map(canal => `
-                            <div class="grid grid-cols-3 gap-2 items-center">
-                                <p class="text-xs font-bold text-slate-500">${canal}</p>
-                                <input type="number" step="0.1" data-canal="${canal}" data-field="wl" class="canal-input px-2 py-2 rounded-lg border-2 border-slate-200 focus:outline-none focus:border-clinic bg-slate-50 font-bold text-slate-800 text-sm" placeholder="WL">
-                                <input type="text" data-canal="${canal}" data-field="file" class="canal-input px-2 py-2 rounded-lg border-2 border-slate-200 focus:outline-none focus:border-clinic bg-slate-50 font-bold text-slate-800 text-sm" placeholder="File">
+                            <div class="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+                                <p class="text-xs font-bold text-slate-500 mb-1.5">${canal}</p>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div class="flex items-center gap-1">
+                                        <button type="button" onclick="window.adjustWL('${toothId}','${canal}',-0.5)" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-black flex-shrink-0 flex items-center justify-center">−</button>
+                                        <input type="number" step="0.5" value="21" data-canal="${canal}" data-field="wl" onfocus="this.select()" class="canal-input w-full px-1 py-2 rounded-lg border-2 border-slate-200 focus:outline-none focus:border-clinic bg-slate-50 font-bold text-slate-800 text-sm text-center">
+                                        <button type="button" onclick="window.adjustWL('${toothId}','${canal}',0.5)" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-black flex-shrink-0 flex items-center justify-center">+</button>
+                                    </div>
+                                    <input type="text" list="${fileListId}" value="${defaultFileFor(procedure, canal)}" data-canal="${canal}" data-field="file" onfocus="this.select()" class="canal-input px-2 py-2 rounded-lg border-2 border-slate-200 focus:outline-none focus:border-clinic bg-slate-50 font-bold text-slate-800 text-sm" placeholder="File">
+                                </div>
                             </div>
                         `).join('')}
                     </div>
@@ -943,6 +1065,120 @@
             });
         }
 
+        // Runs whenever the Procedure dropdown changes — shows/hides and populates whichever
+        // section is relevant (canal details for Endo phases, materials for Filling).
+        window.onProcedureChange = function() {
+            window.renderCanalDetails();
+            window.renderFillingMaterialsFields();
+        };
+
+        function populateMaterialSelect(selectId, options, preferredValue) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = options.map(o => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('');
+            if (preferredValue && options.includes(preferredValue)) select.value = preferredValue;
+            else select.value = options[0] || '';
+        }
+
+        window.renderFillingMaterialsFields = function() {
+            const procedure = document.getElementById('new-entry-procedure').value;
+            const section = document.getElementById('filling-materials-section');
+            if (procedure !== 'Filling') {
+                section.classList.add('hidden');
+                return;
+            }
+            section.classList.remove('hidden');
+            populateMaterialSelect('filling-bond-select', window.fillingMaterials.bond);
+            populateMaterialSelect('filling-composite-select', window.fillingMaterials.composite);
+            populateMaterialSelect('filling-flowable-select', window.fillingMaterials.flowable);
+        };
+
+        function populateFillingMaterialsFields(saved) {
+            if (!saved) return;
+            populateMaterialSelect('filling-bond-select', window.fillingMaterials.bond, saved.bond);
+            populateMaterialSelect('filling-composite-select', window.fillingMaterials.composite, saved.composite);
+            populateMaterialSelect('filling-flowable-select', window.fillingMaterials.flowable, saved.flowable);
+        }
+
+        function collectFillingMaterials() {
+            return {
+                bond: document.getElementById('filling-bond-select').value,
+                composite: document.getElementById('filling-composite-select').value,
+                flowable: document.getElementById('filling-flowable-select').value
+            };
+        }
+
+        // Brief code for Filling visits, e.g. "Premio / Toko / GC Flo" — just the three chosen
+        // materials, no labels, matching the same brevity as the canal codes.
+        function buildFillingCode(materials) {
+            const parts = [materials.bond, materials.composite, materials.flowable].filter(Boolean);
+            return parts.length ? parts.join(' / ') : '';
+        }
+
+        // Materials management modal — edits a working draft, only writing to Firestore on Save.
+        window.materialsDraft = null;
+
+        window.openMaterialsModal = function() {
+            window.materialsDraft = JSON.parse(JSON.stringify(window.fillingMaterials));
+            renderMaterialsModalLists();
+            document.getElementById('materials-modal').classList.remove('hidden');
+            document.getElementById('materials-modal').classList.add('flex');
+        };
+
+        window.closeMaterialsModal = function() {
+            document.getElementById('materials-modal').classList.add('hidden');
+            document.getElementById('materials-modal').classList.remove('flex');
+        };
+
+        function renderMaterialsModalLists() {
+            ['bond', 'composite', 'flowable'].forEach(category => {
+                const list = window.materialsDraft[category] || [];
+                const container = document.getElementById(`materials-${category}-list`);
+                container.innerHTML = list.map((item, i) => `
+                    <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5">
+                        <span class="flex-grow text-sm font-bold text-slate-700 truncate">${escapeHtml(item)}</span>
+                        ${i > 0 ? `<button type="button" onclick="window.moveMaterial('${category}', ${i}, -1)" class="text-slate-400 hover:text-clinic text-xs w-6 h-6 flex-shrink-0"><i class="fa-solid fa-arrow-up"></i></button>` : `<span class="w-6 flex-shrink-0"></span>`}
+                        ${i < list.length - 1 ? `<button type="button" onclick="window.moveMaterial('${category}', ${i}, 1)" class="text-slate-400 hover:text-clinic text-xs w-6 h-6 flex-shrink-0"><i class="fa-solid fa-arrow-down"></i></button>` : `<span class="w-6 flex-shrink-0"></span>`}
+                        <button type="button" onclick="window.removeMaterial('${category}', ${i})" class="text-slate-400 hover:text-red-500 text-xs w-6 h-6 flex-shrink-0"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                `).join('') || `<p class="text-xs text-slate-400 font-bold">No materials yet.</p>`;
+            });
+        }
+
+        window.addMaterial = function(category) {
+            const input = document.getElementById(`materials-${category}-new`);
+            const value = input.value.trim();
+            if (!value) return;
+            window.materialsDraft[category] = [...(window.materialsDraft[category] || []), value];
+            input.value = '';
+            renderMaterialsModalLists();
+        };
+
+        window.removeMaterial = function(category, index) {
+            window.materialsDraft[category].splice(index, 1);
+            renderMaterialsModalLists();
+        };
+
+        window.moveMaterial = function(category, index, direction) {
+            const list = window.materialsDraft[category];
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= list.length) return;
+            [list[index], list[newIndex]] = [list[newIndex], list[index]];
+            renderMaterialsModalLists();
+        };
+
+        window.saveMaterials = async function() {
+            if (!db) return;
+            try {
+                const materialsRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinic_state', 'filling_materials');
+                await setDoc(materialsRef, window.materialsDraft, { merge: false });
+                window.closeMaterialsModal();
+                window.showMessage('Saved', 'Filling materials updated.', 'success');
+            } catch (e) {
+                console.error(e);
+                window.showMessage('Save Failed', 'Could not save materials. Please try again.', 'error');
+            }
+        };
+
         // Formats the canal boxes as a brief code and merges it into the Notes field itself,
         // so the printed Patient Summary (which only prints Notes) shows it too.
         // Format: (MB 22 F2 / DB 22 F2 / P 23 F5) — Obturation visits get an "Obt." prefix,
@@ -954,7 +1190,7 @@
                 const canalsText = Object.entries(canalDetails[toothId]).map(([canal, vals]) => {
                     let part = canal;
                     if (vals.wl) part += ' ' + vals.wl;
-                    if (vals.file) part += ' F' + vals.file;
+                    if (vals.file) part += ' ' + vals.file; // file value already includes its own prefix (S1, F2, etc.)
                     return part;
                 }).join(' / ');
                 const bracket = `(${canalsText})`;
@@ -964,12 +1200,21 @@
             return procedure === 'Obturation' ? `Obt. ${combined}` : combined;
         }
 
-        // The canal code is always saved as its own first paragraph (separated from free-typed
-        // notes by a blank line) — stripping just checks whether that first paragraph looks like
-        // a generated code, so re-editing never duplicates it.
+        // Any auto-generated code (canal details, filling materials, etc.) is saved as its own
+        // first paragraph, prefixed with an invisible zero-width marker that never shows up when
+        // printed. This lets us reliably strip and rebuild it on every save, regardless of what
+        // the code's actual text looks like, without ever duplicating it.
+        const AUTOCODE_MARKER = '\u200B';
+
+        function mergeGeneratedCode(codeText, freeText) {
+            if (!codeText) return freeText;
+            return AUTOCODE_MARKER + codeText + (freeText ? '\n\n' + freeText : '');
+        }
+
         function stripCanalBlock(notesText) {
-            const parts = notesText.split('\n\n');
-            if (parts.length > 0 && /^(Obt\.\s*)?(\S+\s+)?\(/.test(parts[0].trim())) {
+            if (notesText.startsWith(AUTOCODE_MARKER)) {
+                const withoutMarker = notesText.slice(AUTOCODE_MARKER.length);
+                const parts = withoutMarker.split('\n\n');
                 return parts.slice(1).join('\n\n').trim();
             }
             return notesText.trim();
@@ -1038,6 +1283,8 @@
             document.getElementById('canal-details-list').innerHTML = '';
             window.renderCanalDetails();
             if (existingEntry && existingEntry.canalDetails) populateCanalDetails(existingEntry.canalDetails);
+            window.renderFillingMaterialsFields();
+            if (existingEntry && existingEntry.fillingMaterials) populateFillingMaterialsFields(existingEntry.fillingMaterials);
             document.getElementById('add-entry-modal').classList.remove('hidden');
             document.getElementById('add-entry-modal').classList.add('flex');
             setTimeout(() => document.getElementById('new-entry-notes').focus(), 50);
@@ -1061,12 +1308,15 @@
                 return parseInt(a.slice(2), 10) - parseInt(b.slice(2), 10);
             });
             const canalDetails = (procedure === 'Instrumentation' || procedure === 'Obturation') ? collectCanalDetails() : {};
+            const fillingMaterials = procedure === 'Filling' ? collectFillingMaterials() : {};
 
-            // Strip any previously auto-generated canal block from what's typed, then prepend a
-            // fresh one built from the current box values — keeps edits from duplicating the block.
+            // Strip any previously auto-generated code from what's typed, then prepend a fresh
+            // one built from the current values — keeps edits from ever duplicating it.
             const cleanTypedNotes = stripCanalBlock(rawNotes);
-            const canalBlockText = buildCanalCode(canalDetails, procedure);
-            const notes = canalBlockText ? (canalBlockText + (cleanTypedNotes ? '\n\n' + cleanTypedNotes : '')) : cleanTypedNotes;
+            let generatedCode = '';
+            if (procedure === 'Instrumentation' || procedure === 'Obturation') generatedCode = buildCanalCode(canalDetails, procedure);
+            else if (procedure === 'Filling') generatedCode = buildFillingCode(fillingMaterials);
+            const notes = mergeGeneratedCode(generatedCode, cleanTypedNotes);
 
             if (!date) {
                 window.showMessage('Missing Date', 'Please select a date for this entry.', 'error');
@@ -1083,10 +1333,10 @@
                     // Spreading ...e first preserves any older fields (like photos from before this
                     // feature was removed) that aren't explicitly touched here.
                     updatedHistory = (p.caseHistory || []).map(e =>
-                        e.id === window.editingEntryId ? { ...e, date, notes, paid, remaining, teeth, procedure, canalDetails } : e
+                        e.id === window.editingEntryId ? { ...e, date, notes, paid, remaining, teeth, procedure, canalDetails, fillingMaterials } : e
                     );
                 } else {
-                    updatedHistory = [...(p.caseHistory || []), { id: entryId, date, notes, paid, remaining, teeth, procedure, canalDetails }];
+                    updatedHistory = [...(p.caseHistory || []), { id: entryId, date, notes, paid, remaining, teeth, procedure, canalDetails, fillingMaterials }];
                 }
 
                 const patientRef = doc(db, 'artifacts', appId, 'public', 'data', 'patient_records', p.id);
