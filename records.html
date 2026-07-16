@@ -325,7 +325,11 @@
                     </div>
 
                     <div>
-                        <label class="text-xs font-black text-slate-500 mb-2 block uppercase tracking-wide">Deciduous Teeth (Baby Teeth)</label>
+                        <button type="button" onclick="window.toggleDeciduousChart()" class="w-full flex justify-between items-center mb-2">
+                            <label class="text-xs font-black text-slate-500 block uppercase tracking-wide pointer-events-none">Deciduous Teeth (Baby Teeth)</label>
+                            <span id="deciduous-toggle-label" class="text-xs font-bold text-clinic flex items-center gap-1">Show <i class="fa-solid fa-chevron-down text-[10px]"></i></span>
+                        </button>
+                        <div id="deciduous-chart-wrapper" class="hidden">
                         <div class="bg-white border-2 border-slate-200 rounded-xl overflow-hidden shadow-sm">
                             <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200 bg-slate-50">
                                 <p class="text-center font-black text-slate-600 py-2 text-[11px] uppercase tracking-wide">Upper Right</p>
@@ -343,6 +347,7 @@
                                 <p class="text-center font-black text-slate-600 py-2 text-[11px] uppercase tracking-wide">Lower Right</p>
                                 <p class="text-center font-black text-slate-600 py-2 text-[11px] uppercase tracking-wide">Lower Left</p>
                             </div>
+                        </div>
                         </div>
                     </div>
                 </div>
@@ -959,6 +964,18 @@
             document.getElementById('d-ll-teeth-row').innerHTML = ['A','B','C','D','E'].map(l => toothButtonHtml('LL' + l, l)).join('');
         }
 
+        // Deciduous chart is hidden by default (rarely needed) to keep the entry page compact —
+        // one tap reveals it when treating a baby tooth.
+        window.toggleDeciduousChart = function() {
+            const wrapper = document.getElementById('deciduous-chart-wrapper');
+            const label = document.getElementById('deciduous-toggle-label');
+            const isHidden = wrapper.classList.contains('hidden');
+            wrapper.classList.toggle('hidden');
+            label.innerHTML = isHidden
+                ? 'Hide <i class="fa-solid fa-chevron-up text-[10px]"></i>'
+                : 'Show <i class="fa-solid fa-chevron-down text-[10px]"></i>';
+        };
+
         window.toggleTooth = function(id) {
             const btn = document.querySelector(`.tooth-btn[data-tooth="${id}"]`);
             if (window.selectedTeeth.has(id)) {
@@ -1379,6 +1396,17 @@
             if (existingEntry && existingEntry.canalDetails) populateCanalDetails(existingEntry.canalDetails);
             window.renderFillingMaterialsFields();
             if (existingEntry && existingEntry.fillingMaterials) populateFillingMaterialsFields(existingEntry.fillingMaterials);
+
+            // Deciduous chart starts collapsed, but auto-expands if this entry already has a
+            // baby-tooth selected, so editing doesn't hide something already chosen.
+            const hasDeciduousSelected = existingEntry && existingEntry.teeth && existingEntry.teeth.some(t => /[A-E]$/.test(t));
+            const deciduousWrapper = document.getElementById('deciduous-chart-wrapper');
+            const deciduousLabel = document.getElementById('deciduous-toggle-label');
+            deciduousWrapper.classList.toggle('hidden', !hasDeciduousSelected);
+            deciduousLabel.innerHTML = hasDeciduousSelected
+                ? 'Hide <i class="fa-solid fa-chevron-up text-[10px]"></i>'
+                : 'Show <i class="fa-solid fa-chevron-down text-[10px]"></i>';
+
             document.getElementById('add-entry-modal').classList.remove('hidden');
             document.getElementById('add-entry-modal').classList.add('flex');
             setTimeout(() => document.getElementById('new-entry-notes').focus(), 50);
