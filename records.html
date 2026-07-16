@@ -110,11 +110,21 @@
                     <input type="text" id="records-search-input" oninput="window.searchPatients()" placeholder="Search by name or ID..." class="w-full pl-11 pr-4 py-3 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-clinic bg-white font-bold text-slate-800 shadow-sm">
                 </div>
                 <button onclick="window.openAddPatientForm()" class="bg-clinic text-white font-bold px-5 py-3 rounded-xl hover:bg-clinic-dark transition-colors shadow-md whitespace-nowrap"><i class="fa-solid fa-plus mr-1"></i> Add Patient</button>
+                <button onclick="window.openEndoFollowups()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-5 py-3 rounded-xl transition-colors shadow-md whitespace-nowrap"><i class="fa-solid fa-tooth mr-1"></i> Endo Follow-Ups</button>
             </div>
 
-            <!-- Recent visits: today / yesterday / 2 days ago -->
+            <!-- Pinned patients: manually pinned by staff so they're one tap away all day -->
+            <div id="pinned-patients-section" class="hidden">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fa-solid fa-thumbtack text-clinic"></i>
+                    <h3 class="text-xs font-black text-slate-500 uppercase tracking-wide">Pinned</h3>
+                </div>
+                <div id="pinned-patients-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+            </div>
+
+            <!-- Recent visits: today / yesterday -->
             <div id="recent-visits-section">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
                         <p class="text-xs font-black text-slate-400 uppercase tracking-wide mb-1">Today</p>
                         <p id="today-date-label" class="text-sm font-bold text-slate-600 mb-3"></p>
@@ -125,25 +135,21 @@
                         <p id="yesterday-date-label" class="text-sm font-bold text-slate-600 mb-3"></p>
                         <div id="yesterday-visits-list" class="space-y-2"></div>
                     </div>
-                    <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-                        <p class="text-xs font-black text-slate-400 uppercase tracking-wide mb-1">2 Days Ago</p>
-                        <p id="twodaysago-date-label" class="text-sm font-bold text-slate-600 mb-3"></p>
-                        <div id="twodaysago-visits-list" class="space-y-2"></div>
-                    </div>
-                </div>
-
-                <!-- Endo follow-ups: always visible, no button needed -->
-                <div id="endo-followup-dashboard-section" class="hidden mt-6">
-                    <div class="flex items-center gap-2 mb-3">
-                        <i class="fa-solid fa-tooth text-amber-500"></i>
-                        <h3 class="text-sm font-black text-slate-700 uppercase tracking-wide">Endo Follow-Ups Needed</h3>
-                    </div>
-                    <div id="endo-followup-dashboard-list" class="space-y-2"></div>
                 </div>
             </div>
 
             <!-- Search results (shown instead of recent-visits while searching) -->
             <div id="records-list-step" class="hidden space-y-3"></div>
+
+            <!-- Endo follow-up list -->
+            <div id="endo-followup-step" class="hidden space-y-4">
+                <button onclick="window.backToPatientList()" class="text-sm font-bold text-slate-500 hover:text-clinic flex items-center gap-1"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                <div>
+                    <h3 class="text-lg font-black text-slate-800">Endo Follow-Ups</h3>
+                    <p class="text-sm text-slate-500 font-bold">Instrumentation &amp; Obturation visits from the past month, oldest first</p>
+                </div>
+                <div id="endo-followup-list" class="space-y-2"></div>
+            </div>
 
             <!-- Add patient form -->
             <div id="records-add-step" class="hidden max-w-md mx-auto space-y-4 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
@@ -193,7 +199,10 @@
                                 <button onclick="window.savePatientPhone()" class="bg-clinic text-white font-bold px-4 py-2 rounded-lg text-sm hover:bg-clinic-dark transition-colors">Save</button>
                             </div>
                         </div>
-                        <button onclick="window.deletePatientPrompt()" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors flex-shrink-0" title="Delete patient"><i class="fa-solid fa-trash-can"></i></button>
+                        <div class="flex flex-col gap-1 flex-shrink-0">
+                            <button id="detail-pin-btn" onclick="window.togglePin(window.currentDetailPatientId)" class="text-slate-300 hover:bg-clinic-light hover:text-clinic p-2 rounded-lg transition-colors" title="Pin patient"><i class="fa-solid fa-thumbtack"></i></button>
+                            <button onclick="window.deletePatientPrompt()" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors" title="Delete patient"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
                     </div>
                     <div class="grid grid-cols-4 gap-1.5 mt-4">
                         <button onclick="window.sendWhatsAppReminder('تركيب')" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded-lg transition-colors shadow-md flex flex-col items-center justify-center gap-0.5 text-[11px]">
@@ -343,7 +352,7 @@
                     <label class="text-xs font-black text-slate-500 mb-2 block uppercase tracking-wide">Canal Details</label>
                     <div id="canal-details-list" class="space-y-3"></div>
                     <datalist id="file-options-instrumentation">
-                        <option value="S1"><option value="S2"><option value="F1"><option value="F2"><option value="F3">
+                        <option value="S1"><option value="S2"><option value="F1"><option value="F2"><option value="F3"><option value="F4"><option value="F5">
                     </datalist>
                     <datalist id="file-options-obturation">
                         <option value="F1"><option value="F2"><option value="F3"><option value="F4"><option value="F5">
@@ -668,18 +677,19 @@
         }
 
         function renderRecentVisits() {
+            document.getElementById('pinned-patients-section').classList.remove('hidden');
             document.getElementById('recent-visits-section').classList.remove('hidden');
             document.getElementById('records-list-step').classList.add('hidden');
 
+            renderPinnedPatients();
+
             const todayIso = isoDateOffset(0);
             const yestIso = isoDateOffset(1);
-            const twoIso = isoDateOffset(2);
 
             document.getElementById('today-date-label').textContent = friendlyDateLabel(todayIso);
             document.getElementById('yesterday-date-label').textContent = friendlyDateLabel(yestIso);
-            document.getElementById('twodaysago-date-label').textContent = friendlyDateLabel(twoIso);
 
-            const buckets = { [todayIso]: [], [yestIso]: [], [twoIso]: [] };
+            const buckets = { [todayIso]: [], [yestIso]: [] };
             window.allPatients.forEach(p => {
                 const seenDates = new Set();
                 (p.caseHistory || []).forEach(e => {
@@ -705,10 +715,41 @@
 
             renderCol('today-visits-list', buckets[todayIso]);
             renderCol('yesterday-visits-list', buckets[yestIso]);
-            renderCol('twodaysago-visits-list', buckets[twoIso]);
-
-            renderEndoFollowupDashboard();
         }
+
+        // Pinned patients: manually toggled by staff, not date-based — stay pinned until someone
+        // unpins them, so a patient stays one tap away all day without needing to search.
+        function renderPinnedPatients() {
+            const section = document.getElementById('pinned-patients-section');
+            const container = document.getElementById('pinned-patients-list');
+            const pinned = window.allPatients.filter(p => p.pinned);
+            if (pinned.length === 0) {
+                section.classList.add('hidden');
+                return;
+            }
+            section.classList.remove('hidden');
+            container.innerHTML = pinned.map(p => `
+                <div class="bg-clinic-light border-2 border-clinic/30 rounded-xl px-3 py-2.5 flex items-center justify-between gap-2">
+                    <button onclick="window.openPatientDetail('${p.id}')" class="text-left flex-grow min-w-0">
+                        <p class="font-black text-slate-800 text-sm truncate">${escapeHtml(p.name)}</p>
+                        <p class="text-[11px] text-slate-500 font-bold">${p.patientId ? 'ID: ' + escapeHtml(p.patientId) : ''}</p>
+                    </button>
+                    <button onclick="window.togglePin('${p.id}')" class="text-clinic hover:text-red-500 flex-shrink-0 p-1" title="Unpin"><i class="fa-solid fa-thumbtack"></i></button>
+                </div>
+            `).join('');
+        }
+
+        window.togglePin = async function(patientId) {
+            const p = window.allPatients.find(x => x.id === patientId);
+            if (!p || !db) return;
+            try {
+                const patientRef = doc(db, 'artifacts', appId, 'public', 'data', 'patient_records', p.id);
+                await setDoc(patientRef, { pinned: !p.pinned, updatedAt: serverTimestamp() }, { merge: true });
+            } catch (e) {
+                console.error(e);
+                window.showMessage('Failed', 'Could not update pin. Please try again.', 'error');
+            }
+        };
 
         window.searchPatients = function() {
             const raw = (document.getElementById('records-search-input').value || '').trim();
@@ -719,6 +760,7 @@
                 return;
             }
 
+            document.getElementById('pinned-patients-section').classList.add('hidden');
             document.getElementById('recent-visits-section').classList.add('hidden');
             document.getElementById('records-list-step').classList.remove('hidden');
 
@@ -742,13 +784,13 @@
             }
             const sorted = [...list].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
             container.innerHTML = sorted.map(p => `
-                <button onclick="window.openPatientDetail('${p.id}')" class="w-full text-left bg-white border border-slate-200 rounded-xl p-4 flex justify-between items-center hover:border-clinic transition-colors shadow-sm">
-                    <div>
+                <div class="w-full bg-white border border-slate-200 rounded-xl p-4 flex justify-between items-center hover:border-clinic transition-colors shadow-sm gap-2">
+                    <button onclick="window.openPatientDetail('${p.id}')" class="text-left flex-grow min-w-0">
                         <p class="font-black text-slate-800">${escapeHtml(p.name)}</p>
                         <p class="text-xs text-slate-500 font-bold mt-0.5">${p.patientId ? 'ID: ' + escapeHtml(p.patientId) : 'No ID'} ${p.phone ? ' · ' + escapeHtml(p.phone) : ''}</p>
-                    </div>
-                    <i class="fa-solid fa-chevron-right text-slate-300"></i>
-                </button>
+                    </button>
+                    <button onclick="window.togglePin('${p.id}')" class="flex-shrink-0 p-2 ${p.pinned ? 'text-clinic' : 'text-slate-300 hover:text-clinic'}" title="${p.pinned ? 'Unpin' : 'Pin'}"><i class="fa-solid fa-thumbtack"></i></button>
+                </div>
             `).join('');
         }
 
@@ -771,10 +813,12 @@
 
         // Shows the add-patient form or patient-detail view, hiding the recent-visits/search list beneath it.
         function recordsShowStep(stepId) {
+            document.getElementById('pinned-patients-section').classList.add('hidden');
             document.getElementById('recent-visits-section').classList.add('hidden');
             document.getElementById('records-list-step').classList.add('hidden');
             document.getElementById('records-add-step').classList.add('hidden');
             document.getElementById('records-detail-step').classList.add('hidden');
+            document.getElementById('endo-followup-step').classList.add('hidden');
             document.getElementById(stepId).classList.remove('hidden');
         }
 
@@ -843,6 +887,17 @@
             document.getElementById('detail-patient-name').textContent = p.name || '';
             document.getElementById('detail-patient-id').textContent = p.patientId ? 'ID: ' + p.patientId : 'No ID assigned';
             document.getElementById('detail-patient-phone').textContent = p.phone ? 'Phone: ' + p.phone : 'No phone on file';
+
+            const pinBtn = document.getElementById('detail-pin-btn');
+            if (p.pinned) {
+                pinBtn.classList.add('bg-clinic-light', 'text-clinic');
+                pinBtn.classList.remove('text-slate-300');
+                pinBtn.title = 'Unpin patient';
+            } else {
+                pinBtn.classList.remove('bg-clinic-light', 'text-clinic');
+                pinBtn.classList.add('text-slate-300');
+                pinBtn.title = 'Pin patient';
+            }
 
             const generalSection = document.getElementById('general-photos-section');
             const generalRow = document.getElementById('general-photos-row');
@@ -954,15 +1009,15 @@
             });
         }
 
-        // Mesial canals (MB1, MB2, MB, ML) default to F2 during Obturation; distal/palatal
-        // canals (DB, D, P) default to F3 — the two most common finishing sizes in practice.
-        function isMesialCanal(canalName) {
-            return canalName.startsWith('M');
+        // Buccal canals (MB1, MB2, MB, DB) default to F2 during Obturation; palatal/distal
+        // canals (P, D, ML) default to F3 — the two most common finishing sizes in practice.
+        function isBuccalCanal(canalName) {
+            return canalName.includes('B');
         }
 
         function defaultFileFor(procedure, canalName) {
             if (procedure === 'Instrumentation') return 'S1';
-            if (procedure === 'Obturation') return isMesialCanal(canalName) ? 'F2' : 'F3';
+            if (procedure === 'Obturation') return isBuccalCanal(canalName) ? 'F2' : 'F3';
             return '';
         }
 
@@ -1505,15 +1560,15 @@
         };
 
         // Finds patients needing an Endo follow-up: their most recent Instrumentation/Obturation
-        // entry was 2-30 days ago (today/yesterday excluded — too soon for a "don't forget"
-        // nudge), not already dismissed, oldest visit first, capped at 30 so the list stays usable.
-        function renderEndoFollowupDashboard() {
+        // entry was 4-30 days ago (the most recent 3 days are excluded — too soon for a "don't
+        // forget" nudge), not already dismissed, oldest visit first, capped at 30.
+        window.openEndoFollowups = function() {
             const oldCutoff = new Date();
             oldCutoff.setDate(oldCutoff.getDate() - 30);
             const oldCutoffIso = oldCutoff.toISOString().split('T')[0];
 
             const recentCutoff = new Date();
-            recentCutoff.setDate(recentCutoff.getDate() - 2);
+            recentCutoff.setDate(recentCutoff.getDate() - 3);
             const recentCutoffIso = recentCutoff.toISOString().split('T')[0];
 
             const results = [];
@@ -1528,24 +1583,25 @@
             results.sort((a, b) => a.entry.date.localeCompare(b.entry.date)); // oldest first
             const capped = results.slice(0, 30);
 
-            const section = document.getElementById('endo-followup-dashboard-section');
-            const container = document.getElementById('endo-followup-dashboard-list');
+            const container = document.getElementById('endo-followup-list');
             if (capped.length === 0) {
-                section.classList.add('hidden');
-                return;
+                container.innerHTML = `<p class="text-center text-slate-400 font-bold py-10">No follow-ups needed right now.</p>`;
+            } else {
+                container.innerHTML = capped.map(r => `
+                    <div class="bg-white border border-slate-200 rounded-xl p-3 flex items-center gap-3 shadow-sm">
+                        <label class="flex items-center gap-2 flex-shrink-0 cursor-pointer" title="Tick once you've messaged them or they've already been in">
+                            <input type="checkbox" onchange="window.dismissEndoReminder('${r.patient.id}', '${r.entry.id}')" class="w-5 h-5 rounded border-2 border-slate-300 text-clinic focus:ring-clinic cursor-pointer">
+                        </label>
+                        <button onclick="window.openPatientDetail('${r.patient.id}')" class="text-left flex-grow min-w-0">
+                            <p class="font-black text-slate-800 text-sm truncate">${escapeHtml(r.patient.name)}</p>
+                            <p class="text-[11px] text-slate-500 font-bold">${r.patient.patientId ? 'ID: ' + escapeHtml(r.patient.patientId) : ''} · ${escapeHtml(r.entry.procedure)} on ${r.entry.date}</p>
+                        </button>
+                        <button onclick="window.sendEndoReminder('${r.patient.id}')" class="bg-green-500 hover:bg-green-600 text-white font-bold px-3 py-2 rounded-lg text-sm flex-shrink-0" title="Send WhatsApp reminder"><i class="fa-brands fa-whatsapp"></i></button>
+                    </div>
+                `).join('');
             }
-            section.classList.remove('hidden');
-            container.innerHTML = capped.map(r => `
-                <div class="bg-white border border-slate-200 rounded-xl p-3 flex justify-between items-center shadow-sm gap-2">
-                    <button onclick="window.openPatientDetail('${r.patient.id}')" class="text-left flex-grow min-w-0">
-                        <p class="font-black text-slate-800 text-sm truncate">${escapeHtml(r.patient.name)}</p>
-                        <p class="text-[11px] text-slate-500 font-bold">${r.patient.patientId ? 'ID: ' + escapeHtml(r.patient.patientId) : ''} · ${escapeHtml(r.entry.procedure)} on ${r.entry.date}</p>
-                    </button>
-                    <button onclick="window.sendEndoReminder('${r.patient.id}')" class="bg-green-500 hover:bg-green-600 text-white font-bold px-3 py-2 rounded-lg text-sm flex-shrink-0" title="Send WhatsApp reminder"><i class="fa-brands fa-whatsapp"></i></button>
-                    <button onclick="window.dismissEndoReminder('${r.patient.id}', '${r.entry.id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold px-3 py-2 rounded-lg text-sm flex-shrink-0" title="Hide — already messaged or visit completed"><i class="fa-solid fa-eye-slash"></i></button>
-                </div>
-            `).join('');
-        }
+            recordsShowStep('endo-followup-step');
+        };
 
         window.dismissEndoReminder = async function(patientId, entryId) {
             const p = window.allPatients.find(x => x.id === patientId);
