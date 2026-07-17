@@ -310,12 +310,12 @@
                                 <p class="text-center font-black text-slate-600 py-2 text-[11px] uppercase tracking-wide">Upper Left</p>
                             </div>
                             <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
-                                <div class="flex flex-col gap-1 p-2 items-end" id="ur-teeth-row"></div>
-                                <div class="flex flex-col gap-1 p-2 items-start" id="ul-teeth-row"></div>
+                                <div class="p-2" id="ur-teeth-row"></div>
+                                <div class="p-2" id="ul-teeth-row"></div>
                             </div>
                             <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
-                                <div class="flex flex-col gap-1 p-2 items-end" id="lr-teeth-row"></div>
-                                <div class="flex flex-col gap-1 p-2 items-start" id="ll-teeth-row"></div>
+                                <div class="p-2" id="lr-teeth-row"></div>
+                                <div class="p-2" id="ll-teeth-row"></div>
                             </div>
                             <div class="grid grid-cols-2 divide-x divide-slate-200 bg-slate-50">
                                 <p class="text-center font-black text-slate-600 py-2 text-[11px] uppercase tracking-wide">Lower Right</p>
@@ -336,12 +336,12 @@
                                 <p class="text-center font-black text-slate-600 py-2 text-[11px] uppercase tracking-wide">Upper Left</p>
                             </div>
                             <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
-                                <div class="flex flex-col gap-1 p-2 items-end" id="d-ur-teeth-row"></div>
-                                <div class="flex flex-col gap-1 p-2 items-start" id="d-ul-teeth-row"></div>
+                                <div class="p-2" id="d-ur-teeth-row"></div>
+                                <div class="p-2" id="d-ul-teeth-row"></div>
                             </div>
                             <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
-                                <div class="flex flex-col gap-1 p-2 items-end" id="d-lr-teeth-row"></div>
-                                <div class="flex flex-col gap-1 p-2 items-start" id="d-ll-teeth-row"></div>
+                                <div class="p-2" id="d-lr-teeth-row"></div>
+                                <div class="p-2" id="d-ll-teeth-row"></div>
                             </div>
                             <div class="grid grid-cols-2 divide-x divide-slate-200 bg-slate-50">
                                 <p class="text-center font-black text-slate-600 py-2 text-[11px] uppercase tracking-wide">Lower Right</p>
@@ -949,34 +949,50 @@
             return `<button type="button" onclick="window.toggleTooth('${id}')" data-tooth="${id}" class="tooth-btn w-8 h-8 flex-shrink-0 rounded-md border-2 border-slate-200 bg-white text-slate-700 text-xs font-bold hover:border-clinic transition-colors flex items-center justify-center">${label}</button>`;
         }
 
-        // Splits a quadrant's teeth into short rows (3, then 3, then whatever's left) instead of
-        // one long wrapping row — matches a classic printed dental chart and stays compact on mobile.
-        function renderQuadrantRows(containerId, teethIds, labels) {
+        // Builds both a desktop layout (single row, exactly as before) and a mobile layout
+        // (grouped into short rows of 3/3/2, mirrored for left-side quadrants) for the same
+        // quadrant — only one is ever visible at a time, switched by screen width via CSS.
+        // `outwardIds`/`outwardLabels` must be in molars→incisors order (8..1 or E..A) for every
+        // quadrant; `mirror` (true for UL/LL) reverses that for the desktop reading order and
+        // reverses each mobile row internally, since those quadrants are the mirror image of UR/LR.
+        function renderQuadrantRows(containerId, outwardIds, outwardLabels, mirror, alignClass) {
+            const desktopIds = mirror ? [...outwardIds].reverse() : outwardIds;
+            const desktopLabels = mirror ? [...outwardLabels].reverse() : outwardLabels;
+            const desktopHtml = desktopIds.map((id, i) => toothButtonHtml(id, desktopLabels[i])).join('');
+
             const rows = [];
             let i = 0;
-            while (i < teethIds.length) {
-                const size = (teethIds.length - i > 3) ? 3 : (teethIds.length - i);
-                rows.push([teethIds.slice(i, i + size), labels.slice(i, i + size)]);
+            while (i < outwardIds.length) {
+                const size = (outwardIds.length - i > 3) ? 3 : (outwardIds.length - i);
+                let rowIds = outwardIds.slice(i, i + size);
+                let rowLabels = outwardLabels.slice(i, i + size);
+                if (mirror) { rowIds = [...rowIds].reverse(); rowLabels = [...rowLabels].reverse(); }
+                rows.push([rowIds, rowLabels]);
                 i += size;
             }
-            document.getElementById(containerId).innerHTML = rows.map(([ids, lbls]) =>
+            const mobileHtml = rows.map(([ids, lbls]) =>
                 `<div class="flex gap-1">${ids.map((id, idx) => toothButtonHtml(id, lbls[idx])).join('')}</div>`
             ).join('');
+
+            document.getElementById(containerId).innerHTML = `
+                <div class="flex sm:hidden flex-col gap-1 ${alignClass}">${mobileHtml}</div>
+                <div class="hidden sm:flex flex-wrap gap-1 ${alignClass === 'items-end' ? 'justify-end' : 'justify-start'}">${desktopHtml}</div>
+            `;
         }
 
         function renderToothChart() {
-            // Right-side quadrants run 8→1 (or E→A) outward-to-midline; left-side quadrants run the
-            // opposite way — tooth "1"/"A" always sits closest to the centre divider, matching a real chart.
-            renderQuadrantRows('ur-teeth-row', [8,7,6,5,4,3,2,1].map(n => 'UR' + n), [8,7,6,5,4,3,2,1]);
-            renderQuadrantRows('ul-teeth-row', [1,2,3,4,5,6,7,8].map(n => 'UL' + n), [1,2,3,4,5,6,7,8]);
-            renderQuadrantRows('lr-teeth-row', [8,7,6,5,4,3,2,1].map(n => 'LR' + n), [8,7,6,5,4,3,2,1]);
-            renderQuadrantRows('ll-teeth-row', [1,2,3,4,5,6,7,8].map(n => 'LL' + n), [1,2,3,4,5,6,7,8]);
+            // Every quadrant is fed the same "outward" (molars→incisors) order — mirror=true for
+            // the left-side quadrants (UL, LL) handles flipping it correctly for both layouts.
+            renderQuadrantRows('ur-teeth-row', [8,7,6,5,4,3,2,1].map(n => 'UR' + n), [8,7,6,5,4,3,2,1], false, 'items-end');
+            renderQuadrantRows('ul-teeth-row', [8,7,6,5,4,3,2,1].map(n => 'UL' + n), [8,7,6,5,4,3,2,1], true, 'items-start');
+            renderQuadrantRows('lr-teeth-row', [8,7,6,5,4,3,2,1].map(n => 'LR' + n), [8,7,6,5,4,3,2,1], false, 'items-end');
+            renderQuadrantRows('ll-teeth-row', [8,7,6,5,4,3,2,1].map(n => 'LL' + n), [8,7,6,5,4,3,2,1], true, 'items-start');
 
             // Deciduous (baby) teeth: lettered A (closest to midline) through E (outermost), 5 per quadrant.
-            renderQuadrantRows('d-ur-teeth-row', ['E','D','C','B','A'].map(l => 'UR' + l), ['E','D','C','B','A']);
-            renderQuadrantRows('d-ul-teeth-row', ['A','B','C','D','E'].map(l => 'UL' + l), ['A','B','C','D','E']);
-            renderQuadrantRows('d-lr-teeth-row', ['E','D','C','B','A'].map(l => 'LR' + l), ['E','D','C','B','A']);
-            renderQuadrantRows('d-ll-teeth-row', ['A','B','C','D','E'].map(l => 'LL' + l), ['A','B','C','D','E']);
+            renderQuadrantRows('d-ur-teeth-row', ['E','D','C','B','A'].map(l => 'UR' + l), ['E','D','C','B','A'], false, 'items-end');
+            renderQuadrantRows('d-ul-teeth-row', ['E','D','C','B','A'].map(l => 'UL' + l), ['E','D','C','B','A'], true, 'items-start');
+            renderQuadrantRows('d-lr-teeth-row', ['E','D','C','B','A'].map(l => 'LR' + l), ['E','D','C','B','A'], false, 'items-end');
+            renderQuadrantRows('d-ll-teeth-row', ['E','D','C','B','A'].map(l => 'LL' + l), ['E','D','C','B','A'], true, 'items-start');
         }
 
         // Deciduous chart is hidden by default (rarely needed) to keep the entry page compact —
