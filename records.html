@@ -310,12 +310,12 @@
                                 <p class="text-center font-black text-slate-600 py-2 text-[11px] uppercase tracking-wide">Upper Left</p>
                             </div>
                             <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
-                                <div class="flex flex-wrap gap-1 p-2 justify-end" id="ur-teeth-row"></div>
-                                <div class="flex flex-wrap gap-1 p-2 justify-start" id="ul-teeth-row"></div>
+                                <div class="flex flex-col gap-1 p-2 items-end" id="ur-teeth-row"></div>
+                                <div class="flex flex-col gap-1 p-2 items-start" id="ul-teeth-row"></div>
                             </div>
                             <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
-                                <div class="flex flex-wrap gap-1 p-2 justify-end" id="lr-teeth-row"></div>
-                                <div class="flex flex-wrap gap-1 p-2 justify-start" id="ll-teeth-row"></div>
+                                <div class="flex flex-col gap-1 p-2 items-end" id="lr-teeth-row"></div>
+                                <div class="flex flex-col gap-1 p-2 items-start" id="ll-teeth-row"></div>
                             </div>
                             <div class="grid grid-cols-2 divide-x divide-slate-200 bg-slate-50">
                                 <p class="text-center font-black text-slate-600 py-2 text-[11px] uppercase tracking-wide">Lower Right</p>
@@ -336,12 +336,12 @@
                                 <p class="text-center font-black text-slate-600 py-2 text-[11px] uppercase tracking-wide">Upper Left</p>
                             </div>
                             <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
-                                <div class="flex flex-wrap gap-1 p-2 justify-end" id="d-ur-teeth-row"></div>
-                                <div class="flex flex-wrap gap-1 p-2 justify-start" id="d-ul-teeth-row"></div>
+                                <div class="flex flex-col gap-1 p-2 items-end" id="d-ur-teeth-row"></div>
+                                <div class="flex flex-col gap-1 p-2 items-start" id="d-ul-teeth-row"></div>
                             </div>
                             <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
-                                <div class="flex flex-wrap gap-1 p-2 justify-end" id="d-lr-teeth-row"></div>
-                                <div class="flex flex-wrap gap-1 p-2 justify-start" id="d-ll-teeth-row"></div>
+                                <div class="flex flex-col gap-1 p-2 items-end" id="d-lr-teeth-row"></div>
+                                <div class="flex flex-col gap-1 p-2 items-start" id="d-ll-teeth-row"></div>
                             </div>
                             <div class="grid grid-cols-2 divide-x divide-slate-200 bg-slate-50">
                                 <p class="text-center font-black text-slate-600 py-2 text-[11px] uppercase tracking-wide">Lower Right</p>
@@ -949,19 +949,34 @@
             return `<button type="button" onclick="window.toggleTooth('${id}')" data-tooth="${id}" class="tooth-btn w-8 h-8 flex-shrink-0 rounded-md border-2 border-slate-200 bg-white text-slate-700 text-xs font-bold hover:border-clinic transition-colors flex items-center justify-center">${label}</button>`;
         }
 
+        // Splits a quadrant's teeth into short rows (3, then 3, then whatever's left) instead of
+        // one long wrapping row — matches a classic printed dental chart and stays compact on mobile.
+        function renderQuadrantRows(containerId, teethIds, labels) {
+            const rows = [];
+            let i = 0;
+            while (i < teethIds.length) {
+                const size = (teethIds.length - i > 3) ? 3 : (teethIds.length - i);
+                rows.push([teethIds.slice(i, i + size), labels.slice(i, i + size)]);
+                i += size;
+            }
+            document.getElementById(containerId).innerHTML = rows.map(([ids, lbls]) =>
+                `<div class="flex gap-1">${ids.map((id, idx) => toothButtonHtml(id, lbls[idx])).join('')}</div>`
+            ).join('');
+        }
+
         function renderToothChart() {
-            // Right-side columns run 8→1 (or E→A) outward-to-midline; left-side columns run the
+            // Right-side quadrants run 8→1 (or E→A) outward-to-midline; left-side quadrants run the
             // opposite way — tooth "1"/"A" always sits closest to the centre divider, matching a real chart.
-            document.getElementById('ur-teeth-row').innerHTML = [8,7,6,5,4,3,2,1].map(n => toothButtonHtml('UR' + n, n)).join('');
-            document.getElementById('ul-teeth-row').innerHTML = [1,2,3,4,5,6,7,8].map(n => toothButtonHtml('UL' + n, n)).join('');
-            document.getElementById('lr-teeth-row').innerHTML = [8,7,6,5,4,3,2,1].map(n => toothButtonHtml('LR' + n, n)).join('');
-            document.getElementById('ll-teeth-row').innerHTML = [1,2,3,4,5,6,7,8].map(n => toothButtonHtml('LL' + n, n)).join('');
+            renderQuadrantRows('ur-teeth-row', [8,7,6,5,4,3,2,1].map(n => 'UR' + n), [8,7,6,5,4,3,2,1]);
+            renderQuadrantRows('ul-teeth-row', [1,2,3,4,5,6,7,8].map(n => 'UL' + n), [1,2,3,4,5,6,7,8]);
+            renderQuadrantRows('lr-teeth-row', [8,7,6,5,4,3,2,1].map(n => 'LR' + n), [8,7,6,5,4,3,2,1]);
+            renderQuadrantRows('ll-teeth-row', [1,2,3,4,5,6,7,8].map(n => 'LL' + n), [1,2,3,4,5,6,7,8]);
 
             // Deciduous (baby) teeth: lettered A (closest to midline) through E (outermost), 5 per quadrant.
-            document.getElementById('d-ur-teeth-row').innerHTML = ['E','D','C','B','A'].map(l => toothButtonHtml('UR' + l, l)).join('');
-            document.getElementById('d-ul-teeth-row').innerHTML = ['A','B','C','D','E'].map(l => toothButtonHtml('UL' + l, l)).join('');
-            document.getElementById('d-lr-teeth-row').innerHTML = ['E','D','C','B','A'].map(l => toothButtonHtml('LR' + l, l)).join('');
-            document.getElementById('d-ll-teeth-row').innerHTML = ['A','B','C','D','E'].map(l => toothButtonHtml('LL' + l, l)).join('');
+            renderQuadrantRows('d-ur-teeth-row', ['E','D','C','B','A'].map(l => 'UR' + l), ['E','D','C','B','A']);
+            renderQuadrantRows('d-ul-teeth-row', ['A','B','C','D','E'].map(l => 'UL' + l), ['A','B','C','D','E']);
+            renderQuadrantRows('d-lr-teeth-row', ['E','D','C','B','A'].map(l => 'LR' + l), ['E','D','C','B','A']);
+            renderQuadrantRows('d-ll-teeth-row', ['A','B','C','D','E'].map(l => 'LL' + l), ['A','B','C','D','E']);
         }
 
         // Deciduous chart is hidden by default (rarely needed) to keep the entry page compact —
@@ -999,7 +1014,7 @@
             const num = parseInt(toothId.slice(2), 10);
             const isUpper = quadrant === 'UR' || quadrant === 'UL';
             if (num >= 1 && num <= 3) return ['Canal'];
-            if (num === 4 || num === 5) return isUpper ? ['MB', 'P'] : ['Canal'];
+            if (num === 4 || num === 5) return isUpper ? ['B', 'P'] : ['Canal'];
             if (num >= 6 && num <= 8) return isUpper ? ['MB1', 'MB2', 'DB', 'P'] : ['MB', 'ML', 'D'];
             return ['Canal'];
         }
