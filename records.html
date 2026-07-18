@@ -310,12 +310,12 @@
                                 <p class="text-center font-black text-slate-600 py-2 text-[11px] uppercase tracking-wide">Upper Left</p>
                             </div>
                             <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
-                                <div class="p-2" id="ur-teeth-row"></div>
-                                <div class="p-2" id="ul-teeth-row"></div>
+                                <div class="flex flex-wrap gap-1 p-2 justify-end max-w-[112px] sm:max-w-none" id="ur-teeth-row"></div>
+                                <div class="flex flex-wrap gap-1 p-2 justify-start max-w-[112px] sm:max-w-none" id="ul-teeth-row"></div>
                             </div>
                             <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
-                                <div class="p-2" id="lr-teeth-row"></div>
-                                <div class="p-2" id="ll-teeth-row"></div>
+                                <div class="flex flex-wrap gap-1 p-2 justify-end max-w-[112px] sm:max-w-none" id="lr-teeth-row"></div>
+                                <div class="flex flex-wrap gap-1 p-2 justify-start max-w-[112px] sm:max-w-none" id="ll-teeth-row"></div>
                             </div>
                             <div class="grid grid-cols-2 divide-x divide-slate-200 bg-slate-50">
                                 <p class="text-center font-black text-slate-600 py-2 text-[11px] uppercase tracking-wide">Lower Right</p>
@@ -336,12 +336,12 @@
                                 <p class="text-center font-black text-slate-600 py-2 text-[11px] uppercase tracking-wide">Upper Left</p>
                             </div>
                             <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
-                                <div class="p-2" id="d-ur-teeth-row"></div>
-                                <div class="p-2" id="d-ul-teeth-row"></div>
+                                <div class="flex flex-wrap gap-1 p-2 justify-end max-w-[112px] sm:max-w-none" id="d-ur-teeth-row"></div>
+                                <div class="flex flex-wrap gap-1 p-2 justify-start max-w-[112px] sm:max-w-none" id="d-ul-teeth-row"></div>
                             </div>
                             <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
-                                <div class="p-2" id="d-lr-teeth-row"></div>
-                                <div class="p-2" id="d-ll-teeth-row"></div>
+                                <div class="flex flex-wrap gap-1 p-2 justify-end max-w-[112px] sm:max-w-none" id="d-lr-teeth-row"></div>
+                                <div class="flex flex-wrap gap-1 p-2 justify-start max-w-[112px] sm:max-w-none" id="d-ll-teeth-row"></div>
                             </div>
                             <div class="grid grid-cols-2 divide-x divide-slate-200 bg-slate-50">
                                 <p class="text-center font-black text-slate-600 py-2 text-[11px] uppercase tracking-wide">Lower Right</p>
@@ -945,54 +945,51 @@
 
         window.selectedTeeth = new Set();
 
-        function toothButtonHtml(id, label) {
-            return `<button type="button" onclick="window.toggleTooth('${id}')" data-tooth="${id}" class="tooth-btn w-8 h-8 flex-shrink-0 rounded-md border-2 border-slate-200 bg-white text-slate-700 text-xs font-bold hover:border-clinic transition-colors flex items-center justify-center">${label}</button>`;
+        function toothButtonHtml(id, label, mobileOrder, desktopOrder) {
+            return `<button type="button" onclick="window.toggleTooth('${id}')" data-tooth="${id}" class="tooth-btn order-${mobileOrder} sm:order-${desktopOrder} w-8 h-8 flex-shrink-0 rounded-md border-2 border-slate-200 bg-white text-slate-700 text-xs font-bold hover:border-clinic transition-colors flex items-center justify-center">${label}</button>`;
         }
 
-        // Builds both a desktop layout (single row, exactly as before) and a mobile layout
-        // (grouped into short rows of 3/3/2, mirrored for left-side quadrants) for the same
-        // quadrant — only one is ever visible at a time, switched by screen width via CSS.
+        // One button per tooth (no duplicated elements — that caused real selection bugs before).
+        // The container wraps at 3-per-row on narrow screens via a max-width, and each button
+        // carries a CSS `order` that's different for mobile vs desktop, so the same buttons can
+        // read correctly in both a grouped 3/3/2 layout and a single full-width row.
         // `outwardIds`/`outwardLabels` must be in molars→incisors order (8..1 or E..A) for every
-        // quadrant; `mirror` (true for UL/LL) reverses that for the desktop reading order and
-        // reverses each mobile row internally, since those quadrants are the mirror image of UR/LR.
-        function renderQuadrantRows(containerId, outwardIds, outwardLabels, mirror, alignClass) {
-            const desktopIds = mirror ? [...outwardIds].reverse() : outwardIds;
-            const desktopLabels = mirror ? [...outwardLabels].reverse() : outwardLabels;
-            const desktopHtml = desktopIds.map((id, i) => toothButtonHtml(id, desktopLabels[i])).join('');
+        // quadrant; `mirror` (true for UL/LL) flips both layouts for the mirror-image side.
+        function renderQuadrantRows(containerId, outwardIds, outwardLabels, mirror) {
+            const n = outwardIds.length;
 
-            const rows = [];
-            let i = 0;
-            while (i < outwardIds.length) {
-                const size = (outwardIds.length - i > 3) ? 3 : (outwardIds.length - i);
-                let rowIds = outwardIds.slice(i, i + size);
-                let rowLabels = outwardLabels.slice(i, i + size);
-                if (mirror) { rowIds = [...rowIds].reverse(); rowLabels = [...rowLabels].reverse(); }
-                rows.push([rowIds, rowLabels]);
-                i += size;
+            const desktopOrder = new Array(n);
+            for (let i = 0; i < n; i++) desktopOrder[i] = mirror ? (n - i) : (i + 1);
+
+            const chunks = [];
+            let idx = 0;
+            while (idx < n) {
+                const size = (n - idx > 3) ? 3 : (n - idx);
+                let chunkIdx = [];
+                for (let k = 0; k < size; k++) chunkIdx.push(idx + k);
+                if (mirror) chunkIdx.reverse();
+                chunks.push(chunkIdx);
+                idx += size;
             }
-            const mobileHtml = rows.map(([ids, lbls]) =>
-                `<div class="flex gap-1">${ids.map((id, idx) => toothButtonHtml(id, lbls[idx])).join('')}</div>`
-            ).join('');
+            const visualSeq = chunks.flat();
+            const mobileOrder = new Array(n);
+            visualSeq.forEach((origIdx, pos) => { mobileOrder[origIdx] = pos + 1; });
 
-            document.getElementById(containerId).innerHTML = `
-                <div class="flex sm:hidden flex-col gap-1 ${alignClass}">${mobileHtml}</div>
-                <div class="hidden sm:flex flex-wrap gap-1 ${alignClass === 'items-end' ? 'justify-end' : 'justify-start'}">${desktopHtml}</div>
-            `;
+            const html = outwardIds.map((id, i) => toothButtonHtml(id, outwardLabels[i], mobileOrder[i], desktopOrder[i])).join('');
+            document.getElementById(containerId).innerHTML = html;
         }
 
         function renderToothChart() {
-            // Every quadrant is fed the same "outward" (molars→incisors) order — mirror=true for
-            // the left-side quadrants (UL, LL) handles flipping it correctly for both layouts.
-            renderQuadrantRows('ur-teeth-row', [8,7,6,5,4,3,2,1].map(n => 'UR' + n), [8,7,6,5,4,3,2,1], false, 'items-end');
-            renderQuadrantRows('ul-teeth-row', [8,7,6,5,4,3,2,1].map(n => 'UL' + n), [8,7,6,5,4,3,2,1], true, 'items-start');
-            renderQuadrantRows('lr-teeth-row', [8,7,6,5,4,3,2,1].map(n => 'LR' + n), [8,7,6,5,4,3,2,1], false, 'items-end');
-            renderQuadrantRows('ll-teeth-row', [8,7,6,5,4,3,2,1].map(n => 'LL' + n), [8,7,6,5,4,3,2,1], true, 'items-start');
+            renderQuadrantRows('ur-teeth-row', [8,7,6,5,4,3,2,1].map(n => 'UR' + n), [8,7,6,5,4,3,2,1], false);
+            renderQuadrantRows('ul-teeth-row', [8,7,6,5,4,3,2,1].map(n => 'UL' + n), [8,7,6,5,4,3,2,1], true);
+            renderQuadrantRows('lr-teeth-row', [8,7,6,5,4,3,2,1].map(n => 'LR' + n), [8,7,6,5,4,3,2,1], false);
+            renderQuadrantRows('ll-teeth-row', [8,7,6,5,4,3,2,1].map(n => 'LL' + n), [8,7,6,5,4,3,2,1], true);
 
             // Deciduous (baby) teeth: lettered A (closest to midline) through E (outermost), 5 per quadrant.
-            renderQuadrantRows('d-ur-teeth-row', ['E','D','C','B','A'].map(l => 'UR' + l), ['E','D','C','B','A'], false, 'items-end');
-            renderQuadrantRows('d-ul-teeth-row', ['E','D','C','B','A'].map(l => 'UL' + l), ['E','D','C','B','A'], true, 'items-start');
-            renderQuadrantRows('d-lr-teeth-row', ['E','D','C','B','A'].map(l => 'LR' + l), ['E','D','C','B','A'], false, 'items-end');
-            renderQuadrantRows('d-ll-teeth-row', ['E','D','C','B','A'].map(l => 'LL' + l), ['E','D','C','B','A'], true, 'items-start');
+            renderQuadrantRows('d-ur-teeth-row', ['E','D','C','B','A'].map(l => 'UR' + l), ['E','D','C','B','A'], false);
+            renderQuadrantRows('d-ul-teeth-row', ['E','D','C','B','A'].map(l => 'UL' + l), ['E','D','C','B','A'], true);
+            renderQuadrantRows('d-lr-teeth-row', ['E','D','C','B','A'].map(l => 'LR' + l), ['E','D','C','B','A'], false);
+            renderQuadrantRows('d-ll-teeth-row', ['E','D','C','B','A'].map(l => 'LL' + l), ['E','D','C','B','A'], true);
         }
 
         // Deciduous chart is hidden by default (rarely needed) to keep the entry page compact —
@@ -1008,15 +1005,19 @@
         };
 
         window.toggleTooth = function(id) {
-            const btn = document.querySelector(`.tooth-btn[data-tooth="${id}"]`);
+            const btns = document.querySelectorAll(`.tooth-btn[data-tooth="${id}"]`);
             if (window.selectedTeeth.has(id)) {
                 window.selectedTeeth.delete(id);
-                btn.classList.remove('bg-clinic', 'border-clinic', 'text-white');
-                btn.classList.add('bg-white', 'border-slate-200', 'text-slate-700');
+                btns.forEach(btn => {
+                    btn.classList.remove('bg-clinic', 'border-clinic', 'text-white');
+                    btn.classList.add('bg-white', 'border-slate-200', 'text-slate-700');
+                });
             } else {
                 window.selectedTeeth.add(id);
-                btn.classList.add('bg-clinic', 'border-clinic', 'text-white');
-                btn.classList.remove('bg-white', 'border-slate-200', 'text-slate-700');
+                btns.forEach(btn => {
+                    btn.classList.add('bg-clinic', 'border-clinic', 'text-white');
+                    btn.classList.remove('bg-white', 'border-slate-200', 'text-slate-700');
+                });
             }
             window.renderCanalDetails();
         };
