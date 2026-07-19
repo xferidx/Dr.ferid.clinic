@@ -1032,7 +1032,10 @@
             const isUpper = quadrant === 'UR' || quadrant === 'UL';
             if (num >= 1 && num <= 3) return ['Canal'];
             if (num === 4 || num === 5) return isUpper ? ['B', 'P'] : ['Canal'];
-            if (num >= 6 && num <= 8) return isUpper ? ['MB1', 'MB2', 'DB', 'P'] : ['MB', 'ML', 'D'];
+            // Teeth 6/7 sometimes have an extra canal (a 2nd mesiobuccal upper, a 2nd distal lower)
+            // that isn't always present — left blank by default rather than assumed.
+            if (num === 6 || num === 7) return isUpper ? ['MB1', 'MB2', 'DB', 'P'] : ['MB', 'ML', 'D', 'D2'];
+            if (num === 8) return isUpper ? ['MB1', 'MB2', 'DB', 'P'] : ['MB', 'ML', 'D'];
             return ['Canal'];
         }
 
@@ -1052,6 +1055,12 @@
             });
         }
 
+        // MB2 (2nd mesiobuccal, upper) and D2 (2nd distal, lower) aren't always present anatomically
+        // — they start blank rather than pre-filled, and stay out of the notes entirely if left blank.
+        function isOptionalCanal(canalName) {
+            return canalName === 'MB2' || canalName === 'D2';
+        }
+
         // Buccal canals (MB1, MB2, MB, DB) default to F2 during Obturation; palatal/distal
         // canals (P, D, ML) default to F3 — the two most common finishing sizes in practice.
         function isBuccalCanal(canalName) {
@@ -1059,6 +1068,7 @@
         }
 
         function defaultFileFor(procedure, canalName) {
+            if (isOptionalCanal(canalName)) return '';
             if (procedure === 'Instrumentation') return 'S1';
             if (procedure === 'Obturation') return isBuccalCanal(canalName) ? 'F2' : 'F3';
             return '';
@@ -1110,15 +1120,17 @@
                     <p class="font-black text-slate-800 text-sm mb-3">${toothLabel(toothId)} (${toothId})</p>
                     <div class="space-y-3">
                         ${canals.map(canal => {
+                            const optional = isOptionalCanal(canal);
                             const defaultVal = defaultFileFor(procedure, canal);
-                            const optionsHtml = fileOptions.map(opt => `<option value="${opt}" ${opt === defaultVal ? 'selected' : ''}>${opt}</option>`).join('') + `<option value="__custom__">Custom...</option>`;
+                            const blankOption = optional ? `<option value="" ${defaultVal === '' ? 'selected' : ''}>Not Present</option>` : '';
+                            const optionsHtml = blankOption + fileOptions.map(opt => `<option value="${opt}" ${opt === defaultVal ? 'selected' : ''}>${opt}</option>`).join('') + `<option value="__custom__">Custom...</option>`;
                             return `
                             <div class="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
-                                <p class="text-xs font-bold text-slate-500 mb-1.5">${canal}</p>
+                                <p class="text-xs font-bold text-slate-500 mb-1.5">${canal}${optional ? ' <span class="text-slate-400 font-normal">(if present)</span>' : ''}</p>
                                 <div class="grid grid-cols-2 gap-2">
                                     <div class="flex items-center gap-1">
                                         <button type="button" onclick="window.adjustWL('${toothId}','${canal}',-0.5)" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-black flex-shrink-0 flex items-center justify-center">−</button>
-                                        <input type="number" step="0.5" value="21" data-canal="${canal}" data-field="wl" onfocus="this.select()" class="canal-input w-full px-1 py-2 rounded-lg border-2 border-slate-200 focus:outline-none focus:border-clinic bg-slate-50 font-bold text-slate-800 text-sm text-center">
+                                        <input type="number" step="0.5" value="${optional ? '' : '21'}" data-canal="${canal}" data-field="wl" onfocus="this.select()" class="canal-input w-full px-1 py-2 rounded-lg border-2 border-slate-200 focus:outline-none focus:border-clinic bg-slate-50 font-bold text-slate-800 text-sm text-center" placeholder="${optional ? '—' : ''}">
                                         <button type="button" onclick="window.adjustWL('${toothId}','${canal}',0.5)" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-black flex-shrink-0 flex items-center justify-center">+</button>
                                     </div>
                                     <div class="relative">
