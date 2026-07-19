@@ -1859,12 +1859,6 @@
             window.open(url, '_blank');
         };
 
-        // Initialize application after all script assignments are completely loaded
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initApp);
-        } else {
-            initApp();
-        }
 
         // Register service worker for installability (Add to Home Screen) and offline shell caching
         if ('serviceWorker' in navigator) {
