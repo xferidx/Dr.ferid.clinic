@@ -310,12 +310,12 @@
                                 <p class="text-center font-black text-slate-600 py-2 text-[11px] uppercase tracking-wide">Upper Left</p>
                             </div>
                             <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
-                                <div class="flex flex-wrap gap-1 p-2 justify-end max-w-[112px] sm:max-w-none" id="ur-teeth-row"></div>
-                                <div class="flex flex-wrap gap-1 p-2 justify-start max-w-[112px] sm:max-w-none" id="ul-teeth-row"></div>
+                                <div class="flex flex-wrap gap-1 p-2 justify-end max-w-[128px] sm:max-w-none" id="ur-teeth-row"></div>
+                                <div class="flex flex-wrap gap-1 p-2 justify-start max-w-[128px] sm:max-w-none" id="ul-teeth-row"></div>
                             </div>
                             <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
-                                <div class="flex flex-wrap gap-1 p-2 justify-end max-w-[112px] sm:max-w-none" id="lr-teeth-row"></div>
-                                <div class="flex flex-wrap gap-1 p-2 justify-start max-w-[112px] sm:max-w-none" id="ll-teeth-row"></div>
+                                <div class="flex flex-wrap gap-1 p-2 justify-end max-w-[128px] sm:max-w-none" id="lr-teeth-row"></div>
+                                <div class="flex flex-wrap gap-1 p-2 justify-start max-w-[128px] sm:max-w-none" id="ll-teeth-row"></div>
                             </div>
                             <div class="grid grid-cols-2 divide-x divide-slate-200 bg-slate-50">
                                 <p class="text-center font-black text-slate-600 py-2 text-[11px] uppercase tracking-wide">Lower Right</p>
@@ -336,12 +336,12 @@
                                 <p class="text-center font-black text-slate-600 py-2 text-[11px] uppercase tracking-wide">Upper Left</p>
                             </div>
                             <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
-                                <div class="flex flex-wrap gap-1 p-2 justify-end max-w-[112px] sm:max-w-none" id="d-ur-teeth-row"></div>
-                                <div class="flex flex-wrap gap-1 p-2 justify-start max-w-[112px] sm:max-w-none" id="d-ul-teeth-row"></div>
+                                <div class="flex flex-wrap gap-1 p-2 justify-end max-w-[128px] sm:max-w-none" id="d-ur-teeth-row"></div>
+                                <div class="flex flex-wrap gap-1 p-2 justify-start max-w-[128px] sm:max-w-none" id="d-ul-teeth-row"></div>
                             </div>
                             <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
-                                <div class="flex flex-wrap gap-1 p-2 justify-end max-w-[112px] sm:max-w-none" id="d-lr-teeth-row"></div>
-                                <div class="flex flex-wrap gap-1 p-2 justify-start max-w-[112px] sm:max-w-none" id="d-ll-teeth-row"></div>
+                                <div class="flex flex-wrap gap-1 p-2 justify-end max-w-[128px] sm:max-w-none" id="d-lr-teeth-row"></div>
+                                <div class="flex flex-wrap gap-1 p-2 justify-start max-w-[128px] sm:max-w-none" id="d-ll-teeth-row"></div>
                             </div>
                             <div class="grid grid-cols-2 divide-x divide-slate-200 bg-slate-50">
                                 <p class="text-center font-black text-slate-600 py-2 text-[11px] uppercase tracking-wide">Lower Right</p>
@@ -1859,6 +1859,12 @@
             window.open(url, '_blank');
         };
 
+        // Initialize application after all script assignments are completely loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
 
         // Register service worker for installability (Add to Home Screen) and offline shell caching
         if ('serviceWorker' in navigator) {
