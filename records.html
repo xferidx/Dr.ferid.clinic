@@ -293,6 +293,7 @@
                         <option value="Implants">Implants</option>
                         <option value="Crown & Bridge">Crown &amp; Bridge</option>
                         <option value="Rx">Rx (Prescription)</option>
+                        <option value="Orthodontics">Orthodontics</option>
                     </select>
                 </div>
 
@@ -1858,6 +1859,13 @@
             const url = URL.createObjectURL(blob);
             window.open(url, '_blank');
         };
+
+        // Initialize application after all script assignments are completely loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
 
         // Register service worker for installability (Add to Home Screen) and offline shell caching
         if ('serviceWorker' in navigator) {
