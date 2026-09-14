@@ -117,6 +117,7 @@
                 </div>
                 <button onclick="window.openAddPatientForm()" class="bg-clinic text-white font-bold px-5 py-3 rounded-xl hover:bg-clinic-dark transition-colors shadow-md whitespace-nowrap"><i class="fa-solid fa-plus mr-1"></i> Add Patient</button>
                 <button onclick="window.openEndoFollowups()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-5 py-3 rounded-xl transition-colors shadow-md whitespace-nowrap"><i class="fa-solid fa-tooth mr-1"></i> Endo Follow-Ups</button>
+                <button onclick="window.openFaqsModal()" class="bg-teal-500 hover:bg-teal-600 text-white font-bold px-5 py-3 rounded-xl transition-colors shadow-md whitespace-nowrap"><i class="fa-solid fa-comment-dots mr-1"></i> Chatbot FAQs</button>
             </div>
 
             <!-- Pinned patients: manually pinned by staff so they're one tap away all day -->
@@ -448,6 +449,24 @@
         </div>
     </div>
 
+    <!-- Chatbot FAQs Management Modal -->
+    <div id="chatbot-faqs-modal" class="fixed inset-0 bg-slate-900/70 hidden items-center justify-center z-[160] p-4 backdrop-blur-md" dir="ltr" lang="en">
+        <div class="bg-white rounded-3xl w-full max-w-2xl shadow-2xl max-h-[90vh] flex flex-col border border-slate-200">
+            <div class="p-6 border-b border-slate-200 flex justify-between items-center">
+                <h3 class="text-lg font-black text-slate-800">Chatbot FAQs</h3>
+                <button onclick="window.closeFaqsModal()" class="text-slate-400 hover:text-white hover:bg-red-500 transition-colors p-2 bg-slate-100 rounded-full w-10 h-10 flex items-center justify-center"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <p class="text-xs text-slate-500 font-bold mb-4">These power the chat assistant on your main site. "Triggers" are Arabic (or English) keywords, comma-separated — if a patient's question contains one, this answer shows up. "Label" is the short caption on the quick-question button (first 6 FAQs only).</p>
+                <div id="faqs-list" class="space-y-3 mb-3"></div>
+                <button onclick="window.addNewFaq()" class="w-full border-2 border-dashed border-slate-300 rounded-xl py-3 text-slate-400 font-bold text-sm hover:border-clinic hover:text-clinic transition-colors"><i class="fa-solid fa-plus mr-1"></i> Add FAQ</button>
+            </div>
+            <div class="p-6 border-t border-slate-200">
+                <button onclick="window.saveFaqs()" class="w-full bg-clinic text-white font-black py-3.5 rounded-xl hover:bg-clinic-dark transition-colors shadow-lg">Save</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -638,6 +657,16 @@
                 if (window.currentDetailPatientId) window.refreshDetailView();
                 maybeMigratePinnedPatients();
             }, (error) => console.error('Pinned Queue Sync Error:', error));
+
+            // Chatbot FAQs: powers the AI assistant on the main site.
+            const faqsRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinic_state', 'chatbot_faqs');
+            onSnapshot(faqsRef, (snap) => {
+                window.chatbotFaqs = snap.exists() ? (snap.data().items || []) : [];
+                if (!document.getElementById('chatbot-faqs-modal').classList.contains('hidden')) {
+                    window.faqsDraft = JSON.parse(JSON.stringify(window.chatbotFaqs));
+                    renderFaqsList();
+                }
+            }, (error) => console.error('Chatbot FAQs Sync Error:', error));
         }
 
         // One-time migration: patients pinned under the old system (a boolean flag stored
@@ -1399,6 +1428,65 @@
             } catch (e) {
                 console.error(e);
                 window.showMessage('Save Failed', 'Could not save materials. Please try again.', 'error');
+            }
+        };
+
+        // Chatbot FAQs management — same working-draft pattern as Materials: edit freely, only
+        // writes to Firestore on Save.
+        window.chatbotFaqs = [];
+        window.faqsDraft = null;
+
+        window.openFaqsModal = function() {
+            window.faqsDraft = JSON.parse(JSON.stringify(window.chatbotFaqs));
+            renderFaqsList();
+            document.getElementById('chatbot-faqs-modal').classList.remove('hidden');
+            document.getElementById('chatbot-faqs-modal').classList.add('flex');
+        };
+
+        window.closeFaqsModal = function() {
+            document.getElementById('chatbot-faqs-modal').classList.add('hidden');
+            document.getElementById('chatbot-faqs-modal').classList.remove('flex');
+        };
+
+        function renderFaqsList() {
+            const container = document.getElementById('faqs-list');
+            if (!window.faqsDraft.length) {
+                container.innerHTML = `<p class="text-xs text-slate-400 font-bold text-center py-4">No FAQs yet — add one below.</p>`;
+                return;
+            }
+            container.innerHTML = window.faqsDraft.map((faq, i) => `
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
+                    <div class="flex gap-2">
+                        <input type="text" value="${escapeHtml(faq.label || '')}" oninput="window.faqsDraft[${i}].label = this.value" placeholder="Button label (e.g. الأسعار)" class="flex-1 px-2 py-1.5 rounded-lg border-2 border-slate-200 text-sm font-bold" dir="rtl">
+                        <button type="button" onclick="window.removeFaq(${i})" class="text-red-400 hover:text-red-600 px-2 flex-shrink-0"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                    <input type="text" value="${escapeHtml(faq.triggers || '')}" oninput="window.faqsDraft[${i}].triggers = this.value" placeholder="Triggers, comma separated (زراعة, implant, تركيب اسنان)" class="w-full px-2 py-1.5 rounded-lg border-2 border-slate-200 text-sm" dir="rtl">
+                    <textarea rows="2" oninput="window.faqsDraft[${i}].answer = this.value" placeholder="Answer in Arabic" class="w-full px-2 py-1.5 rounded-lg border-2 border-slate-200 text-sm" dir="rtl">${escapeHtml(faq.answer || '')}</textarea>
+                </div>
+            `).join('');
+        }
+
+        window.addNewFaq = function() {
+            window.faqsDraft.push({ label: '', triggers: '', answer: '' });
+            renderFaqsList();
+        };
+
+        window.removeFaq = function(index) {
+            window.faqsDraft.splice(index, 1);
+            renderFaqsList();
+        };
+
+        window.saveFaqs = async function() {
+            if (!db) return;
+            try {
+                const faqsRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinic_state', 'chatbot_faqs');
+                const cleaned = window.faqsDraft.filter(f => f.answer && f.answer.trim());
+                await setDoc(faqsRef, { items: cleaned, updatedAt: serverTimestamp() });
+                window.closeFaqsModal();
+                window.showMessage('Saved', 'Chatbot FAQs updated.', 'success');
+            } catch (e) {
+                console.error(e);
+                window.showMessage('Save Failed', 'Could not save FAQs. Please try again.', 'error');
             }
         };
 
