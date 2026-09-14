@@ -490,6 +490,34 @@
         </div>
     </div>
 
+    <!-- AI Chat Widget: a curated Arabic FAQ assistant, not a general-purpose AI, so it only ever
+         says what the clinic has approved (prices, hours, services) — never improvised answers. -->
+    <button id="chat-widget-btn" onclick="window.toggleChatWidget()" class="fixed bottom-5 right-5 z-50 w-16 h-16 bg-clinic hover:bg-clinic-dark text-white rounded-full shadow-2xl flex items-center justify-center transition-transform hover:scale-105">
+        <i class="fa-solid fa-comment-dots text-2xl"></i>
+    </button>
+
+    <div id="chat-widget-window" class="hidden fixed bottom-5 right-5 z-50 w-[92vw] max-w-sm h-[70vh] max-h-[560px] bg-white rounded-3xl shadow-2xl border border-slate-200 flex-col overflow-hidden" dir="rtl">
+        <div class="bg-gradient-to-r from-clinic to-clinic-dark p-4 flex items-center justify-between text-white flex-shrink-0">
+            <div class="flex items-center gap-2">
+                <div class="bg-white/20 p-2 rounded-full"><i class="fa-solid fa-tooth text-lg"></i></div>
+                <div>
+                    <p class="font-black text-sm">مساعد عيادة د. فريد</p>
+                    <p class="text-[10px] text-white/80">اسألني عن الأسعار والخدمات</p>
+                </div>
+            </div>
+            <button onclick="window.toggleChatWidget()" class="hover:bg-white/20 p-1.5 rounded-full transition-colors"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div id="chat-messages" class="flex-grow overflow-y-auto p-4 space-y-3 bg-slate-50"></div>
+
+        <div id="chat-quick-buttons" class="px-3 pb-2 flex flex-wrap gap-1.5 bg-slate-50 flex-shrink-0"></div>
+
+        <div class="p-3 border-t border-slate-200 bg-white flex gap-2 flex-shrink-0">
+            <input type="text" id="chat-input" onkeydown="if(event.key==='Enter') window.sendChatMessage()" placeholder="اكتب سؤالك هنا..." class="flex-grow px-4 py-2.5 rounded-full border-2 border-slate-200 focus:outline-none focus:border-clinic text-sm font-bold text-slate-800">
+            <button onclick="window.sendChatMessage()" class="bg-clinic hover:bg-clinic-dark text-white w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -752,6 +780,7 @@
             if (secInput) secInput.value = window.currentWaitingCount;
 
             initCloudSync(); // Boot up cloud sync
+            initChatbot();
         }
 
         window.syncDarkModeIcon = function() {
@@ -1128,6 +1157,90 @@
                 await window.cloudClearAllBookings();
             });
         };
+
+        // ===================== AI FAQ Chatbot =====================
+        // A curated Arabic assistant, not a general AI — it only ever answers with what the
+        // clinic has written and approved (via the "Chatbot FAQs" manager in Patient Records),
+        // matched by keyword. Never invents prices or medical advice on its own.
+        window.chatFaqs = [];
+
+        function initChatbot() {
+            if (!db) return;
+            const faqsRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinic_state', 'chatbot_faqs');
+            onSnapshot(faqsRef, (snap) => {
+                window.chatFaqs = snap.exists() ? (snap.data().items || []) : [];
+                renderChatQuickButtons();
+            }, (err) => console.error('Chatbot FAQ sync error:', err));
+        }
+
+        function escapeHtmlChat(str) {
+            const div = document.createElement('div');
+            div.textContent = str || '';
+            return div.innerHTML;
+        }
+
+        window.toggleChatWidget = function() {
+            const win = document.getElementById('chat-widget-window');
+            const isHidden = win.classList.contains('hidden');
+            win.classList.toggle('hidden');
+            win.classList.toggle('flex');
+            if (isHidden && document.getElementById('chat-messages').children.length === 0) {
+                addChatBubble('bot', 'مرحباً بك! 👋 أنا مساعد عيادة الدكتور فريد. يمكنك سؤالي عن الأسعار، الخدمات، ساعات العمل، أو الموقع.');
+            }
+        };
+
+        function addChatBubble(sender, text) {
+            const container = document.getElementById('chat-messages');
+            const bubble = document.createElement('div');
+            if (sender === 'user') {
+                bubble.className = 'flex justify-end';
+                bubble.innerHTML = `<div class="bg-clinic text-white rounded-2xl rounded-tl-sm px-4 py-2.5 max-w-[80%] text-sm font-bold">${escapeHtmlChat(text)}</div>`;
+            } else {
+                bubble.className = 'flex justify-start';
+                bubble.innerHTML = `<div class="bg-white border border-slate-200 rounded-2xl rounded-tr-sm px-4 py-2.5 max-w-[85%] text-sm font-medium text-slate-700 shadow-sm leading-relaxed whitespace-pre-wrap">${escapeHtmlChat(text)}</div>`;
+            }
+            container.appendChild(bubble);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function renderChatQuickButtons() {
+            const container = document.getElementById('chat-quick-buttons');
+            if (!window.chatFaqs.length) { container.innerHTML = ''; return; }
+            container.innerHTML = window.chatFaqs.slice(0, 6).map(faq => {
+                const label = faq.label || (faq.triggers || '').split(',')[0] || 'سؤال';
+                return `<button onclick="window.askQuickQuestion('${label.replace(/'/g, "\\'")}')" class="text-xs font-bold bg-white border border-slate-200 hover:border-clinic hover:text-clinic text-slate-600 px-3 py-1.5 rounded-full transition-colors">${escapeHtmlChat(label)}</button>`;
+            }).join('');
+        }
+
+        window.askQuickQuestion = function(text) {
+            document.getElementById('chat-input').value = text;
+            window.sendChatMessage();
+        };
+
+        window.sendChatMessage = function() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+            addChatBubble('user', text);
+            input.value = '';
+
+            setTimeout(() => {
+                addChatBubble('bot', matchFaq(text));
+            }, 400); // small delay feels more natural than an instant reply
+        };
+
+        function matchFaq(userText) {
+            const normalized = userText.toLowerCase();
+            let best = null, bestScore = 0;
+            window.chatFaqs.forEach(faq => {
+                const keywords = (faq.triggers || '').split(',').map(k => k.trim().toLowerCase()).filter(Boolean);
+                let score = 0;
+                keywords.forEach(kw => { if (kw && normalized.includes(kw)) score++; });
+                if (score > bestScore) { bestScore = score; best = faq; }
+            });
+            if (best) return best.answer;
+            return 'عذراً، لم أفهم سؤالك بالضبط 🙏 يمكنك التواصل معنا مباشرة عبر واتساب أو الاتصال، وسنجيبك بكل سرور:\n\n📱 واتساب: أيقونة واتساب أعلى الصفحة\n📞 اتصال: 077818653825';
+        }
 
         let deferredInstallPrompt = null;
         window.addEventListener('beforeinstallprompt', (e) => {
