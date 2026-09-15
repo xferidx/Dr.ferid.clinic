@@ -1230,6 +1230,10 @@
         };
 
         function matchFaq(userText) {
+            if (!window.chatFaqs || window.chatFaqs.length === 0) {
+                console.warn('Chatbot: no FAQs loaded from Firestore yet, or none have been saved.');
+                return 'عذراً، لم يتم إضافة أي أسئلة شائعة بعد 🙏 يرجى التواصل معنا مباشرة عبر واتساب أو الاتصال:\n\n📱 واتساب: أيقونة واتساب أعلى الصفحة\n📞 اتصال: 077818653825';
+            }
             const normalized = userText.toLowerCase();
             let best = null, bestScore = 0;
             window.chatFaqs.forEach(faq => {
@@ -1239,6 +1243,7 @@
                 if (score > bestScore) { bestScore = score; best = faq; }
             });
             if (best) return best.answer;
+            console.warn('Chatbot: FAQs are loaded (' + window.chatFaqs.length + ') but none matched:', userText);
             return 'عذراً، لم أفهم سؤالك بالضبط 🙏 يمكنك التواصل معنا مباشرة عبر واتساب أو الاتصال، وسنجيبك بكل سرور:\n\n📱 واتساب: أيقونة واتساب أعلى الصفحة\n📞 اتصال: 077818653825';
         }
 
