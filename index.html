@@ -1169,6 +1169,7 @@
             const faqsRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinic_state', 'chatbot_faqs');
             onSnapshot(faqsRef, (snap) => {
                 window.chatFaqs = snap.exists() ? (snap.data().items || []) : [];
+                console.log('Chatbot: loaded', window.chatFaqs.length, 'FAQ(s) from Firestore:', window.chatFaqs);
                 renderChatQuickButtons();
             }, (err) => console.error('Chatbot FAQ sync error:', err));
         }
@@ -1206,15 +1207,20 @@
         function renderChatQuickButtons() {
             const container = document.getElementById('chat-quick-buttons');
             if (!window.chatFaqs.length) { container.innerHTML = ''; return; }
-            container.innerHTML = window.chatFaqs.slice(0, 6).map(faq => {
+            container.innerHTML = window.chatFaqs.slice(0, 6).map((faq, i) => {
                 const label = faq.label || (faq.triggers || '').split(',')[0] || 'سؤال';
-                return `<button onclick="window.askQuickQuestion('${label.replace(/'/g, "\\'")}')" class="text-xs font-bold bg-white border border-slate-200 hover:border-clinic hover:text-clinic text-slate-600 px-3 py-1.5 rounded-full transition-colors">${escapeHtmlChat(label)}</button>`;
+                return `<button onclick="window.askQuickQuestion(${i})" class="text-xs font-bold bg-white border border-slate-200 hover:border-clinic hover:text-clinic text-slate-600 px-3 py-1.5 rounded-full transition-colors">${escapeHtmlChat(label)}</button>`;
             }).join('');
         }
 
-        window.askQuickQuestion = function(text) {
-            document.getElementById('chat-input').value = text;
-            window.sendChatMessage();
+        // Quick buttons show their own saved answer directly — no keyword matching involved at
+        // all — so they can never fail even if the matching algorithm misses a phrasing.
+        window.askQuickQuestion = function(faqIndex) {
+            const faq = window.chatFaqs[faqIndex];
+            if (!faq) return;
+            const label = faq.label || (faq.triggers || '').split(',')[0] || 'سؤال';
+            addChatBubble('user', label);
+            setTimeout(() => addChatBubble('bot', faq.answer), 300);
         };
 
         window.sendChatMessage = function() {
@@ -1237,7 +1243,10 @@
             const normalized = userText.toLowerCase();
             let best = null, bestScore = 0;
             window.chatFaqs.forEach(faq => {
-                const keywords = (faq.triggers || '').split(',').map(k => k.trim().toLowerCase()).filter(Boolean);
+                // The label counts as an implicit keyword too — a safety net for whenever the
+                // typed question closely matches the button caption but not any listed trigger.
+                const keywords = (faq.triggers || '').split(',').concat(faq.label ? [faq.label] : [])
+                    .map(k => k.trim().toLowerCase()).filter(Boolean);
                 let score = 0;
                 keywords.forEach(kw => { if (kw && normalized.includes(kw)) score++; });
                 if (score > bestScore) { bestScore = score; best = faq; }
