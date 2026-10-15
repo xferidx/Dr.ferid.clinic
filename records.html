@@ -961,7 +961,14 @@
                     createdAt: serverTimestamp(),
                     updatedAt: serverTimestamp()
                 });
-                window.showMessage('Patient Added', name + ' was saved as patient #' + patientId + '.', 'success');
+                // New patients go straight into the pinned reception queue (at the end of the line)
+                // so they're one tap away without searching.
+                const queue = [...(window.pinnedQueue || [])];
+                if (!queue.includes(newRef.id)) {
+                    queue.push(newRef.id);
+                    await savePinnedQueue(queue);
+                }
+                window.showMessage('Patient Added', name + ' was saved as patient #' + patientId + ' and pinned.', 'success');
                 window.backToPatientList();
             } catch (e) {
                 console.error(e);
