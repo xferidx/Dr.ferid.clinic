@@ -69,6 +69,8 @@
 
         /* ===== Dark Mode ===== */
         html.dark body { background-color: #0f172a; color: #cbd5e1; }
+        html.dark #sponsor-bar { background:#0b1220 !important; border-color:rgba(255,255,255,0.08) !important; }
+        html.dark #sponsor-bar > span { color:#94a3b8 !important; }
         html.dark .glass-nav { background: rgba(15, 23, 42, 0.9) !important; border-bottom: 1px solid rgba(255,255,255,0.08) !important; }
         html.dark .glass-panel { background: rgba(30, 41, 59, 0.9) !important; border: 1px solid rgba(255,255,255,0.08) !important; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.3) !important; }
         html.dark .bg-white { background-color: #1e293b !important; }
@@ -119,6 +121,16 @@
 </head>
 <body class="text-slate-800 antialiased min-h-screen flex flex-col">
 
+    <div id="sponsor-bar" class="bg-slate-100 border-b border-slate-200 py-1.5 px-2 flex items-center justify-center gap-2 text-[11px] font-bold" dir="rtl">
+        <span class="text-slate-400 font-semibold whitespace-nowrap">هذا الموقع برعاية</span>
+        <a href="https://xferidx.github.io/Shamsiastore/#home" target="_blank" rel="noopener" class="w-[8.5rem] h-7 flex items-center justify-center gap-1.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 whitespace-nowrap transition-colors">
+            <i class="fa-solid fa-solar-panel"></i> سوق الطاقة الشمسية
+        </a>
+        <a href="http://www.dardoor.net" target="_blank" rel="noopener" class="w-[8.5rem] h-7 flex items-center justify-center gap-1.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 whitespace-nowrap transition-colors">
+            <i class="fa-solid fa-building"></i> عقارات العراق
+        </a>
+    </div>
+
     <nav class="glass-nav sticky top-0 z-50 transition-all duration-300 shadow-sm">
         <div class="container mx-auto px-4 py-3 flex justify-between items-center max-w-5xl">
             <div class="flex items-center gap-3">
@@ -145,15 +157,6 @@
                     <i class="fa-solid fa-user-lock text-lg"></i>
                 </button>
             </div>
-        </div>
-        <div class="container mx-auto px-4 pb-3 max-w-5xl flex flex-wrap items-center justify-center sm:justify-start gap-2 text-xs font-bold">
-            <span class="w-full sm:w-auto text-center text-slate-400 font-semibold text-[11px] tracking-wide">هذا الموقع برعاية</span>
-            <a href="https://xferidx.github.io/Shamsiastore/#home" target="_blank" rel="noopener" class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition-colors">
-                <i class="fa-solid fa-solar-panel"></i> سوق الطاقة الشمسية
-            </a>
-            <a href="http://www.dardoor.net" target="_blank" rel="noopener" class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 transition-colors">
-                <i class="fa-solid fa-building"></i> عقارات العراق
-            </a>
         </div>
     </nav>
 
