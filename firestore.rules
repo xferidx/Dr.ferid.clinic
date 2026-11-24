@@ -1,0 +1,107 @@
+rules_version = '2';
+
+// Firestore security rules for the Dr. Ferid clinic site (index.html + records.html).
+//
+// Who is who:
+//   - Visitors on index.html are signed in ANONYMOUSLY (to book and to see the waiting count).
+//   - Staff sign in with email/password (index.html secretary panel, records.html).
+//     IMPORTANT: in Firebase Console → Authentication → Settings → User actions,
+//     turn OFF "Enable create (sign-up)" so nobody can create their own email/password
+//     account and be treated as staff. Staff accounts are then added only from the Console.
+//
+// Deploy: Firebase Console → Firestore Database → Rules → paste this file → Publish.
+// Anything not matched below is denied.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isStaff() {
+      return signedIn()
+        && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+
+    function validDate(d) {
+      return d is string && d.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
+    // Matches TIME_SLOTS in index.html, e.g. "05:00 PM".
+    function validTime(t) {
+      return t is string && t.matches('^(0[1-9]|1[0-2]):[0-5][0-9] (AM|PM)$');
+    }
+
+    // Public marker: only says a slot is taken. Doc id must be "<date>_<time>".
+    function validSlot(id, d) {
+      return d.keys().hasOnly(['date', 'time'])
+        && d.keys().hasAll(['date', 'time'])
+        && validDate(d.date)
+        && validTime(d.time)
+        && id == d.date + '_' + d.time;
+    }
+
+    // Private booking details. Doc id must be "<date>_<time>" (same as its slot).
+    function validBooking(id, d) {
+      return d.keys().hasOnly(['name', 'phone', 'reasons', 'timestamp', 'date', 'time'])
+        && d.keys().hasAll(['name', 'phone', 'reasons', 'timestamp', 'date', 'time'])
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 80
+        && d.phone is string && d.phone.matches('^07[0-9]{9}$')
+        && d.reasons is list && d.reasons.size() > 0 && d.reasons.size() <= 10
+        && d.timestamp is string && d.timestamp.size() <= 40
+        && validDate(d.date)
+        && validTime(d.time)
+        && id == d.date + '_' + d.time;
+    }
+
+    match /artifacts/{appId}/public/data {
+
+      function slotPath(id) {
+        return /databases/$(database)/documents/artifacts/$(appId)/public/data/clinic_slots/$(id);
+      }
+      function bookingPath(id) {
+        return /databases/$(database)/documents/artifacts/$(appId)/public/data/clinic_bookings/$(id);
+      }
+
+      // ---- Public "slot taken" markers (no personal data) ----
+      match /clinic_slots/{slotId} {
+        allow read: if signedIn();
+        // Visitors: create only, and only together with its booking (same transaction).
+        // Staff: may also create a bare marker (used by the one-off migration).
+        allow create: if signedIn()
+          && validSlot(slotId, request.resource.data)
+          && (isStaff() || existsAfter(bookingPath(slotId)));
+        allow delete: if isStaff();
+        // No updates: a taken slot can't be overwritten by anyone.
+      }
+
+      // ---- Booking details (name, phone, reasons) — staff only to read ----
+      match /clinic_bookings/{bookingId} {
+        allow read: if isStaff();
+        // Visitors: create only, for a slot that was free before this write
+        // and is claimed in the same transaction.
+        allow create: if signedIn()
+          && validBooking(bookingId, request.resource.data)
+          && (isStaff()
+              || (!exists(slotPath(bookingId)) && existsAfter(slotPath(bookingId))));
+        allow delete: if isStaff();
+        // No updates.
+      }
+
+      // ---- Shared clinic state ----
+      // waiting_room + chatbot_faqs are shown on the public page; the rest
+      // (filling_materials, pinned_queue, …) are records.html staff data.
+      match /clinic_state/{stateId} {
+        allow read: if isStaff()
+          || (signedIn() && stateId in ['waiting_room', 'chatbot_faqs']);
+        allow write: if isStaff();
+      }
+
+      // ---- Patient records (records.html) — staff only ----
+      match /patient_records/{recordId} {
+        allow read, write: if isStaff();
+      }
+    }
+  }
+}

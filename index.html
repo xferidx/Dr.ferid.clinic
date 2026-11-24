@@ -529,7 +529,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, getDocs, serverTimestamp, runTransaction, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase Setup
         // ⚠️ REPLACE the values below with YOUR OWN Firebase project config.
@@ -567,7 +567,17 @@
         window.selectedReasons = new Set();
         window.selectedDate = null;
         window.selectedTime = null;
-        window.bookingsDB = JSON.parse(localStorage.getItem('clinicBookingsV2')) || {}; 
+        // Two separate views of bookings:
+        //  - bookedSlots: { date: { time: true } } from the public `clinic_slots` collection.
+        //    This is all a visitor ever receives — which slots are taken, nothing else.
+        //  - bookingsDB:  { date: { time: {name, phone, ...} } } from `clinic_bookings`, which
+        //    only signed-in staff can read. Never written to localStorage.
+        window.bookedSlots = (() => {
+            try { return JSON.parse(localStorage.getItem('clinicSlotsV1')) || {}; } catch (e) { return {}; }
+        })();
+        window.bookingsDB = {};
+        // Older versions cached every patient's name/phone on each visitor's device — purge it.
+        try { localStorage.removeItem('clinicBookingsV2'); } catch (e) {}
 
         const TIME_SLOTS = ["05:00 PM", "05:30 PM", "06:00 PM", "06:30 PM", "07:00 PM", "07:30 PM", "08:00 PM", "08:30 PM", "09:00 PM"];
 
@@ -589,10 +599,18 @@
             // session with a fresh anonymous one on every page load.
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
-                    startListeners();
-                    cleanupPastBookings(); // purge yesterday-and-earlier bookings, keep today & future
+                    startPublicListeners();
+                    if (window.isStaffLoggedIn()) {
+                        startStaffListeners();
+                        // Staff-only maintenance (visitors can no longer read or delete bookings).
+                        await cleanupPastBookings(); // purge yesterday-and-earlier bookings, keep today & future
+                        await migrateSlotsFromBookings(); // one-off: create public slot markers for older bookings
+                    } else {
+                        stopStaffListeners();
+                    }
                     window.updateStaffUI();
                 } else {
+                    stopStaffListeners();
                     try {
                         await signInAnonymously(auth);
                     } catch (e) {
@@ -643,12 +661,44 @@
         }
         setInterval(refreshLastUpdatedText, 30000); // keep the text fresh even with no new writes
 
-        function startListeners() {
+        // ---- Firestore paths ----
+        // clinic_slots/{date_time}    → { date, time } only. Public: tells visitors a slot is taken.
+        // clinic_bookings/{date_time} → { name, phone, reasons, timestamp, date, time }. Staff-only read.
+        // Both docs share the same id and are always written/deleted together.
+        const dataPath = ['artifacts', appId, 'public', 'data'];
+        const slotsCol = () => collection(db, ...dataPath, 'clinic_slots');
+        const bookingsCol = () => collection(db, ...dataPath, 'clinic_bookings');
+        const slotRef = (id) => doc(db, ...dataPath, 'clinic_slots', id);
+        const bookingRef = (id) => doc(db, ...dataPath, 'clinic_bookings', id);
+        const slotId = (dateIso, time) => `${dateIso}_${time}`;
+
+        function refreshBookingViews() {
+            window.updateManagerBookingsView();
+            if (window.selectedDate) window.generateTimeButtons(window.selectedDate);
+        }
+
+        // Deletes docs in chunks (a Firestore batch is capped at 500 writes).
+        async function deleteRefs(refs) {
+            for (let i = 0; i < refs.length; i += 450) {
+                const batch = writeBatch(db);
+                refs.slice(i, i + 450).forEach(r => batch.delete(r));
+                await batch.commit();
+            }
+        }
+
+        // Listener handles, so an auth change (anonymous ⇄ staff) replaces listeners
+        // instead of stacking duplicates.
+        let publicUnsubs = [];
+        let staffUnsub = null;
+
+        function startPublicListeners() {
             if (!auth.currentUser || !db) return;
-            
+            publicUnsubs.forEach(u => u());
+            publicUnsubs = [];
+
             // Sync Waiting Room Instantly across all users
-            const stateRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinic_state', 'waiting_room');
-            onSnapshot(stateRef, (snapshot) => {
+            const stateRef = doc(db, ...dataPath, 'clinic_state', 'waiting_room');
+            publicUnsubs.push(onSnapshot(stateRef, (snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.data();
                     window.currentWaitingCount = data.count || 0;
@@ -669,50 +719,95 @@
                         refreshLastUpdatedText();
                     }
                 }
-            }, (error) => console.error("Waiting Sync Error:", error));
+            }, (error) => console.error("Waiting Sync Error:", error)));
 
-            // Sync Appointments Bookings Instantly
-            const bookingsCol = collection(db, 'artifacts', appId, 'public', 'data', 'clinic_bookings');
-            onSnapshot(bookingsCol, (snapshot) => {
-                window.bookingsDB = {};
+            // Sync taken slots (no personal data) for everyone
+            publicUnsubs.push(onSnapshot(slotsCol(), (snapshot) => {
+                const slots = {};
+                snapshot.forEach(docSnap => {
+                    const { date, time } = docSnap.data();
+                    if (!date || !time) return;
+                    if (!slots[date]) slots[date] = {};
+                    slots[date][time] = true;
+                });
+                window.bookedSlots = slots;
+                try { localStorage.setItem('clinicSlotsV1', JSON.stringify(slots)); } catch (e) {}
+                refreshBookingViews();
+            }, (error) => console.error("Slots Sync Error:", error)));
+        }
+
+        // Full booking details — staff only (Firestore rules deny this to anonymous visitors).
+        function startStaffListeners() {
+            if (!window.isStaffLoggedIn() || !db) return;
+            stopStaffListeners();
+            staffUnsub = onSnapshot(bookingsCol(), (snapshot) => {
+                const details = {};
                 snapshot.forEach(docSnap => {
                     const data = docSnap.data();
-                    if (!window.bookingsDB[data.date]) window.bookingsDB[data.date] = {};
-                    window.bookingsDB[data.date][data.time] = data;
+                    if (!data.date || !data.time) return;
+                    if (!details[data.date]) details[data.date] = {};
+                    details[data.date][data.time] = data;
                 });
-                
-                localStorage.setItem('clinicBookingsV2', JSON.stringify(window.bookingsDB));
-                window.updateManagerBookingsView();
-                if (window.selectedDate) window.generateTimeButtons(window.selectedDate);
+                window.bookingsDB = details;
+                refreshBookingViews();
             }, (error) => console.error("Bookings Sync Error:", error));
         }
 
-        // Automatically clears bookings for days that have already finished (yesterday and earlier),
-        // while leaving today's and every future date's bookings untouched.
-        // Runs once whenever any device (patient or secretary) opens the site and connects —
-        // no server/cron needed, since the clinic site gets opened many times a day.
+        function stopStaffListeners() {
+            if (staffUnsub) { staffUnsub(); staffUnsub = null; }
+            window.bookingsDB = {};
+            refreshBookingViews();
+        }
+
+        // Automatically clears bookings (details + slot markers) for days that have already
+        // finished (yesterday and earlier), leaving today's and future bookings untouched.
+        // Runs whenever staff open the site — only staff are allowed to delete.
         async function cleanupPastBookings() {
-            if (!auth?.currentUser || !db) return;
+            if (!window.isStaffLoggedIn() || !db) return;
             try {
                 const todayIso = formatDateForDisplay(new Date()).iso; // matches the exact format used when bookings are saved
+                const [bookingsSnap, slotsSnap] = await Promise.all([getDocs(bookingsCol()), getDocs(slotsCol())]);
 
-                const bookingsCol = collection(db, 'artifacts', appId, 'public', 'data', 'clinic_bookings');
-                const snapshot = await getDocs(bookingsCol);
-
-                const deletions = [];
-                snapshot.forEach(docSnap => {
+                const stale = [];
+                [bookingsSnap, slotsSnap].forEach(snap => snap.forEach(docSnap => {
                     const data = docSnap.data();
-                    if (data.date && data.date < todayIso) {
-                        deletions.push(deleteDoc(docSnap.ref));
-                    }
-                });
+                    if (data.date && data.date < todayIso) stale.push(docSnap.ref);
+                }));
 
-                if (deletions.length > 0) {
-                    await Promise.all(deletions);
-                    console.log(`Cleared ${deletions.length} finished-day booking(s).`);
+                if (stale.length > 0) {
+                    await deleteRefs(stale);
+                    console.log(`Cleared ${stale.length} finished-day booking doc(s).`);
                 }
             } catch (e) {
                 console.error("Auto-cleanup error:", e);
+            }
+        }
+
+        // One-off migration (safe to run repeatedly): bookings made before clinic_slots existed
+        // have no public slot marker, so visitors wouldn't see them as taken. Create the markers.
+        async function migrateSlotsFromBookings() {
+            if (!window.isStaffLoggedIn() || !db) return;
+            try {
+                const todayIso = formatDateForDisplay(new Date()).iso;
+                const [bookingsSnap, slotsSnap] = await Promise.all([getDocs(bookingsCol()), getDocs(slotsCol())]);
+                const existing = new Set(slotsSnap.docs.map(d => d.id));
+
+                const missing = [];
+                bookingsSnap.forEach(docSnap => {
+                    const { date, time } = docSnap.data();
+                    if (!date || !time || date < todayIso) return;
+                    const id = slotId(date, time);
+                    if (!existing.has(id)) missing.push({ id, date, time });
+                });
+
+                for (let i = 0; i < missing.length; i += 450) {
+                    const batch = writeBatch(db);
+                    missing.slice(i, i + 450).forEach(m => batch.set(slotRef(m.id), { date: m.date, time: m.time }));
+                    await batch.commit();
+                }
+                if (missing.length > 0) console.log(`Created ${missing.length} public slot marker(s) for existing bookings.`);
+            } catch (e) {
+                console.error("Slot migration error:", e);
             }
         }
 
@@ -721,50 +816,53 @@
             localStorage.setItem('clinicWaitingCount', count);
             const publicCount = document.getElementById('public-waiting-count');
             if(publicCount) publicCount.innerText = count;
-            
+
             if (!auth?.currentUser || !db) return;
-            const stateRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinic_state', 'waiting_room');
+            const stateRef = doc(db, ...dataPath, 'clinic_state', 'waiting_room');
             await setDoc(stateRef, { count: count, updatedAt: serverTimestamp() }, { merge: true });
         };
 
+        // Creates the public slot marker and the private booking atomically. Throws
+        // Error('SLOT_TAKEN') if someone else already holds the slot.
         window.cloudAddBooking = async (dateIso, time, data) => {
-            if (!window.bookingsDB[dateIso]) window.bookingsDB[dateIso] = {};
-            window.bookingsDB[dateIso][time] = { ...data, date: dateIso, time: time };
-            localStorage.setItem('clinicBookingsV2', JSON.stringify(window.bookingsDB));
-            
-            if (!auth?.currentUser || !db) return;
-            const docId = `${dateIso}_${time}`;
-            const bookingRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinic_bookings', docId);
-            await setDoc(bookingRef, { ...data, date: dateIso, time: time });
+            if (!auth?.currentUser || !db) {
+                // Local-only mode (Firebase not configured)
+                if (!window.bookedSlots[dateIso]) window.bookedSlots[dateIso] = {};
+                window.bookedSlots[dateIso][time] = true;
+                return;
+            }
+            const id = slotId(dateIso, time);
+            await runTransaction(db, async (tx) => {
+                const existing = await tx.get(slotRef(id));
+                if (existing.exists()) throw new Error('SLOT_TAKEN');
+                tx.set(slotRef(id), { date: dateIso, time: time });
+                tx.set(bookingRef(id), { ...data, date: dateIso, time: time });
+            });
+            if (!window.bookedSlots[dateIso]) window.bookedSlots[dateIso] = {};
+            window.bookedSlots[dateIso][time] = true;
         };
 
         window.cloudDeleteBooking = async (dateIso, time) => {
-            if (window.bookingsDB[dateIso]) {
-                delete window.bookingsDB[dateIso][time];
-                if(Object.keys(window.bookingsDB[dateIso]).length === 0) delete window.bookingsDB[dateIso];
-                localStorage.setItem('clinicBookingsV2', JSON.stringify(window.bookingsDB));
-                window.updateManagerBookingsView();
-                if (window.selectedDate === dateIso) window.generateTimeButtons(dateIso);
-            }
+            if (window.bookingsDB[dateIso]) delete window.bookingsDB[dateIso][time];
+            if (window.bookedSlots[dateIso]) delete window.bookedSlots[dateIso][time];
+            refreshBookingViews();
 
             if (!auth?.currentUser || !db) return;
-            const docId = `${dateIso}_${time}`;
-            const bookingRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinic_bookings', docId);
-            await deleteDoc(bookingRef);
+            const id = slotId(dateIso, time);
+            const batch = writeBatch(db);
+            batch.delete(bookingRef(id));
+            batch.delete(slotRef(id));
+            await batch.commit();
         };
 
         window.cloudClearAllBookings = async () => {
             window.bookingsDB = {};
-            localStorage.setItem('clinicBookingsV2', JSON.stringify(window.bookingsDB));
-            window.updateManagerBookingsView();
-            if (window.selectedDate) window.generateTimeButtons(window.selectedDate);
+            window.bookedSlots = {};
+            refreshBookingViews();
 
             if (!auth?.currentUser || !db) return;
-            const bookingsCol = collection(db, 'artifacts', appId, 'public', 'data', 'clinic_bookings');
-            const snapshot = await getDocs(bookingsCol);
-            const promises = [];
-            snapshot.forEach(docSnap => promises.push(deleteDoc(docSnap.ref)));
-            await Promise.all(promises);
+            const [bookingsSnap, slotsSnap] = await Promise.all([getDocs(bookingsCol()), getDocs(slotsCol())]);
+            await deleteRefs([...bookingsSnap.docs, ...slotsSnap.docs].map(d => d.ref));
         };
 
         // UI & Application Logic
@@ -915,7 +1013,7 @@
             container.innerHTML = '';
             emptyState.classList.add('hidden');
             container.classList.remove('hidden');
-            const dateBookings = window.bookingsDB[dateIso] || {};
+            const dateBookings = window.bookedSlots[dateIso] || {};
             
             TIME_SLOTS.forEach(time => {
                 const btn = document.createElement('button');
@@ -949,18 +1047,31 @@
         };
 
         window.submitBooking = async function() {
-            const name = document.getElementById('patient-name').value.trim();
-            const phone = document.getElementById('patient-phone').value.trim();
-            
+            const name = document.getElementById('patient-name').value.trim().replace(/\s+/g, ' ');
+            // Normalise Arabic-Indic / Persian digits to 0-9 and drop spaces, dashes, etc.
+            const phone = document.getElementById('patient-phone').value
+                .replace(/[٠-٩]/g, d => String(d.charCodeAt(0) - 0x0660))
+                .replace(/[۰-۹]/g, d => String(d.charCodeAt(0) - 0x06F0))
+                .replace(/\D/g, '');
+
             if (!name || !phone || window.selectedReasons.size === 0 || !window.selectedDate || !window.selectedTime) {
                 window.showMessage("بيانات ناقصة", "يرجى ملء جميع الحقول واختيار الموعد.", "error");
+                return;
+            }
+            // Same limits are enforced by the Firestore security rules.
+            if (name.length > 80) {
+                window.showMessage("الاسم طويل جداً", "يرجى كتابة اسم لا يتجاوز 80 حرفاً.", "error");
+                return;
+            }
+            if (!/^07[0-9]{9}$/.test(phone)) {
+                window.showMessage("رقم الهاتف غير صحيح", "يرجى إدخال رقم هاتف صحيح من 11 رقماً يبدأ بـ 07 (مثال: 07XXXXXXXXX).", "error");
                 return;
             }
             if (new Date(window.selectedDate + 'T00:00:00').getDay() === 5) {
                 window.showMessage("العيادة مغلقة", "العيادة مغلقة يوم الجمعة. يرجى اختيار يوم آخر.", "error");
                 return;
             }
-            if (window.bookingsDB[window.selectedDate] && window.bookingsDB[window.selectedDate][window.selectedTime]) {
+            if (window.bookedSlots[window.selectedDate] && window.bookedSlots[window.selectedDate][window.selectedTime]) {
                 window.showMessage("عذراً", "هذا الوقت تم حجزه للتو من قبل شخص آخر.", "error");
                 window.generateTimeButtons(window.selectedDate);
                 return;
@@ -970,19 +1081,25 @@
             const bookingData = { name, phone, reasons: reasonsArr, timestamp: new Date().toISOString() };
             
             // Send Booking To Cloud
+            const btn = document.querySelector('button[onclick="submitBooking()"]');
+            const orgHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-2xl"></i> جاري الحجز...';
+            btn.disabled = true;
             try {
-                const btn = document.querySelector('button[onclick="submitBooking()"]');
-                const orgHtml = btn.innerHTML;
-                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-2xl"></i> جاري الحجز...';
-                btn.disabled = true;
-                
                 await window.cloudAddBooking(window.selectedDate, window.selectedTime, bookingData);
-                
+            } catch (e) {
+                console.error("Booking error:", e);
+                if (e && e.message === 'SLOT_TAKEN') {
+                    window.showMessage("عذراً", "هذا الوقت تم حجزه للتو من قبل شخص آخر.", "error");
+                    window.selectedTime = null;
+                    window.generateTimeButtons(window.selectedDate);
+                } else {
+                    window.showMessage("خطأ الاتصال", "حدث خطأ أثناء الاتصال بالخادم. حاول مجدداً.", "error");
+                }
+                return;
+            } finally {
                 btn.innerHTML = orgHtml;
                 btn.disabled = false;
-            } catch (e) {
-                window.showMessage("خطأ الاتصال", "حدث خطأ أثناء الاتصال بالخادم. حاول مجدداً.", "error");
-                return;
             }
 
             const waMessage = `✨ *حجز جديد - عيادة د. فريد* ✨%0A👤 *الاسم:* ${name}%0A📱 *الهاتف:* ${phone}%0A🗓 *التاريخ:* ${window.selectedDate}%0A⏰ *الوقت:* ${window.selectedTime.replace(' PM', ' م')}%0A🦷 *السبب:* ${reasonsArr.join('، ')}`;
@@ -1066,6 +1183,7 @@
             if (!auth) return;
             try {
                 window.closeSecretaryModal();
+                stopStaffListeners(); // drop patient details from memory before leaving the staff session
                 await signOut(auth);
                 // onAuthStateChanged fires with user = null, which signs back in anonymously
                 // automatically — so booking/waiting-count keep working right away on this device.
@@ -1115,39 +1233,55 @@
             const list = document.getElementById('manager-bookings-list');
             if(!list) return;
             list.innerHTML = '';
-            
-            const dates = Object.keys(window.bookingsDB).sort();
+            if (!window.isStaffLoggedIn()) return; // details are staff-only
+
+            // Names/phones/reasons are typed by the public — always escape before rendering.
+            const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+            // Union of detailed bookings and public slot markers, so a slot that is blocked
+            // without details (e.g. a half-finished or junk booking) is still visible and removable.
+            const merged = {};
+            [window.bookedSlots, window.bookingsDB].forEach(src => {
+                Object.keys(src).forEach(date => Object.keys(src[date] || {}).forEach(time => {
+                    if (!merged[date]) merged[date] = {};
+                    merged[date][time] = (window.bookingsDB[date] && window.bookingsDB[date][time]) || null;
+                }));
+            });
+
+            const dates = Object.keys(merged).sort();
             if(dates.length === 0) {
                  list.innerHTML = `<div class="text-center text-slate-400 py-10 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">لا توجد مواعيد حالياً</div>`;
                  return;
             }
 
             dates.forEach(date => {
-                if(Object.keys(window.bookingsDB[date]).length === 0) return;
-                
+                if(Object.keys(merged[date]).length === 0) return;
+
                 const dateHeader = document.createElement('div');
                 dateHeader.className = 'bg-slate-800 text-white p-3 rounded-t-xl font-bold text-sm mt-6 shadow-md';
-                dateHeader.innerHTML = `<i class="fa-regular fa-calendar-days ml-2"></i> ${date}`;
+                dateHeader.innerHTML = `<i class="fa-regular fa-calendar-days ml-2"></i> ${esc(date)}`;
                 list.appendChild(dateHeader);
-                
+
                 const timesWrapper = document.createElement('div');
                 timesWrapper.className = 'border-x border-b border-slate-200 bg-white rounded-b-xl divide-y divide-slate-100';
-                
-                Object.keys(window.bookingsDB[date]).sort().forEach(time => {
-                    const b = window.bookingsDB[date][time];
+
+                Object.keys(merged[date]).sort().forEach(time => {
+                    const b = merged[date][time];
                     const item = document.createElement('div');
                     item.className = 'p-4 flex justify-between items-center';
+                    const detailsHtml = b ? `
+                            <div class="font-black text-lg text-slate-800">${esc(b.name)}</div>
+                            <div class="text-xs text-slate-500 mb-1"><i class="fa-solid fa-phone ml-1"></i>${esc(b.phone)}</div>
+                            <div class="flex flex-wrap gap-1 mt-2">${(Array.isArray(b.reasons) ? b.reasons : []).map(r => `<span class="bg-blue-50 text-clinic px-2 py-1 rounded-md text-[10px] font-bold border border-blue-100">${esc(r)}</span>`).join('')}</div>`
+                        : `<div class="font-bold text-slate-400">محجوز بدون بيانات</div>`;
                     item.innerHTML = `
-                        <div>
-                            <div class="font-black text-lg text-slate-800">${b.name}</div>
-                            <div class="text-xs text-slate-500 mb-1"><i class="fa-solid fa-phone ml-1"></i>${b.phone}</div>
-                            <div class="flex flex-wrap gap-1 mt-2">${b.reasons.map(r => `<span class="bg-blue-50 text-clinic px-2 py-1 rounded-md text-[10px] font-bold border border-blue-100">${r}</span>`).join('')}</div>
-                        </div>
+                        <div>${detailsHtml}</div>
                         <div class="flex flex-col gap-2 items-end">
-                            <span class="bg-clinic text-white font-bold px-3 py-1 rounded-lg text-sm"><i class="fa-regular fa-clock ml-1"></i>${time.replace(' PM', ' م')}</span>
-                            <button onclick="requestDeleteBooking('${date}', '${time}')" class="text-red-500 hover:bg-red-50 px-2 py-1 rounded transition-colors text-xs font-bold"><i class="fa-solid fa-trash-can ml-1"></i>حذف</button>
+                            <span class="bg-clinic text-white font-bold px-3 py-1 rounded-lg text-sm"><i class="fa-regular fa-clock ml-1"></i>${esc(time.replace(' PM', ' م'))}</span>
+                            <button type="button" class="delete-booking-btn text-red-500 hover:bg-red-50 px-2 py-1 rounded transition-colors text-xs font-bold"><i class="fa-solid fa-trash-can ml-1"></i>حذف</button>
                         </div>
                     `;
+                    item.querySelector('.delete-booking-btn').addEventListener('click', () => window.requestDeleteBooking(date, time));
                     timesWrapper.appendChild(item);
                 });
                 list.appendChild(timesWrapper);
