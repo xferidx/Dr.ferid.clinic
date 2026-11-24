@@ -170,6 +170,7 @@
         /* Must come after the generic dark overrides above so the selection highlight always wins,
            even though the buttons keep their old bg-white/border-slate-* classes alongside it. */
         html.dark .selected-btn { background-color: #2563eb !important; border-color: #2563eb !important; color: white !important; }
+        .date-btn.selected-btn span { color: #fff !important; }
     </style>
 </head>
 <body class="text-slate-800 antialiased min-h-screen flex flex-col">
@@ -185,29 +186,29 @@
     </div>
 
     <nav class="glass-nav sticky top-0 z-50 transition-all duration-300 shadow-sm">
-        <div class="container mx-auto px-4 py-3 flex justify-between items-center max-w-5xl">
-            <div class="flex items-center gap-3">
-                <div class="bg-gradient-to-br from-clinic to-clinic-dark text-white p-2 rounded-xl flex items-center justify-center h-12 w-12 shadow-lg" aria-hidden="true">
-                    <i class="fa-solid fa-tooth text-2xl"></i>
+        <div class="container mx-auto px-3 py-2 flex justify-between items-center gap-2 max-w-5xl">
+            <div class="flex items-center gap-2 min-w-0">
+                <div class="bg-gradient-to-br from-clinic to-clinic-dark text-white rounded-xl flex items-center justify-center h-9 w-9 flex-shrink-0 shadow-md" aria-hidden="true">
+                    <i class="fa-solid fa-tooth text-lg"></i>
                 </div>
-                <div>
-                    <h1 class="text-base sm:text-lg md:text-xl font-extrabold text-slate-800 tracking-tight">عيادة د. فريد مؤيد السعيد</h1>
-                    <p class="text-clinic text-xs font-bold">لصحة وتجميل الأسنان</p>
+                <div class="min-w-0">
+                    <h1 class="text-sm sm:text-lg font-extrabold text-slate-800 tracking-tight leading-tight truncate">عيادة د. فريد مؤيد السعيد</h1>
+                    <p class="text-clinic text-[11px] font-bold leading-tight truncate">لصحة وتجميل الأسنان</p>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
-                <button type="button" onclick="window.installApp()" id="install-app-btn" class="flex items-center gap-2 text-white bg-clinic hover:bg-clinic-dark transition-colors px-3 py-2 rounded-full text-xs font-bold shadow-lg" title="تثبيت التطبيق" aria-label="تثبيت التطبيق">
-                    <i class="fa-solid fa-download"></i>
+            <div class="flex items-center gap-1 flex-shrink-0">
+                <button type="button" onclick="window.installApp()" id="install-app-btn" class="h-8 min-w-[2rem] px-2 flex items-center justify-center gap-1.5 text-white bg-clinic hover:bg-clinic-dark transition-colors rounded-full text-xs font-bold shadow-md" title="تثبيت التطبيق" aria-label="تثبيت التطبيق">
+                    <i class="fa-solid fa-download text-sm"></i>
                     <span class="hidden sm:inline">تثبيت التطبيق</span>
                 </button>
-                <button type="button" onclick="window.toggleDarkMode()" id="dark-toggle-btn" class="text-slate-400 hover:text-clinic transition-colors p-2 bg-slate-50 rounded-full hover:bg-clinic-light" title="الوضع الليلي" aria-label="الوضع الليلي">
-                    <i class="fa-solid fa-moon text-lg"></i>
+                <button type="button" onclick="window.toggleDarkMode()" id="dark-toggle-btn" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-clinic transition-colors bg-slate-50 rounded-full hover:bg-clinic-light" title="الوضع الليلي" aria-label="الوضع الليلي">
+                    <i class="fa-solid fa-moon text-sm"></i>
                 </button>
-                <a href="records.html" class="text-slate-400 hover:text-clinic transition-colors p-2 bg-slate-50 rounded-full hover:bg-clinic-light" title="سجلات المرضى (للموظفين)" aria-label="سجلات المرضى">
-                    <i class="fa-solid fa-folder-open text-lg"></i>
+                <a href="records.html" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-clinic transition-colors bg-slate-50 rounded-full hover:bg-clinic-light" title="سجلات المرضى (للموظفين)" aria-label="سجلات المرضى">
+                    <i class="fa-solid fa-folder-open text-sm"></i>
                 </a>
-                <button type="button" id="admin-btn" onclick="openSecretaryModal()" class="text-slate-400 hover:text-clinic transition-colors p-2 bg-slate-50 rounded-full hover:bg-clinic-light" title="لوحة الإدارة (للموظفين)" aria-label="لوحة الإدارة">
-                    <i class="fa-solid fa-user-lock text-lg"></i>
+                <button type="button" id="admin-btn" onclick="openSecretaryModal()" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-clinic transition-colors bg-slate-50 rounded-full hover:bg-clinic-light" title="لوحة الإدارة (للموظفين)" aria-label="لوحة الإدارة">
+                    <i class="fa-solid fa-user-lock text-sm"></i>
                 </button>
             </div>
         </div>
@@ -218,168 +219,160 @@
             <img src="header.jpg" alt="" fetchpriority="high" decoding="async" class="w-full h-full object-cover opacity-90" style="object-position: 85% 25%;">
         </div>
         <div class="absolute inset-0 hero-overlay z-0"></div>
-        <div class="container mx-auto px-4 py-20 md:py-32 relative z-10 max-w-4xl text-center">
-            <span class="inline-block py-1 px-3 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-sm font-bold mb-4 animate-pulse">
+        <div class="container mx-auto px-4 pt-10 pb-14 md:py-24 relative z-10 max-w-4xl text-center">
+            <span class="inline-block py-1 px-3 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-xs font-bold mb-3">
                 <i class="fa-solid fa-star text-gold-light mr-1"></i> الرعاية المثالية لأسنانك
             </span>
-            <h2 class="text-4xl md:text-6xl font-black mb-6 leading-tight drop-shadow-lg">ابتسامتك تستحق <br/><span class="text-gold-light">الأفضل دائماً</span></h2>
-            <p class="text-lg md:text-xl text-blue-100 mb-10 max-w-2xl mx-auto leading-relaxed">أحدث التقنيات العالمية في زراعة وتجميل الأسنان، مع خيارات دفع مرنة تناسب الجميع لتستعيد ثقتك بابتسامتك.</p>
-            <a href="#booking-section" class="inline-block bg-white text-clinic font-bold text-lg px-8 py-4 rounded-full shadow-2xl hover:bg-clinic-light transition-all transform hover:-translate-y-1 hover:shadow-clinic/50">
+            <h2 class="text-3xl md:text-5xl font-black mb-3 leading-tight drop-shadow-lg">ابتسامتك تستحق <br/><span class="text-gold-light">الأفضل دائماً</span></h2>
+            <p class="text-sm md:text-lg text-blue-100 mb-5 max-w-2xl mx-auto leading-relaxed">أحدث التقنيات العالمية في زراعة وتجميل الأسنان، مع خيارات دفع مرنة تناسب الجميع.</p>
+            <a href="#booking-section" class="inline-block bg-white text-clinic font-bold text-base px-6 py-3 rounded-full shadow-2xl hover:bg-clinic-light transition-all transform hover:-translate-y-1">
                 <i class="fa-solid fa-calendar-check ml-2"></i> احجز موعدك الآن
             </a>
-            <p class="mt-6 text-sm text-blue-100/90 font-bold"><i class="fa-regular fa-clock ml-1"></i> السبت – الخميس، 5 مساءً – 9 مساءً · الجمعة عطلة</p>
+            <p class="mt-4 text-xs text-blue-100/90 font-bold"><i class="fa-regular fa-clock ml-1"></i> السبت – الخميس، 5 – 9 مساءً · الجمعة عطلة</p>
         </div>
     </header>
 
-    <main class="container mx-auto px-4 py-10 flex-grow space-y-10 max-w-4xl -mt-10 relative z-20">
-        <section class="glass-panel rounded-2xl p-5 sm:p-6 flex items-center justify-between gap-3" aria-live="polite">
-            <div class="flex items-center gap-4">
-                <div class="bg-amber-100 text-amber-600 w-12 h-12 flex-shrink-0 rounded-full flex items-center justify-center text-xl shadow-inner relative" aria-hidden="true">
-                    <i class="fa-solid fa-users"></i>
-                    <span class="absolute top-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full animate-ping"></span>
-                    <span class="absolute top-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
-                </div>
-                <div>
-                    <h2 class="text-lg font-bold text-slate-800">المرضى في الانتظار الآن</h2>
-                    <p class="text-sm text-slate-500">يتم التحديث المباشر من العيادة</p>
-                </div>
+    <main class="container mx-auto px-3 sm:px-4 py-5 flex-grow space-y-5 max-w-4xl -mt-8 relative z-20">
+        <!-- Waiting room: one compact row -->
+        <section class="glass-panel rounded-2xl px-3 py-2.5 flex items-center gap-3" aria-live="polite">
+            <div class="bg-amber-100 text-amber-600 w-9 h-9 flex-shrink-0 rounded-full flex items-center justify-center text-sm relative" aria-hidden="true">
+                <i class="fa-solid fa-users"></i>
+                <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full animate-ping"></span>
+                <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
             </div>
-            <div class="text-center bg-slate-50 px-6 py-2 rounded-xl border border-slate-100">
-                <span id="public-waiting-count" class="block text-3xl font-black text-clinic transition-transform">0</span>
-                <span id="waiting-last-updated" class="block text-[11px] text-slate-400 mt-1 whitespace-nowrap">--</span>
+            <div class="flex-1 min-w-0">
+                <h2 class="text-sm font-bold text-slate-800 leading-tight">المرضى في الانتظار الآن</h2>
+                <p id="waiting-last-updated" class="text-[11px] text-slate-400 leading-tight truncate">--</p>
             </div>
+            <span id="public-waiting-count" class="flex-shrink-0 min-w-[3rem] text-center text-2xl font-black text-clinic bg-slate-50 border border-slate-100 rounded-xl px-3 py-0.5 transition-transform">0</span>
         </section>
 
-        <section class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-            <a href="tel:+9647818653825" aria-label="اتصال بالرقم 07818653825" class="bg-white hover:bg-clinic-light text-clinic shadow-lg rounded-2xl p-4 flex flex-col items-center justify-center gap-2 transition-all transform hover:-translate-y-1 border border-slate-100">
-                <div class="bg-blue-50 p-3 rounded-full mb-1"><i class="fa-solid fa-phone-volume text-2xl"></i></div>
-                <span class="text-xs font-bold text-center">اتصال 1</span>
-                <span class="text-sm font-black" dir="ltr">07818653825</span>
+        <!-- Contact shortcuts: small tiles, 3 per row on phones -->
+        <section class="grid grid-cols-3 md:grid-cols-6 gap-2" aria-label="تواصل معنا">
+            <a href="tel:+9647818653825" aria-label="اتصال بالرقم 07818653825" class="bg-white hover:bg-clinic-light text-clinic shadow-sm rounded-xl py-2.5 px-1 flex flex-col items-center gap-1 border border-slate-100 transition-colors">
+                <span class="bg-blue-50 w-9 h-9 rounded-full flex items-center justify-center"><i class="fa-solid fa-phone-volume text-base"></i></span>
+                <span class="text-[11px] font-black leading-none" dir="ltr">07818653825</span>
             </a>
-            <a href="tel:+9647758939998" aria-label="اتصال بالرقم 07758939998" class="bg-white hover:bg-clinic-light text-clinic shadow-lg rounded-2xl p-4 flex flex-col items-center justify-center gap-2 transition-all transform hover:-translate-y-1 border border-slate-100">
-                <div class="bg-blue-50 p-3 rounded-full mb-1"><i class="fa-solid fa-phone text-2xl"></i></div>
-                <span class="text-xs font-bold text-center">اتصال 2</span>
-                <span class="text-sm font-black" dir="ltr">07758939998</span>
+            <a href="tel:+9647758939998" aria-label="اتصال بالرقم 07758939998" class="bg-white hover:bg-clinic-light text-clinic shadow-sm rounded-xl py-2.5 px-1 flex flex-col items-center gap-1 border border-slate-100 transition-colors">
+                <span class="bg-blue-50 w-9 h-9 rounded-full flex items-center justify-center"><i class="fa-solid fa-phone text-base"></i></span>
+                <span class="text-[11px] font-black leading-none" dir="ltr">07758939998</span>
             </a>
-            <a href="https://wa.me/9647818653825" target="_blank" rel="noopener" class="bg-white hover:bg-green-50 text-green-600 shadow-lg rounded-2xl p-4 flex flex-col items-center justify-center gap-2 transition-all transform hover:-translate-y-1 border border-slate-100">
-                <div class="bg-green-50 p-3 rounded-full mb-1"><i class="fa-brands fa-whatsapp text-3xl"></i></div>
-                <span class="text-sm font-black text-center mt-2">واتساب</span>
+            <a href="https://wa.me/9647818653825" target="_blank" rel="noopener" class="bg-white hover:bg-green-50 text-green-600 shadow-sm rounded-xl py-2.5 px-1 flex flex-col items-center gap-1 border border-slate-100 transition-colors">
+                <span class="bg-green-50 w-9 h-9 rounded-full flex items-center justify-center"><i class="fa-brands fa-whatsapp text-lg"></i></span>
+                <span class="text-xs font-black leading-none">واتساب</span>
             </a>
-            <a href="https://t.me/+9647818653825" target="_blank" rel="noopener" class="bg-white hover:bg-sky-50 text-sky-500 shadow-lg rounded-2xl p-4 flex flex-col items-center justify-center gap-2 transition-all transform hover:-translate-y-1 border border-slate-100">
-                <div class="bg-sky-50 p-3 rounded-full mb-1"><i class="fa-brands fa-telegram text-3xl"></i></div>
-                <span class="text-sm font-black text-center mt-2">تلغرام</span>
+            <a href="https://t.me/+9647818653825" target="_blank" rel="noopener" class="bg-white hover:bg-sky-50 text-sky-500 shadow-sm rounded-xl py-2.5 px-1 flex flex-col items-center gap-1 border border-slate-100 transition-colors">
+                <span class="bg-sky-50 w-9 h-9 rounded-full flex items-center justify-center"><i class="fa-brands fa-telegram text-lg"></i></span>
+                <span class="text-xs font-black leading-none">تلغرام</span>
             </a>
-            <a href="https://www.instagram.com/dr.ferid.clinic/" target="_blank" rel="noopener" class="bg-white hover:bg-pink-50 text-pink-600 shadow-lg rounded-2xl p-4 flex flex-col items-center justify-center gap-2 transition-all transform hover:-translate-y-1 border border-slate-100">
-                <div class="p-3 rounded-full mb-1 bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600"><i class="fa-brands fa-instagram text-3xl text-white"></i></div>
-                <span class="text-sm font-black text-center mt-2">انستغرام</span>
+            <a href="https://www.instagram.com/dr.ferid.clinic/" target="_blank" rel="noopener" class="bg-white hover:bg-pink-50 text-pink-600 shadow-sm rounded-xl py-2.5 px-1 flex flex-col items-center gap-1 border border-slate-100 transition-colors">
+                <span class="bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 w-9 h-9 rounded-full flex items-center justify-center"><i class="fa-brands fa-instagram text-lg text-white"></i></span>
+                <span class="text-xs font-black leading-none">انستغرام</span>
             </a>
-            <a href="https://waze.com/ul/hsvz33y6uy" target="_blank" rel="noopener" class="bg-white hover:bg-red-50 text-red-500 shadow-lg rounded-2xl p-4 flex flex-col items-center justify-center gap-2 transition-all transform hover:-translate-y-1 border border-slate-100">
-                <div class="bg-red-50 p-3 rounded-full mb-1"><i class="fa-solid fa-location-dot text-3xl"></i></div>
-                <span class="text-sm font-black text-center mt-2">الموقع</span>
+            <a href="#clinic-location" class="bg-white hover:bg-red-50 text-red-500 shadow-sm rounded-xl py-2.5 px-1 flex flex-col items-center gap-1 border border-slate-100 transition-colors">
+                <span class="bg-red-50 w-9 h-9 rounded-full flex items-center justify-center"><i class="fa-solid fa-location-dot text-lg"></i></span>
+                <span class="text-xs font-black leading-none">الموقع</span>
             </a>
         </section>
 
-        <section class="relative rounded-[2rem] p-8 overflow-hidden shadow-2xl bg-gradient-to-br from-indigo-900 via-blue-900 to-blue-800 border border-indigo-400/30">
-            <div class="absolute top-0 right-0 -mr-20 -mt-20 w-72 h-72 rounded-full bg-yellow-400/20 blur-3xl animate-pulse"></div>
-            <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-72 h-72 rounded-full bg-cyan-400/20 blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
-            <div class="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
-                <div class="text-center lg:text-right flex-1">
-                    <div class="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-md mb-5 text-yellow-300 text-sm font-bold shadow-lg">
-                        <i class="fa-solid fa-credit-card"></i> تسهيلات مالية حصرية
-                    </div>
-                    <h2 class="text-3xl md:text-4xl font-black text-white mb-4 tracking-tight leading-tight">ابتسم الآن.. <br class="hidden md:block" /> وادفع براحة عبر التقسيط</h2>
-                    <p class="text-indigo-100 text-sm md:text-base leading-relaxed max-w-xl mx-auto lg:mx-0 font-medium">يتوفر لدينا نظام التقسيط المريح والميسر عبر أجهزة الدفع الإلكتروني (POS) لضمان حصولك على أفضل رعاية صحية وتجميلية لأسنانك.</p>
+        <!-- Installments: compact banner -->
+        <section class="relative rounded-2xl p-4 sm:p-6 overflow-hidden shadow-lg bg-gradient-to-br from-indigo-900 via-blue-900 to-blue-800 border border-indigo-400/30">
+            <div class="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 rounded-full bg-yellow-400/20 blur-3xl" aria-hidden="true"></div>
+            <div class="relative z-10 flex flex-col md:flex-row md:items-center gap-3 md:gap-6">
+                <div class="flex-1">
+                    <p class="text-yellow-300 text-xs font-bold mb-1"><i class="fa-solid fa-credit-card ml-1"></i> تسهيلات مالية حصرية</p>
+                    <h2 class="text-lg sm:text-2xl font-black text-white leading-snug">ابتسم الآن.. وادفع براحة عبر التقسيط</h2>
+                    <p class="text-indigo-100 text-xs sm:text-sm leading-relaxed mt-1">تقسيط مريح عبر أجهزة الدفع الإلكتروني (POS).</p>
                 </div>
-                <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto justify-center">
-                    <div class="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 flex flex-col items-center gap-3 hover:bg-white/20 transition-all transform hover:-translate-y-2 shadow-xl flex-1 lg:flex-none lg:w-48 text-center group">
-                        <div class="w-16 h-16 rounded-full bg-gradient-to-b from-white to-gray-200 flex items-center justify-center text-green-700 shadow-inner group-hover:scale-110 transition-transform">
-                            <i class="fa-solid fa-landmark text-3xl"></i>
-                        </div>
-                        <div>
-                            <p class="text-[10px] text-indigo-200 font-bold mb-1 uppercase tracking-wider">متاح لموظفي</p>
-                            <h3 class="text-xl font-black text-white">مصرف الرافدين</h3>
+                <div class="grid grid-cols-2 gap-2 md:w-80">
+                    <div class="bg-white/10 border border-white/20 rounded-xl p-2.5 flex items-center gap-2">
+                        <span class="w-8 h-8 flex-shrink-0 rounded-full bg-white flex items-center justify-center text-green-700"><i class="fa-solid fa-landmark text-sm"></i></span>
+                        <div class="min-w-0">
+                            <p class="text-[10px] text-indigo-200 font-bold leading-tight">متاح لموظفي</p>
+                            <h3 class="text-xs sm:text-sm font-black text-white leading-tight whitespace-nowrap">مصرف الرافدين</h3>
                         </div>
                     </div>
-                    <div class="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 flex flex-col items-center gap-3 hover:bg-white/20 transition-all transform hover:-translate-y-2 shadow-xl flex-1 lg:flex-none lg:w-48 text-center group">
-                        <div class="w-16 h-16 rounded-full bg-gradient-to-b from-white to-gray-200 flex items-center justify-center text-blue-700 shadow-inner group-hover:scale-110 transition-transform">
-                            <i class="fa-solid fa-building-columns text-3xl"></i>
-                        </div>
-                        <div>
-                            <p class="text-[10px] text-indigo-200 font-bold mb-1 uppercase tracking-wider">متاح لموظفي</p>
-                            <h3 class="text-xl font-black text-white">مصرف الرشيد</h3>
+                    <div class="bg-white/10 border border-white/20 rounded-xl p-2.5 flex items-center gap-2">
+                        <span class="w-8 h-8 flex-shrink-0 rounded-full bg-white flex items-center justify-center text-blue-700"><i class="fa-solid fa-building-columns text-sm"></i></span>
+                        <div class="min-w-0">
+                            <p class="text-[10px] text-indigo-200 font-bold leading-tight">متاح لموظفي</p>
+                            <h3 class="text-xs sm:text-sm font-black text-white leading-tight whitespace-nowrap">مصرف الرشيد</h3>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="booking-section" class="glass-panel rounded-3xl p-6 md:p-8 shadow-lg border border-slate-200">
-            <div class="flex items-center gap-3 mb-8 pb-4 border-b border-slate-100">
-                <div class="bg-clinic-light text-clinic p-3 rounded-xl shadow-inner">
-                    <i class="fa-solid fa-calendar-check text-2xl"></i>
+        <!-- Booking -->
+        <section id="booking-section" class="glass-panel rounded-2xl p-4 sm:p-6 shadow-lg border border-slate-200">
+            <div class="flex items-center gap-2.5 mb-4 pb-3 border-b border-slate-100">
+                <div class="bg-clinic-light text-clinic w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-calendar-check text-lg"></i>
                 </div>
                 <div>
-                    <h2 class="text-2xl font-black text-slate-800">حجز موعد جديد</h2>
-                    <p class="text-slate-500 text-sm font-medium">اختر الوقت المناسب لك لتأكيد الحجز</p>
+                    <h2 class="text-lg font-black text-slate-800 leading-tight">حجز موعد جديد</h2>
+                    <p class="text-slate-500 text-xs font-medium">اختر الوقت المناسب لك لتأكيد الحجز</p>
                 </div>
             </div>
-            <form id="booking-form" class="space-y-8" novalidate onsubmit="window.submitBooking(event)">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                        <label for="patient-name" class="block text-sm font-bold text-slate-700 mb-2"><i class="fa-regular fa-user ml-1 text-clinic"></i> الاسم الكامل <span class="text-red-500">*</span></label>
-                        <input type="text" id="patient-name" name="name" required minlength="3" maxlength="80" autocomplete="name" enterkeyhint="next" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-clinic focus:border-transparent transition-all bg-white" placeholder="الاسم الثلاثي">
+            <form id="booking-form" class="space-y-4" novalidate onsubmit="window.submitBooking(event)">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label for="patient-name" class="block text-xs font-bold text-slate-700 mb-1"><i class="fa-regular fa-user ml-1 text-clinic"></i> الاسم الكامل <span class="text-red-500">*</span></label>
+                        <input type="text" id="patient-name" name="name" required minlength="3" maxlength="80" autocomplete="name" enterkeyhint="next" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-clinic focus:border-transparent transition-all bg-white text-base" placeholder="الاسم الثلاثي">
                     </div>
-                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                        <label for="patient-phone" class="block text-sm font-bold text-slate-700 mb-2"><i class="fa-solid fa-mobile-screen ml-1 text-clinic"></i> رقم الهاتف <span class="text-red-500">*</span></label>
-                        <input type="tel" id="patient-phone" name="phone" required inputmode="tel" autocomplete="tel" maxlength="16" enterkeyhint="done" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-clinic focus:border-transparent transition-all bg-white text-right" placeholder="07XXXXXXXXX" dir="ltr">
-                    </div>
-                </div>
-                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                    <label class="block text-sm font-bold text-slate-700 mb-3"><i class="fa-solid fa-stethoscope ml-1 text-clinic"></i> الغرض من الزيارة <span class="text-xs text-slate-400 font-normal">(يمكنك اختيار أكثر من خيار)</span> <span class="text-red-500">*</span></label>
-                    <div class="flex flex-wrap gap-2" id="reasons-container" role="group" aria-label="الغرض من الزيارة">
-                        <button type="button" class="reason-btn px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 bg-white hover:bg-slate-100 transition-all shadow-sm" data-value="ألم أسنان">ألم أسنان</button>
-                        <button type="button" class="reason-btn px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 bg-white hover:bg-slate-100 transition-all shadow-sm" data-value="قلع / جراحة">قلع / جراحة</button>
-                        <button type="button" class="reason-btn px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 bg-white hover:bg-slate-100 transition-all shadow-sm" data-value="حشوة">حشوة</button>
-                        <button type="button" class="reason-btn px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 bg-white hover:bg-slate-100 transition-all shadow-sm" data-value="حشوة جذر">حشوة جذر</button>
-                        <button type="button" class="reason-btn px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 bg-white hover:bg-slate-100 transition-all shadow-sm" data-value="زراعة أسنان"><i class="fa-solid fa-tooth mr-1"></i> زراعة أسنان</button>
-                        <button type="button" class="reason-btn px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 bg-white hover:bg-slate-100 transition-all shadow-sm" data-value="تنظيف وتلميع">تنظيف وتلميع</button>
-                        <button type="button" class="reason-btn px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 bg-white hover:bg-slate-100 transition-all shadow-sm" data-value="تقويم أسنان">تقويم أسنان</button>
-                        <button type="button" class="reason-btn px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 bg-white hover:bg-slate-100 transition-all shadow-sm" data-value="تركيبات / تيجان">تركيبات / تيجان</button>
-                        <button type="button" class="reason-btn px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 bg-white hover:bg-slate-100 transition-all shadow-sm" data-value="تبييض أسنان">تبييض أسنان</button>
-                        <button type="button" class="reason-btn px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 bg-white hover:bg-slate-100 transition-all shadow-sm" data-value="فحص دوري / استشارة">فحص واستشارة</button>
+                    <div>
+                        <label for="patient-phone" class="block text-xs font-bold text-slate-700 mb-1"><i class="fa-solid fa-mobile-screen ml-1 text-clinic"></i> رقم الهاتف <span class="text-red-500">*</span></label>
+                        <input type="tel" id="patient-phone" name="phone" required inputmode="tel" autocomplete="tel" maxlength="16" enterkeyhint="done" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-clinic focus:border-transparent transition-all bg-white text-base text-right" placeholder="07XXXXXXXXX" dir="ltr">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-3"><i class="fa-regular fa-calendar-days ml-1 text-clinic"></i> اختر اليوم <span class="text-red-500">*</span></label>
-                    <div class="flex overflow-x-auto gap-3 pt-1 pb-4 hide-scrollbar px-1" id="dates-container" role="group" aria-label="اختر اليوم"></div>
-                    <p class="text-xs text-slate-400 font-bold"><i class="fa-solid fa-circle-info ml-1"></i> العيادة مغلقة يوم الجمعة</p>
-                </div>
-                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                    <div class="flex justify-between items-end mb-4">
-                        <label class="block text-sm font-bold text-slate-700"><i class="fa-regular fa-clock ml-1 text-clinic"></i> اختر الوقت (5م - 9م) <span class="text-red-500">*</span></label>
-                        <span class="text-xs font-bold text-clinic bg-clinic-light px-2 py-1 rounded-md">المدة 30 دقيقة</span>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5"><i class="fa-solid fa-stethoscope ml-1 text-clinic"></i> الغرض من الزيارة <span class="text-red-500">*</span> <span class="text-[11px] text-slate-400 font-normal">(يمكن اختيار أكثر من خيار)</span></label>
+                    <div class="flex flex-wrap gap-1.5" id="reasons-container" role="group" aria-label="الغرض من الزيارة">
+                        <button type="button" class="reason-btn px-3 py-1.5 rounded-full border border-slate-200 text-xs font-bold text-slate-600 bg-white hover:bg-slate-100 transition-all" data-value="ألم أسنان">ألم أسنان</button>
+                        <button type="button" class="reason-btn px-3 py-1.5 rounded-full border border-slate-200 text-xs font-bold text-slate-600 bg-white hover:bg-slate-100 transition-all" data-value="قلع / جراحة">قلع / جراحة</button>
+                        <button type="button" class="reason-btn px-3 py-1.5 rounded-full border border-slate-200 text-xs font-bold text-slate-600 bg-white hover:bg-slate-100 transition-all" data-value="حشوة">حشوة</button>
+                        <button type="button" class="reason-btn px-3 py-1.5 rounded-full border border-slate-200 text-xs font-bold text-slate-600 bg-white hover:bg-slate-100 transition-all" data-value="حشوة جذر">حشوة جذر</button>
+                        <button type="button" class="reason-btn px-3 py-1.5 rounded-full border border-slate-200 text-xs font-bold text-slate-600 bg-white hover:bg-slate-100 transition-all" data-value="زراعة أسنان">زراعة أسنان</button>
+                        <button type="button" class="reason-btn px-3 py-1.5 rounded-full border border-slate-200 text-xs font-bold text-slate-600 bg-white hover:bg-slate-100 transition-all" data-value="تنظيف وتلميع">تنظيف وتلميع</button>
+                        <button type="button" class="reason-btn px-3 py-1.5 rounded-full border border-slate-200 text-xs font-bold text-slate-600 bg-white hover:bg-slate-100 transition-all" data-value="تقويم أسنان">تقويم أسنان</button>
+                        <button type="button" class="reason-btn px-3 py-1.5 rounded-full border border-slate-200 text-xs font-bold text-slate-600 bg-white hover:bg-slate-100 transition-all" data-value="تركيبات / تيجان">تركيبات / تيجان</button>
+                        <button type="button" class="reason-btn px-3 py-1.5 rounded-full border border-slate-200 text-xs font-bold text-slate-600 bg-white hover:bg-slate-100 transition-all" data-value="تبييض أسنان">تبييض أسنان</button>
+                        <button type="button" class="reason-btn px-3 py-1.5 rounded-full border border-slate-200 text-xs font-bold text-slate-600 bg-white hover:bg-slate-100 transition-all" data-value="فحص دوري / استشارة">فحص واستشارة</button>
                     </div>
-                    <div id="times-empty-state" class="text-sm text-slate-500 p-8 border-2 border-dashed border-slate-300 rounded-xl text-center bg-white flex flex-col items-center justify-center gap-2">
-                        <i class="fa-solid fa-arrow-up text-xl text-slate-300 animate-bounce"></i>
-                        الرجاء اختيار اليوم من الأعلى لعرض الأوقات المتاحة
-                    </div>
-                    <div class="grid grid-cols-3 sm:grid-cols-4 gap-3 hidden" id="times-container" role="group" aria-label="اختر الوقت" aria-live="polite"></div>
                 </div>
-                <div id="booking-summary" class="hidden bg-clinic-light text-clinic-dark font-bold text-sm rounded-2xl p-4 text-center" aria-live="polite"></div>
-                <button type="submit" id="submit-booking-btn" class="w-full bg-gradient-to-r from-clinic to-clinic-dark hover:from-clinic-dark hover:to-slate-800 text-white font-black text-lg py-5 rounded-2xl shadow-xl transition-all transform hover:-translate-y-1 flex justify-center items-center gap-3 mt-6 border-b-4 border-slate-900/20 disabled:opacity-70 disabled:cursor-wait disabled:transform-none">
-                    <i class="fa-regular fa-calendar-check text-2xl"></i>
+                <div>
+                    <div class="flex items-baseline justify-between mb-1.5">
+                        <label class="text-xs font-bold text-slate-700"><i class="fa-regular fa-calendar-days ml-1 text-clinic"></i> اختر اليوم <span class="text-red-500">*</span></label>
+                        <span class="text-[11px] text-slate-400 font-bold">الجمعة عطلة</span>
+                    </div>
+                    <div class="flex overflow-x-auto gap-2 pb-1 hide-scrollbar" id="dates-container" role="group" aria-label="اختر اليوم"></div>
+                </div>
+                <div>
+                    <div class="flex items-baseline justify-between mb-1.5">
+                        <label class="text-xs font-bold text-slate-700"><i class="fa-regular fa-clock ml-1 text-clinic"></i> اختر الوقت <span class="text-red-500">*</span></label>
+                        <span class="text-[11px] font-bold text-clinic">المدة 30 دقيقة</span>
+                    </div>
+                    <div id="times-empty-state" class="text-xs text-slate-500 py-3 px-3 border border-dashed border-slate-300 rounded-xl text-center bg-white">
+                        <i class="fa-solid fa-arrow-up ml-1 text-slate-300"></i> اختر اليوم أولاً لعرض الأوقات المتاحة
+                    </div>
+                    <div class="grid grid-cols-3 sm:grid-cols-5 gap-2 hidden" id="times-container" role="group" aria-label="اختر الوقت" aria-live="polite"></div>
+                </div>
+                <div id="booking-summary" class="hidden bg-clinic-light text-clinic-dark font-bold text-xs rounded-xl p-2.5 text-center" aria-live="polite"></div>
+                <button type="submit" id="submit-booking-btn" class="w-full bg-gradient-to-r from-clinic to-clinic-dark hover:from-clinic-dark hover:to-slate-800 text-white font-black text-base py-3.5 rounded-xl shadow-lg transition-all flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-wait">
+                    <i class="fa-regular fa-calendar-check text-lg"></i>
                     تأكيد وحجز الموعد
                 </button>
             </form>
         </section>
 
-        <section class="glass-panel rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200">
-            <div class="text-center mb-8">
-                <span class="text-clinic font-bold text-sm bg-clinic-light px-3 py-1 rounded-full mb-2 inline-block">نتائج حقيقية</span>
-                <h2 class="text-2xl font-black text-slate-800">تغيير يصنع الفارق</h2>
+        <!-- Before / after -->
+        <section class="glass-panel rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-lg font-black text-slate-800">تغيير يصنع الفارق</h2>
+                <span class="text-clinic font-bold text-[11px] bg-clinic-light px-2 py-0.5 rounded-full">نتائج حقيقية</span>
             </div>
             <div class="max-w-2xl mx-auto">
-                <div class="ba-slider shadow-lg" id="ba-slider">
+                <div class="ba-slider shadow-md" id="ba-slider">
                     <img class="ba-img" src="https://i.ibb.co/35QTV1qJ/Screenshot-2026-06-30-013242.png" alt="الأسنان بعد العلاج" loading="lazy" decoding="async">
                     <img class="ba-img ba-img-before" src="https://i.ibb.co/TDs3fLf0/Screenshot-2026-06-30-013224.png" alt="الأسنان قبل العلاج" loading="lazy" decoding="async">
                     <span class="ba-tag bg-black/60" style="right:1rem">قبل</span>
@@ -388,99 +381,90 @@
                     <input type="range" id="ba-range" class="ba-range" min="0" max="100" value="50" aria-label="اسحب للمقارنة بين قبل وبعد العلاج">
                     <div class="ba-handle" aria-hidden="true"><i class="fa-solid fa-left-right"></i></div>
                 </div>
-                <p class="text-center text-xs text-slate-400 font-bold mt-3"><i class="fa-solid fa-hand-pointer ml-1"></i> اسحب لمشاهدة الفرق</p>
+                <p class="text-center text-[11px] text-slate-400 font-bold mt-2"><i class="fa-solid fa-hand-pointer ml-1"></i> اسحب لمشاهدة الفرق</p>
             </div>
         </section>
 
-        <section class="glass-panel rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200">
-            <div class="flex items-center justify-between mb-8 pb-4 border-b border-slate-100">
-                <div class="flex items-center gap-3">
-                    <div class="bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 text-white p-3 rounded-xl shadow-lg">
-                        <i class="fa-brands fa-instagram text-2xl"></i>
+        <!-- Instagram: swipeable row instead of four stacked posts -->
+        <section class="glass-panel rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200">
+            <div class="flex items-center justify-between gap-2 mb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 text-white w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <i class="fa-brands fa-instagram text-lg"></i>
                     </div>
                     <div>
-                        <h2 class="text-xl font-black text-slate-800">يوميات العيادة</h2>
-                        <p class="text-slate-500 text-sm">حالات وتفاصيل من داخل العيادة</p>
+                        <h2 class="text-lg font-black text-slate-800 leading-tight">يوميات العيادة</h2>
+                        <p class="text-slate-500 text-[11px]">اسحب لمشاهدة المزيد</p>
                     </div>
                 </div>
+                <a href="https://www.instagram.com/dr.ferid.clinic/" target="_blank" rel="noopener" class="text-xs font-bold text-pink-600 hover:underline whitespace-nowrap">عرض الكل <i class="fa-solid fa-arrow-left text-[10px]"></i></a>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6" dir="ltr">
-                <div class="w-full flex justify-center bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 shadow-inner"><iframe src="https://www.instagram.com/p/DYt1yTiivbF/embed/captioned/" class="w-full h-[600px] bg-white" frameborder="0" scrolling="no" loading="lazy" title="منشور انستغرام من عيادة د. فريد"></iframe></div>
-            <div class="w-full flex justify-center bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 shadow-inner"><iframe src="https://www.instagram.com/p/DZp6rxvCZHv/embed/captioned/" class="w-full h-[600px] bg-white" frameborder="0" scrolling="no" loading="lazy" title="منشور انستغرام من عيادة د. فريد"></iframe></div>
-            <div class="w-full flex justify-center bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 shadow-inner"><iframe src="https://www.instagram.com/p/CX-niGvqme7/embed/captioned/" class="w-full h-[600px] bg-white" frameborder="0" scrolling="no" loading="lazy" title="منشور انستغرام من عيادة د. فريد"></iframe></div>
-            <div class="w-full flex justify-center bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 shadow-inner"><iframe src="https://www.instagram.com/p/CunMmVMg1ba/embed/captioned/" class="w-full h-[600px] bg-white" frameborder="0" scrolling="no" loading="lazy" title="منشور انستغرام من عيادة د. فريد"></iframe></div>
-            </div>
-            <div class="text-center mt-6">
-                <a href="https://www.instagram.com/dr.ferid.clinic/" target="_blank" rel="noopener" class="inline-flex items-center gap-2 font-bold text-pink-600 hover:underline"><i class="fa-brands fa-instagram"></i> شاهد المزيد على انستغرام</a>
+            <div class="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-1 hide-scrollbar" dir="ltr">
+                <div class="snap-center flex-shrink-0 w-[85%] sm:w-[48%] bg-slate-50 rounded-xl overflow-hidden border border-slate-200"><iframe src="https://www.instagram.com/p/DYt1yTiivbF/embed/captioned/" class="w-full h-[470px] bg-white" frameborder="0" scrolling="no" loading="lazy" title="منشور انستغرام من عيادة د. فريد"></iframe></div>
+                <div class="snap-center flex-shrink-0 w-[85%] sm:w-[48%] bg-slate-50 rounded-xl overflow-hidden border border-slate-200"><iframe src="https://www.instagram.com/p/DZp6rxvCZHv/embed/captioned/" class="w-full h-[470px] bg-white" frameborder="0" scrolling="no" loading="lazy" title="منشور انستغرام من عيادة د. فريد"></iframe></div>
+                <div class="snap-center flex-shrink-0 w-[85%] sm:w-[48%] bg-slate-50 rounded-xl overflow-hidden border border-slate-200"><iframe src="https://www.instagram.com/p/CX-niGvqme7/embed/captioned/" class="w-full h-[470px] bg-white" frameborder="0" scrolling="no" loading="lazy" title="منشور انستغرام من عيادة د. فريد"></iframe></div>
+                <div class="snap-center flex-shrink-0 w-[85%] sm:w-[48%] bg-slate-50 rounded-xl overflow-hidden border border-slate-200"><iframe src="https://www.instagram.com/p/CunMmVMg1ba/embed/captioned/" class="w-full h-[470px] bg-white" frameborder="0" scrolling="no" loading="lazy" title="منشور انستغرام من عيادة د. فريد"></iframe></div>
             </div>
         </section>
 
-        <!-- Clinic Location Section -->
-    <section class="glass-panel rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200">
-        <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
-            <div class="bg-red-50 text-red-500 p-3 rounded-xl shadow-inner">
-                <i class="fa-solid fa-map-location-dot text-2xl"></i>
-            </div>
-            <h2 class="text-xl font-black text-slate-800">موقع العيادة</h2>
-        </div>
-        
-        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-sm mb-6 flex items-start gap-4">
-            <i class="fa-solid fa-location-dot text-clinic text-2xl mt-1"></i>
-            <div>
-                <h3 class="font-bold text-lg text-slate-800 mb-1">العنوان التفصيلي</h3>
-                <p class="text-slate-600 leading-relaxed font-medium">شارع الاسكان، مجمع الرافدين، الطابق الثالث، قرب مجمع الفهد</p>
-            </div>
-        </div>
-
-        <div class="relative w-full h-72 rounded-2xl overflow-hidden border border-slate-200 shadow-inner mb-6 bg-slate-100">
-            <iframe 
-                src="https://maps.google.com/maps?q=%D8%B4%D8%A7%D8%B1%D8%B9+%D8%A7%D9%84%D8%A7%D8%B3%D9%83%D8%A7%D9%86+%D9%85%D8%AC%D9%85%D8%B9+%D8%A7%D9%84%D8%B1%D8%A7%D9%81%D8%AF%D9%8A%D9%86&hl=ar&z=15&output=embed" 
-                width="100%" 
-                height="100%" 
-                style="border:0;" 
-                allowfullscreen="" 
-                loading="lazy" 
-                referrerpolicy="no-referrer-when-downgrade"
-                title="خريطة موقع العيادة">
-            </iframe>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <a href="https://www.google.com/maps/search/?api=1&query=%D8%B4%D8%A7%D8%B1%D8%B9%20%D8%A7%D9%84%D8%A7%D8%B3%D9%83%D8%A7%D9%86%20%D9%85%D8%AC%D9%85%D8%B9%20%D8%A7%D9%84%D8%B1%D8%A7%D9%81%D8%AF%D9%8A%D9%86" target="_blank" rel="noopener" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold text-lg py-5 rounded-2xl shadow-xl transition-all transform hover:-translate-y-1 flex justify-center items-center gap-3">
-                <i class="fa-solid fa-map-location-dot text-xl"></i>
-                خرائط جوجل
-            </a>
-            <a href="https://waze.com/ul/hsvz33y6uy" target="_blank" rel="noopener" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold text-lg py-5 rounded-2xl shadow-xl transition-all transform hover:-translate-y-1 flex justify-center items-center gap-3">
-                <i class="fa-brands fa-waze text-xl"></i>
-                افتح المسار في Waze
-            </a>
-        </div>
-    </section>
-
-    <!-- Medical Partnerships -->
-    <section class="text-center py-8">
-        <h3 class="text-sm font-bold text-slate-400 mb-6 uppercase tracking-wider">شركاء النجاح في تقديم الرعاية</h3>
-        <div class="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-70 hover:opacity-100 transition-opacity">
-            <a href="https://biomin.co.uk/about/queen-mary-university-london" target="_blank" rel="noopener" class="flex items-center gap-2 font-black text-2xl text-slate-600 hover:text-clinic transition-colors">
-                <i class="fa-solid fa-shield-halved text-clinic"></i> BioMin
-            </a>
-
-            <a href="https://xferidx.github.io/Edelwhite/" target="_blank" rel="noopener" class="flex flex-col items-center group transition-transform hover:scale-105">
-                <div class="text-3xl font-black tracking-tighter text-slate-800 group-hover:text-clinic transition-colors flex items-center gap-1">
-                    <span class="text-red-500">+</span>edelwhite
+        <!-- Clinic Location -->
+        <section id="clinic-location" class="glass-panel rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200 scroll-mt-20">
+            <div class="flex items-start gap-2.5 mb-3">
+                <div class="bg-red-50 text-red-500 w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-map-location-dot text-lg"></i>
                 </div>
-                <span class="text-[10px] tracking-widest text-slate-500 uppercase">Swiss Dental Care</span>
-            </a>
+                <div class="min-w-0">
+                    <h2 class="text-lg font-black text-slate-800 leading-tight">موقع العيادة</h2>
+                    <p class="text-slate-600 text-xs leading-relaxed font-medium">شارع الاسكان، مجمع الرافدين، الطابق الثالث، قرب مجمع الفهد</p>
+                </div>
+            </div>
 
-            <a href="http://www.dardoor.net" target="_blank" rel="noopener" class="flex items-center gap-2 font-black text-xl text-slate-600 hover:text-clinic transition-colors">
-                <i class="fa-solid fa-building text-sky-500"></i> سوق عقارات العراق
-            </a>
+            <div class="relative w-full h-44 sm:h-60 rounded-xl overflow-hidden border border-slate-200 mb-3 bg-slate-100">
+                <iframe
+                    src="https://maps.google.com/maps?q=%D8%B4%D8%A7%D8%B1%D8%B9+%D8%A7%D9%84%D8%A7%D8%B3%D9%83%D8%A7%D9%86+%D9%85%D8%AC%D9%85%D8%B9+%D8%A7%D9%84%D8%B1%D8%A7%D9%81%D8%AF%D9%8A%D9%86&hl=ar&z=15&output=embed"
+                    width="100%"
+                    height="100%"
+                    style="border:0;"
+                    allowfullscreen=""
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"
+                    title="خريطة موقع العيادة">
+                </iframe>
+            </div>
 
-            <a href="https://xferidx.github.io/Shamsiastore/#home" target="_blank" rel="noopener" class="flex items-center gap-2 font-black text-xl text-slate-600 hover:text-clinic transition-colors">
-                <i class="fa-solid fa-solar-panel text-amber-500"></i> سوق الطاقة الشمسية
-            </a>
-        </div>
-    </section>
+            <div class="grid grid-cols-2 gap-2">
+                <a href="https://www.google.com/maps/search/?api=1&query=%D8%B4%D8%A7%D8%B1%D8%B9%20%D8%A7%D9%84%D8%A7%D8%B3%D9%83%D8%A7%D9%86%20%D9%85%D8%AC%D9%85%D8%B9%20%D8%A7%D9%84%D8%B1%D8%A7%D9%81%D8%AF%D9%8A%D9%86" target="_blank" rel="noopener" class="bg-slate-800 hover:bg-slate-900 text-white font-bold text-sm py-2.5 rounded-xl shadow-md transition-colors flex justify-center items-center gap-2">
+                    <i class="fa-solid fa-map-location-dot"></i>
+                    خرائط جوجل
+                </a>
+                <a href="https://waze.com/ul/hsvz33y6uy" target="_blank" rel="noopener" class="bg-sky-500 hover:bg-sky-600 text-white font-bold text-sm py-2.5 rounded-xl shadow-md transition-colors flex justify-center items-center gap-2">
+                    <i class="fa-brands fa-waze"></i>
+                    Waze
+                </a>
+            </div>
+        </section>
+
+        <!-- Medical Partnerships -->
+        <section class="text-center py-2">
+            <h3 class="text-[11px] font-bold text-slate-400 mb-3">شركاء النجاح في تقديم الرعاية</h3>
+            <div class="flex flex-wrap justify-center items-center gap-x-6 gap-y-3 opacity-70 hover:opacity-100 transition-opacity">
+                <a href="https://biomin.co.uk/about/queen-mary-university-london" target="_blank" rel="noopener" class="flex items-center gap-1.5 font-black text-lg text-slate-600 hover:text-clinic transition-colors">
+                    <i class="fa-solid fa-shield-halved text-clinic"></i> BioMin
+                </a>
+                <a href="https://xferidx.github.io/Edelwhite/" target="_blank" rel="noopener" class="flex flex-col items-center group transition-transform hover:scale-105">
+                    <div class="text-xl font-black tracking-tighter text-slate-800 group-hover:text-clinic transition-colors flex items-center gap-1">
+                        <span class="text-red-500">+</span>edelwhite
+                    </div>
+                    <span class="text-[9px] tracking-widest text-slate-500 uppercase">Swiss Dental Care</span>
+                </a>
+                <a href="http://www.dardoor.net" target="_blank" rel="noopener" class="flex items-center gap-1.5 font-black text-sm text-slate-600 hover:text-clinic transition-colors">
+                    <i class="fa-solid fa-building text-sky-500"></i> سوق عقارات العراق
+                </a>
+                <a href="https://xferidx.github.io/Shamsiastore/#home" target="_blank" rel="noopener" class="flex items-center gap-1.5 font-black text-sm text-slate-600 hover:text-clinic transition-colors">
+                    <i class="fa-solid fa-solar-panel text-amber-500"></i> سوق الطاقة الشمسية
+                </a>
+            </div>
+        </section>
 </main>
 
 <footer class="bg-slate-900 text-slate-400 pt-8 pb-24 text-center text-sm border-t border-slate-800 mt-auto">
@@ -574,8 +558,8 @@
 
     <!-- AI Chat Widget: a curated Arabic FAQ assistant, not a general-purpose AI, so it only ever
          says what the clinic has approved (prices, hours, services) — never improvised answers. -->
-    <button type="button" id="chat-widget-btn" onclick="window.toggleChatWidget()" aria-label="فتح مساعد العيادة" aria-controls="chat-widget-window" aria-expanded="false" class="fixed safe-bottom right-5 z-50 w-16 h-16 bg-clinic hover:bg-clinic-dark text-white rounded-full shadow-2xl flex items-center justify-center transition-transform hover:scale-105">
-        <i class="fa-solid fa-comment-dots text-2xl"></i>
+    <button type="button" id="chat-widget-btn" onclick="window.toggleChatWidget()" aria-label="فتح مساعد العيادة" aria-controls="chat-widget-window" aria-expanded="false" class="fixed safe-bottom right-4 z-50 w-12 h-12 bg-clinic hover:bg-clinic-dark text-white rounded-full shadow-2xl flex items-center justify-center transition-transform hover:scale-105">
+        <i class="fa-solid fa-comment-dots text-xl"></i>
     </button>
 
     <div id="chat-widget-window" role="dialog" aria-label="مساعد عيادة د. فريد" class="hidden fixed safe-bottom right-5 z-50 w-[92vw] max-w-sm h-[70vh] max-h-[560px] bg-white rounded-3xl shadow-2xl border border-slate-200 flex-col overflow-hidden" dir="rtl">
@@ -1023,11 +1007,11 @@
 
                 const btn = document.createElement('button');
                 btn.type = 'button';
-                btn.className = 'date-btn flex-shrink-0 flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl border-2 border-slate-100 bg-white hover:bg-slate-50 transition-all min-w-[88px] shadow-sm';
+                btn.className = 'date-btn flex-shrink-0 flex flex-col items-center justify-center py-1.5 px-2 rounded-xl border-2 border-slate-100 bg-white hover:bg-slate-50 transition-all min-w-[62px]';
                 btn.dataset.iso = iso;
                 btn.setAttribute('aria-pressed', 'false');
                 btn.setAttribute('aria-label', `${f.dayName} ${f.dayNum} ${f.month}`);
-                btn.innerHTML = `<span class="text-xs font-bold text-slate-500 mb-1">${label}</span><span class="text-2xl font-black text-slate-800 leading-none">${f.dayNum}</span><span class="text-xs font-bold text-clinic mt-1 bg-clinic-light/50 px-2 rounded">${f.month}</span>`;
+                btn.innerHTML = `<span class="text-[11px] font-bold text-slate-500 leading-tight">${label}</span><span class="text-lg font-black text-slate-800 leading-tight">${f.dayNum}</span><span class="text-[10px] font-bold text-clinic leading-tight">${f.month}</span>`;
                 btn.addEventListener('click', () => {
                     selectButton('.date-btn', btn);
                     window.selectedDate = iso;
@@ -1065,13 +1049,13 @@
                 const booked = !!dateBookings[time];
                 const past = isSlotInPast(dateIso, time);
                 if (booked || past) {
-                    btn.className = 'py-3 px-1 rounded-xl border-2 border-slate-100 text-sm font-bold text-center disabled-time relative bg-slate-100 overflow-hidden';
+                    btn.className = 'py-2 px-1 rounded-lg border-2 border-slate-100 text-sm font-bold text-center disabled-time relative bg-slate-100 overflow-hidden';
                     btn.disabled = true;
                     btn.setAttribute('aria-label', `${slotLabel(time)} - ${booked ? 'محجوز' : 'انتهى الوقت'}`);
                     btn.innerHTML = `<span class="line-through decoration-slate-400 decoration-2">${slotLabel(time)}</span><span class="absolute inset-0 flex items-center justify-center bg-slate-200/80"><span class="text-xs text-slate-600 font-black"><i class="fa-solid ${booked ? 'fa-lock' : 'fa-clock-rotate-left'} ml-1"></i>${booked ? 'محجوز' : 'انتهى'}</span></span>`;
                 } else {
                     available++;
-                    btn.className = 'time-btn py-3 px-1 rounded-xl border-2 border-slate-200 bg-white hover:border-clinic hover:text-clinic text-slate-700 text-sm font-black text-center transition-all shadow-sm';
+                    btn.className = 'time-btn py-2 px-1 rounded-lg border-2 border-slate-200 bg-white hover:border-clinic hover:text-clinic text-slate-700 text-sm font-black text-center transition-all';
                     btn.textContent = slotLabel(time);
                     const on = window.selectedTime === time;
                     btn.classList.toggle('selected-btn', on);
@@ -1145,7 +1129,7 @@
 
             const btn = $('submit-booking-btn');
             const originalHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-2xl"></i> جاري الحجز...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-lg"></i> جاري الحجز...';
             btn.disabled = true;
             window.isSubmitting = true;
 
