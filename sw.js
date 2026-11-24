@@ -1,30 +1,65 @@
-// Minimal service worker: caches the app shell so the site opens instantly
-// (and still opens, showing a friendly offline message) even with no signal.
-// Live data (waiting count, bookings) always comes from Firebase over the network when available —
-// this cache only covers the static shell, never booking data itself.
-const CACHE_NAME = 'clinic-shell-v1';
-const SHELL_FILES = ['./index.html', './header.jpg', './icon-192.png', './icon-512.png', './manifest.json'];
+// Service worker: caches the static app shell so the site opens instantly
+// (and still opens with no signal). Live data (waiting count, bookings) always
+// comes from Firebase directly — this worker never touches cross-origin requests.
+const CACHE_NAME = 'clinic-shell-v2';
+const SHELL_FILES = [
+    './',
+    './index.html',
+    './records.html',
+    './header.jpg',
+    './icon-180.png',
+    './icon-192.png',
+    './icon-512.png',
+    './manifest.json'
+];
 
 self.addEventListener('install', (event) => {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_FILES))
-    );
+    event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_FILES)));
     self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
     event.waitUntil(
-        caches.keys().then((keys) =>
-            Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-        )
+        caches.keys()
+            .then((keys) => Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))))
+            .then(() => self.clients.claim())
     );
-    self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-    // Network-first for navigations/data so live booking info is never stale;
-    // falls back to the cached shell only when there's no connection at all.
+    const req = event.request;
+    const url = new URL(req.url);
+
+    // Only same-origin GETs. Firebase/Firestore, analytics, CDNs and embeds go straight to the network.
+    if (req.method !== 'GET' || url.origin !== self.location.origin) return;
+
+    // Pages: network-first so updates show immediately; fall back to the cached shell offline.
+    if (req.mode === 'navigate') {
+        event.respondWith(
+            fetch(req)
+                .then((res) => {
+                    const copy = res.clone();
+                    caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+                    return res;
+                })
+                .catch(() => caches.match(req).then((res) => res || caches.match('./index.html')))
+        );
+        return;
+    }
+
+    // Static assets (images, icons, manifest): stale-while-revalidate.
     event.respondWith(
-        fetch(event.request).catch(() => caches.match(event.request).then((res) => res || caches.match('./index.html')))
+        caches.match(req).then((cached) => {
+            const network = fetch(req)
+                .then((res) => {
+                    if (res.ok) {
+                        const copy = res.clone();
+                        caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+                    }
+                    return res;
+                })
+                .catch(() => cached);
+            return cached || network;
+        })
     );
 });
