@@ -61,6 +61,49 @@
         html.dark .text-indigo-700 { color: #a5b4fc !important; }
         html.dark .text-green-700 { color: #4ade80 !important; }
 
+        /* ===== Visual layer ===== */
+        .dash-hero { background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #4f46e5 100%); }
+        .dash-hero .blob { position: absolute; border-radius: 9999px; filter: blur(2px); pointer-events: none; }
+        .kpi-glass { background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.22); backdrop-filter: blur(6px); }
+        .lift { transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+        .lift:hover { transform: translateY(-2px); box-shadow: 0 10px 24px -12px rgba(15,23,42,.35); }
+        .action-tile .tile-icon { transition: transform .2s ease; }
+        .action-tile:hover .tile-icon { transform: scale(1.08) rotate(-4deg); }
+
+        /* Initials avatars — colour is decorative (name is always shown next to it). */
+        .avatar { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 9999px; font-weight: 900; letter-spacing: -.02em; }
+        .av-0 { background: #dbeafe; color: #1e40af; } .av-1 { background: #ede9fe; color: #5b21b6; }
+        .av-2 { background: #dcfce7; color: #166534; } .av-3 { background: #fef3c7; color: #92400e; }
+        .av-4 { background: #fce7f3; color: #9d174d; } .av-5 { background: #cffafe; color: #155e75; }
+        html.dark .av-0 { background: #1e3a8a; color: #bfdbfe; } html.dark .av-1 { background: #3b0764; color: #ddd6fe; }
+        html.dark .av-2 { background: #14532d; color: #bbf7d0; } html.dark .av-3 { background: #78350f; color: #fde68a; }
+        html.dark .av-4 { background: #831843; color: #fbcfe8; } html.dark .av-5 { background: #164e63; color: #a5f3fc; }
+
+        .proc-chip { display: inline-flex; align-items: center; gap: .25rem; font-size: 11px; font-weight: 800; padding: .125rem .5rem; border-radius: .375rem; background: #e0e7ff; color: #3730a3; }
+        html.dark .proc-chip { background: #1e1b4b; color: #c7d2fe; }
+
+        /* Case-history timeline */
+        .timeline { position: relative; }
+        .timeline::before { content: ''; position: absolute; left: 1.45rem; top: .75rem; bottom: .75rem; width: 2px; background: #e2e8f0; border-radius: 2px; }
+        html.dark .timeline::before { background: #334155; }
+        .tl-date { width: 3rem; flex-shrink: 0; position: relative; z-index: 1; }
+
+        /* Statistics bar chart — single series; bars 4px-rounded at the data end, 2px gaps */
+        .vchart { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 2px; align-items: end; height: 120px; border-bottom: 1px solid #e2e8f0; position: relative; }
+        html.dark .vchart { border-color: #334155; }
+        .vchart-col { height: 100%; display: flex; align-items: flex-end; cursor: pointer; padding: 0 1px; }
+        .vchart-bar { width: 100%; border-radius: 4px 4px 0 0; background: #93c5fd; transition: background .15s; min-height: 0; }
+        .vchart-col:hover .vchart-bar, .vchart-col:focus-visible .vchart-bar { background: #60a5fa; }
+        .vchart-col.is-selected .vchart-bar { background: #2563eb; }
+        html.dark .vchart-bar { background: #1e40af; }
+        html.dark .vchart-col:hover .vchart-bar { background: #2563eb; }
+        html.dark .vchart-col.is-selected .vchart-bar { background: #60a5fa; }
+        .vchart-col:focus-visible { outline: 2px solid #60a5fa; outline-offset: 1px; border-radius: 4px; }
+        .vchart-labels { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 2px; }
+        .vchart-tip { position: absolute; bottom: calc(100% + 6px); transform: translateX(-50%); white-space: nowrap; pointer-events: none; z-index: 5; }
+
+        @media (prefers-reduced-motion: reduce) { .lift, .lift:hover, .action-tile .tile-icon { transition: none; transform: none; } }
+
         /* Pinned-patient cards keep a fixed light-blue background in both modes, so their text
            needs fixed dark colors too — otherwise the global dark-mode text override (meant for
            dark-background cards) turns the name/ID near-invisible against that light background. */
@@ -76,7 +119,7 @@
                     <i class="fa-solid fa-arrow-left text-lg"></i>
                 </a>
                 <div class="flex items-center gap-2">
-                    <div class="bg-slate-800 text-white p-2.5 rounded-xl shadow-md"><i class="fa-solid fa-folder-open text-lg"></i></div>
+                    <div class="bg-gradient-to-br from-blue-600 to-indigo-600 text-white w-10 h-10 rounded-xl shadow-md flex items-center justify-center"><i class="fa-solid fa-tooth text-lg"></i></div>
                     <div>
                         <h1 class="text-lg font-black text-slate-800">Patient Records</h1>
                         <p class="text-[11px] text-slate-500 font-bold -mt-0.5">Dr. Ferid Clinic — Staff only</p>
@@ -95,32 +138,70 @@
     <main class="container mx-auto px-4 py-8 max-w-5xl">
 
         <!-- Login section -->
-        <div id="records-login-section" class="max-w-sm mx-auto py-16">
+        <div id="records-login-section" class="max-w-sm mx-auto py-10 sm:py-16">
             <div class="text-center mb-8">
-                <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner"><i class="fa-solid fa-lock text-4xl text-slate-400"></i></div>
-                <h2 class="text-lg font-black text-slate-800">Staff Login</h2>
+                <div class="relative w-24 h-24 mx-auto mb-5">
+                    <div class="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-600 rotate-6 opacity-30"></div>
+                    <div class="relative w-24 h-24 rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-xl"><i class="fa-solid fa-user-doctor text-4xl text-white"></i></div>
+                </div>
+                <h2 class="text-2xl font-black text-slate-800">Welcome back</h2>
                 <p class="text-sm text-slate-500 font-bold mt-1">Sign in to access patient records</p>
             </div>
-            <div class="space-y-3 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-                <input type="email" id="staff-login-email" autocomplete="username" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-clinic bg-white font-bold text-slate-800" placeholder="Email">
-                <input type="password" id="staff-login-password" autocomplete="current-password" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-clinic bg-white font-bold text-slate-800" placeholder="Password">
+            <form class="space-y-3 bg-white border border-slate-200 rounded-3xl p-6 shadow-lg" onsubmit="event.preventDefault(); window.staffLogin();">
+                <div class="relative">
+                    <i class="fa-regular fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="email" id="staff-login-email" autocomplete="username" class="w-full pl-11 pr-4 py-3 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-clinic bg-white font-bold text-slate-800" placeholder="Email">
+                </div>
+                <div class="relative">
+                    <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="password" id="staff-login-password" autocomplete="current-password" class="w-full pl-11 pr-4 py-3 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-clinic bg-white font-bold text-slate-800" placeholder="Password">
+                </div>
                 <p id="staff-login-error" class="hidden text-red-500 text-sm font-bold text-center"></p>
-                <button onclick="window.staffLogin()" class="w-full bg-slate-800 text-white font-black text-lg py-4 rounded-2xl hover:bg-slate-900 transition-colors flex items-center justify-center gap-2 shadow-lg"><i class="fa-solid fa-arrow-right-to-bracket"></i> Login</button>
-            </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-lg py-4 rounded-2xl transition-colors flex items-center justify-center gap-2 shadow-lg"><i class="fa-solid fa-arrow-right-to-bracket"></i> Login</button>
+            </form>
+            <p class="text-center text-xs text-slate-400 font-bold mt-6"><i class="fa-solid fa-shield-halved mr-1"></i> Staff only · Dr. Ferid Clinic</p>
         </div>
 
         <!-- Main records content (shown once logged in) -->
-        <div id="records-main-section" class="hidden space-y-8">
+        <div id="records-main-section" class="hidden space-y-6">
 
-            <div class="flex flex-col sm:flex-row gap-3">
-                <div class="relative flex-grow">
-                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                    <input type="text" id="records-search-input" oninput="window.searchPatients()" placeholder="Search by name or ID..." class="w-full pl-11 pr-4 py-3 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-clinic bg-white font-bold text-slate-800 shadow-sm">
+            <!-- Dashboard hero: greeting + today's key numbers (hidden on detail/sub views) -->
+            <section id="dash-hero" class="dash-hero relative overflow-hidden rounded-3xl p-5 sm:p-7 text-white shadow-xl">
+                <div class="blob w-56 h-56 bg-white/10 -top-20 -right-16"></div>
+                <div class="blob w-40 h-40 bg-indigo-300/20 -bottom-16 left-1/3"></div>
+                <div class="relative flex items-start justify-between gap-3">
+                    <div>
+                        <p id="dash-greeting" class="text-sm font-bold text-blue-100">Hello</p>
+                        <h2 class="text-2xl sm:text-3xl font-black tracking-tight">Dr. Ferid Clinic</h2>
+                        <p id="dash-date" class="text-sm font-bold text-blue-100/90 mt-0.5"></p>
+                    </div>
+                    <i class="fa-solid fa-tooth text-5xl text-white/15 hidden sm:block"></i>
                 </div>
-                <button onclick="window.openAddPatientForm()" class="bg-clinic text-white font-bold px-5 py-3 rounded-xl hover:bg-clinic-dark transition-colors shadow-md whitespace-nowrap"><i class="fa-solid fa-plus mr-1"></i> Add Patient</button>
-                <button onclick="window.openVisitsByDate()" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold px-5 py-3 rounded-xl transition-colors shadow-md whitespace-nowrap"><i class="fa-regular fa-calendar-days mr-1"></i> Visits by Date</button>
-                <button onclick="window.openEndoFollowups()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-5 py-3 rounded-xl transition-colors shadow-md whitespace-nowrap"><i class="fa-solid fa-tooth mr-1"></i> Endo Follow-Ups</button>
-                <button onclick="window.openFaqsModal()" class="bg-teal-500 hover:bg-teal-600 text-white font-bold px-5 py-3 rounded-xl transition-colors shadow-md whitespace-nowrap"><i class="fa-solid fa-comment-dots mr-1"></i> Chatbot FAQs</button>
+                <div id="dash-kpis" class="relative grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mt-5"></div>
+            </section>
+
+            <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="records-search-input" oninput="window.searchPatients()" placeholder="Search patients by name or ID..." class="w-full pl-11 pr-4 py-3.5 rounded-2xl border-2 border-slate-200 focus:outline-none focus:border-clinic bg-white font-bold text-slate-800 shadow-sm">
+            </div>
+
+            <div id="action-tiles" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <button onclick="window.openAddPatientForm()" class="action-tile lift bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm flex items-center gap-3">
+                    <span class="tile-icon w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md flex-shrink-0"><i class="fa-solid fa-user-plus"></i></span>
+                    <span class="min-w-0"><span class="block font-black text-slate-800 text-sm leading-tight">Add Patient</span><span class="block text-[11px] font-bold text-slate-400">New record</span></span>
+                </button>
+                <button onclick="window.openVisitsByDate()" class="action-tile lift bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm flex items-center gap-3">
+                    <span class="tile-icon w-11 h-11 rounded-xl bg-indigo-500 text-white flex items-center justify-center shadow-md flex-shrink-0"><i class="fa-solid fa-chart-column"></i></span>
+                    <span class="min-w-0"><span class="block font-black text-slate-800 text-sm leading-tight">Statistics</span><span class="block text-[11px] font-bold text-slate-400">Visits by day</span></span>
+                </button>
+                <button onclick="window.openEndoFollowups()" class="action-tile lift bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm flex items-center gap-3">
+                    <span class="tile-icon w-11 h-11 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-md flex-shrink-0"><i class="fa-solid fa-tooth"></i></span>
+                    <span class="min-w-0"><span class="block font-black text-slate-800 text-sm leading-tight">Endo Follow-Ups</span><span id="tile-endo-sub" class="block text-[11px] font-bold text-slate-400">Reminders</span></span>
+                </button>
+                <button onclick="window.openFaqsModal()" class="action-tile lift bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm flex items-center gap-3">
+                    <span class="tile-icon w-11 h-11 rounded-xl bg-teal-500 text-white flex items-center justify-center shadow-md flex-shrink-0"><i class="fa-solid fa-comment-dots"></i></span>
+                    <span class="min-w-0"><span class="block font-black text-slate-800 text-sm leading-tight">Chatbot FAQs</span><span class="block text-[11px] font-bold text-slate-400">Site assistant</span></span>
+                </button>
             </div>
 
             <!-- Pinned patients: manually pinned by staff so they're one tap away all day -->
@@ -136,14 +217,30 @@
             <div id="recent-visits-section">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-                        <div class="flex justify-between items-center mb-1"><p class="text-xs font-black text-slate-400 uppercase tracking-wide">Today</p><button onclick="window.openVisitsByDate(0)" class="text-[11px] font-bold text-clinic hover:underline">Details</button></div>
-                        <p id="today-date-label" class="text-sm font-bold text-slate-600 mb-3"></p>
-                        <div id="today-visits-list" class="space-y-2"></div>
+                        <div class="flex justify-between items-center mb-3">
+                            <div class="flex items-center gap-2.5">
+                                <span class="w-9 h-9 rounded-xl bg-green-100 text-green-600 flex items-center justify-center"><i class="fa-solid fa-sun"></i></span>
+                                <div>
+                                    <p class="text-sm font-black text-slate-800 leading-tight">Today <span id="today-count" class="text-slate-400"></span></p>
+                                    <p id="today-date-label" class="text-[11px] font-bold text-slate-400"></p>
+                                </div>
+                            </div>
+                            <button onclick="window.openVisitsByDate(0)" class="text-xs font-bold text-clinic hover:bg-clinic-light px-2.5 py-1 rounded-lg transition-colors">Details <i class="fa-solid fa-chevron-right text-[9px]"></i></button>
+                        </div>
+                        <div id="today-visits-list" class="space-y-1.5"></div>
                     </div>
                     <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-                        <div class="flex justify-between items-center mb-1"><p class="text-xs font-black text-slate-400 uppercase tracking-wide">Yesterday</p><button onclick="window.openVisitsByDate(1)" class="text-[11px] font-bold text-clinic hover:underline">Details</button></div>
-                        <p id="yesterday-date-label" class="text-sm font-bold text-slate-600 mb-3"></p>
-                        <div id="yesterday-visits-list" class="space-y-2"></div>
+                        <div class="flex justify-between items-center mb-3">
+                            <div class="flex items-center gap-2.5">
+                                <span class="w-9 h-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center"><i class="fa-solid fa-clock-rotate-left"></i></span>
+                                <div>
+                                    <p class="text-sm font-black text-slate-800 leading-tight">Yesterday <span id="yesterday-count" class="text-slate-400"></span></p>
+                                    <p id="yesterday-date-label" class="text-[11px] font-bold text-slate-400"></p>
+                                </div>
+                            </div>
+                            <button onclick="window.openVisitsByDate(1)" class="text-xs font-bold text-clinic hover:bg-clinic-light px-2.5 py-1 rounded-lg transition-colors">Details <i class="fa-solid fa-chevron-right text-[9px]"></i></button>
+                        </div>
+                        <div id="yesterday-visits-list" class="space-y-1.5"></div>
                     </div>
                 </div>
             </div>
@@ -156,7 +253,7 @@
                 <button onclick="window.backToPatientList()" class="text-sm font-bold text-slate-500 hover:text-clinic flex items-center gap-1"><i class="fa-solid fa-arrow-left"></i> Back</button>
                 <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
                     <div class="flex items-center justify-between gap-2">
-                        <h3 class="text-lg font-black text-slate-800 flex items-center gap-2"><i class="fa-regular fa-calendar-days text-indigo-500"></i> Visits by Date</h3>
+                        <h3 class="text-lg font-black text-slate-800 flex items-center gap-2"><span class="w-9 h-9 rounded-xl bg-indigo-500 text-white flex items-center justify-center text-sm"><i class="fa-solid fa-chart-column"></i></span> Statistics</h3>
                         <button onclick="window.setVisitsDate(window.localIsoOffset(0))" class="text-xs font-bold text-clinic hover:bg-clinic-light px-3 py-1.5 rounded-lg border border-clinic/20 transition-colors">Today</button>
                     </div>
                     <div class="flex items-center gap-2">
@@ -167,7 +264,16 @@
                     <p id="visits-date-label" class="text-center text-sm font-bold text-slate-500"></p>
                     <div id="visits-recent-days" class="flex gap-1.5 overflow-x-auto pb-1"></div>
                 </div>
+                <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                    <div class="flex justify-between items-baseline mb-3">
+                        <p class="text-sm font-black text-slate-800">Patients per day <span class="text-slate-400 font-bold">· last 14 days</span></p>
+                        <p id="vchart-total" class="text-xs font-bold text-slate-400"></p>
+                    </div>
+                    <div id="vchart" class="vchart" role="list" aria-label="Patients per day, tap a bar to open that day"></div>
+                    <div id="vchart-labels" class="vchart-labels mt-1.5"></div>
+                </div>
                 <div id="visits-summary" class="grid grid-cols-3 gap-2"></div>
+                <div id="visits-procedures" class="flex flex-wrap gap-1.5"></div>
                 <div id="visits-by-date-list" class="space-y-3"></div>
             </div>
 
@@ -207,8 +313,9 @@
                 <button onclick="window.backToPatientList()" class="text-sm font-bold text-slate-500 hover:text-clinic flex items-center gap-1"><i class="fa-solid fa-arrow-left"></i> Back</button>
 
                 <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-                    <div class="flex justify-between items-start">
-                        <div class="flex-grow">
+                    <div class="flex justify-between items-start gap-3">
+                        <div id="detail-avatar" class="avatar av-0 w-14 h-14 text-xl"></div>
+                        <div class="flex-grow min-w-0">
                             <div class="flex items-center gap-2">
                                 <h4 id="detail-patient-name" class="text-xl font-black text-slate-800"></h4>
                                 <button onclick="window.toggleNameEdit()" class="text-xs font-bold text-clinic hover:underline flex-shrink-0">Edit</button>
@@ -234,6 +341,7 @@
                             <button onclick="window.deletePatientPrompt()" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors" title="Delete patient"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
                     </div>
+                    <div id="detail-stats" class="grid grid-cols-3 gap-2 mt-4"></div>
                     <div class="grid grid-cols-4 gap-1.5 mt-4">
                         <button onclick="window.sendWhatsAppReminder('تركيب')" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded-lg transition-colors shadow-md flex flex-col items-center justify-center gap-0.5 text-[11px]">
                             <i class="fa-brands fa-whatsapp text-sm"></i> تركيب
@@ -265,7 +373,7 @@
                         <h5 class="font-black text-slate-800 flex items-center gap-2"><i class="fa-solid fa-notes-medical text-clinic"></i> Case History</h5>
                         <button onclick="window.openAddCaseEntryForm()" class="text-sm font-bold text-clinic hover:bg-clinic-light px-3 py-1.5 rounded-lg transition-colors border border-clinic/20"><i class="fa-solid fa-plus mr-1"></i> Add Entry</button>
                     </div>
-                    <div id="case-history-list" class="space-y-3"></div>
+                    <div id="case-history-list" class="timeline space-y-3"></div>
                 </div>
             </div>
         </div>
@@ -770,11 +878,74 @@
             return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         }
 
+        // ===================== Visual helpers =====================
+        function initialsOf(name) {
+            const parts = String(name || '?').trim().split(/\s+/).filter(Boolean);
+            const letters = parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : (parts[0] || '?').slice(0, 2);
+            return escapeHtml(letters.toUpperCase());
+        }
+        // Stable colour per patient (decorative — the name is always shown alongside).
+        function avatarClass(seed) {
+            let h = 0;
+            for (const ch of String(seed || '')) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+            return 'av-' + (h % 6);
+        }
+        function avatarHtml(p, sizeClasses) {
+            return `<span class="avatar ${avatarClass(p.id || p.name)} ${sizeClasses || 'w-9 h-9 text-xs'}" aria-hidden="true">${initialsOf(p.name)}</span>`;
+        }
+        function procChips(entries) {
+            const procs = [...new Set(entries.map(e => e.procedure).filter(Boolean))];
+            return procs.map(pr => `<span class="proc-chip">${escapeHtml(pr)}</span>`).join(' ');
+        }
+        function lastVisitIso(p) {
+            return (p.caseHistory || []).reduce((max, e) => (e.date && e.date > max ? e.date : max), '');
+        }
+        function shortDate(iso) {
+            const d = new Date(iso + 'T00:00:00');
+            return isNaN(d) ? '' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+
+        function renderDashboard() {
+            const hour = new Date().getHours();
+            document.getElementById('dash-greeting').textContent =
+                hour < 12 ? 'Good morning ☀️' : hour < 17 ? 'Good afternoon 👋' : 'Good evening 🌙';
+            document.getElementById('dash-date').textContent =
+                new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+            const todayIso = isoDateOffset(0);
+            const monthPrefix = todayIso.slice(0, 7);
+            let todayPatients = 0, todayPaid = 0, monthVisits = 0;
+            window.allPatients.forEach(p => {
+                const dates = new Set();
+                (p.caseHistory || []).forEach(e => {
+                    if (!e.date) return;
+                    if (e.date === todayIso) todayPaid += Number(e.paid || 0);
+                    dates.add(e.date);
+                });
+                if (dates.has(todayIso)) todayPatients++;
+                dates.forEach(d => { if (d.startsWith(monthPrefix)) monthVisits++; });
+            });
+
+            const kpi = (icon, value, label) => `
+                <div class="kpi-glass rounded-2xl px-3 py-2.5">
+                    <p class="text-[11px] font-bold text-blue-100 flex items-center gap-1.5"><i class="${icon}"></i> ${label}</p>
+                    <p class="text-xl sm:text-2xl font-black leading-tight truncate">${value}</p>
+                </div>`;
+            document.getElementById('dash-kpis').innerHTML =
+                kpi('fa-solid fa-users', window.allPatients.length.toLocaleString(), 'Patients') +
+                kpi('fa-solid fa-user-check', todayPatients, 'Seen today') +
+                kpi('fa-solid fa-coins', todayPaid.toLocaleString(), 'Collected today') +
+                kpi('fa-regular fa-calendar', monthVisits, 'Visits this month');
+        }
+
         function renderRecentVisits() {
+            document.getElementById('dash-hero').classList.remove('hidden');
+            document.getElementById('action-tiles').classList.remove('hidden');
             document.getElementById('pinned-patients-section').classList.remove('hidden');
             document.getElementById('recent-visits-section').classList.remove('hidden');
             document.getElementById('records-list-step').classList.add('hidden');
 
+            renderDashboard();
             renderPinnedPatients();
 
             const todayIso = isoDateOffset(0);
@@ -783,32 +954,36 @@
             document.getElementById('today-date-label').textContent = friendlyDateLabel(todayIso);
             document.getElementById('yesterday-date-label').textContent = friendlyDateLabel(yestIso);
 
+            // Each bucket holds { patient, entries } so we can show what was done, not just who.
             const buckets = { [todayIso]: [], [yestIso]: [] };
             window.allPatients.forEach(p => {
-                const seenDates = new Set();
-                (p.caseHistory || []).forEach(e => {
-                    if (buckets[e.date] && !seenDates.has(e.date)) {
-                        buckets[e.date].push(p);
-                        seenDates.add(e.date);
-                    }
+                [todayIso, yestIso].forEach(iso => {
+                    const entries = (p.caseHistory || []).filter(e => e.date === iso);
+                    if (entries.length) buckets[iso].push({ patient: p, entries });
                 });
             });
 
-            function renderCol(containerId, list) {
+            function renderCol(containerId, countId, list) {
                 const el = document.getElementById(containerId);
+                document.getElementById(countId).textContent = list.length ? `· ${list.length}` : '';
                 if (list.length === 0) {
-                    el.innerHTML = `<p class="text-xs text-slate-400 font-bold">No visits.</p>`;
+                    el.innerHTML = `<div class="text-center py-5 rounded-xl border-2 border-dashed border-slate-200"><i class="fa-regular fa-calendar text-slate-300 text-xl"></i><p class="text-xs text-slate-400 font-bold mt-1">No visits recorded</p></div>`;
                     return;
                 }
-                el.innerHTML = list.map(p => `
-                    <button onclick="window.openPatientDetail('${p.id}')" class="w-full text-left bg-slate-50 hover:bg-clinic-light border border-slate-200 rounded-lg px-3 py-2 transition-colors">
-                        <p class="font-bold text-slate-800 text-sm">${escapeHtml(p.name)}</p>
-                        <p class="text-[11px] text-slate-500 font-bold">${p.patientId ? 'ID: ' + escapeHtml(p.patientId) : ''}</p>
+                list.sort((a, b) => (a.patient.name || '').localeCompare(b.patient.name || ''));
+                el.innerHTML = list.map(({ patient: p, entries }) => `
+                    <button onclick="window.openPatientDetail('${p.id}')" class="lift w-full text-left bg-slate-50 hover:border-clinic border border-slate-200 rounded-xl px-3 py-2 flex items-center gap-3">
+                        ${avatarHtml(p)}
+                        <span class="min-w-0 flex-grow">
+                            <span class="block font-bold text-slate-800 text-sm truncate">${escapeHtml(p.name)}</span>
+                            <span class="block text-[11px] text-slate-500 font-bold">${p.patientId ? 'ID: ' + escapeHtml(p.patientId) : ''}</span>
+                        </span>
+                        <span class="flex flex-wrap justify-end gap-1 max-w-[50%]">${procChips(entries)}</span>
                     </button>`).join('');
             }
 
-            renderCol('today-visits-list', buckets[todayIso]);
-            renderCol('yesterday-visits-list', buckets[yestIso]);
+            renderCol('today-visits-list', 'today-count', buckets[todayIso]);
+            renderCol('yesterday-visits-list', 'yesterday-count', buckets[yestIso]);
         }
 
         // Pinned patients: manually toggled by staff, not date-based — stay pinned until someone
@@ -911,10 +1086,14 @@
             }
             const sorted = [...list].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
             container.innerHTML = sorted.map(p => `
-                <div class="w-full bg-white border border-slate-200 rounded-xl p-4 flex justify-between items-center hover:border-clinic transition-colors shadow-sm gap-2">
-                    <button onclick="window.openPatientDetail('${p.id}')" class="text-left flex-grow min-w-0">
-                        <p class="font-black text-slate-800">${escapeHtml(p.name)}</p>
-                        <p class="text-xs text-slate-500 font-bold mt-0.5">${p.patientId ? 'ID: ' + escapeHtml(p.patientId) : 'No ID'} ${p.phone ? ' · ' + escapeHtml(p.phone) : ''}</p>
+                <div class="lift w-full bg-white border border-slate-200 rounded-2xl p-3 sm:p-4 flex justify-between items-center hover:border-clinic shadow-sm gap-2">
+                    <button onclick="window.openPatientDetail('${p.id}')" class="text-left flex-grow min-w-0 flex items-center gap-3">
+                        ${avatarHtml(p, 'w-11 h-11 text-sm')}
+                        <span class="min-w-0">
+                            <span class="block font-black text-slate-800 truncate">${escapeHtml(p.name)}</span>
+                            <span class="block text-xs text-slate-500 font-bold mt-0.5">${p.patientId ? 'ID: ' + escapeHtml(p.patientId) : 'No ID'} ${p.phone ? ' · ' + escapeHtml(p.phone) : ''}</span>
+                            ${lastVisitIso(p) ? `<span class="block text-[11px] text-slate-400 font-bold mt-0.5"><i class="fa-regular fa-clock"></i> Last visit ${shortDate(lastVisitIso(p))}</span>` : ''}
+                        </span>
                     </button>
                     <button onclick="window.togglePin('${p.id}')" class="flex-shrink-0 p-2 ${window.isPinned(p.id) ? 'text-clinic' : 'text-slate-300 hover:text-clinic'}" title="${window.isPinned(p.id) ? 'Unpin' : 'Pin'}"><i class="fa-solid fa-thumbtack"></i></button>
                 </div>
@@ -947,6 +1126,8 @@
 
         // Shows the add-patient form or patient-detail view, hiding the recent-visits/search list beneath it.
         function recordsShowStep(stepId) {
+            document.getElementById('dash-hero').classList.add('hidden');
+            document.getElementById('action-tiles').classList.add('hidden');
             document.getElementById('pinned-patients-section').classList.add('hidden');
             document.getElementById('recent-visits-section').classList.add('hidden');
             document.getElementById('records-list-step').classList.add('hidden');
@@ -1032,6 +1213,24 @@
             document.getElementById('detail-patient-id').textContent = p.patientId ? 'ID: ' + p.patientId : 'No ID assigned';
             document.getElementById('detail-patient-phone').textContent = p.phone ? 'Phone: ' + p.phone : 'No phone on file';
 
+            const avatarEl = document.getElementById('detail-avatar');
+            avatarEl.className = `avatar ${avatarClass(p.id || p.name)} w-14 h-14 text-xl`;
+            avatarEl.innerHTML = initialsOf(p.name);
+
+            const history = p.caseHistory || [];
+            const visitDays = new Set(history.map(e => e.date).filter(Boolean)).size;
+            const totalPaid = history.reduce((sum, e) => sum + Number(e.paid || 0), 0);
+            const last = lastVisitIso(p);
+            const stat = (value, label, cls) => `
+                <div class="bg-slate-50 border border-slate-200 rounded-xl px-2 py-2.5 text-center">
+                    <p class="text-base sm:text-lg font-black ${cls || 'text-slate-800'} truncate">${value}</p>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">${label}</p>
+                </div>`;
+            document.getElementById('detail-stats').innerHTML =
+                stat(visitDays, visitDays === 1 ? 'Visit' : 'Visits') +
+                stat(totalPaid.toLocaleString(), 'Total paid', 'text-green-600') +
+                stat(last ? shortDate(last).replace(/ \d{4}$/, '') : '—', 'Last visit');
+
             const pinBtn = document.getElementById('detail-pin-btn');
             if (window.isPinned(p.id)) {
                 pinBtn.classList.add('bg-clinic-light', 'text-clinic');
@@ -1063,17 +1262,25 @@
                 historyContainer.innerHTML = `<p class="text-center text-slate-400 font-bold py-6">No case history yet.</p>`;
                 return;
             }
-            historyContainer.innerHTML = entries.map(entry => `
-                <div class="flex gap-4 border border-slate-200 rounded-xl p-4 bg-slate-50">
-                    <div class="text-left flex-shrink-0 w-24">
-                        <p class="font-black text-slate-800 text-sm">${escapeHtml(entry.date || '')}</p>
+            historyContainer.innerHTML = entries.map(entry => {
+                const d = new Date((entry.date || '') + 'T00:00:00');
+                const valid = !isNaN(d);
+                return `
+                <div class="flex gap-3">
+                <div class="tl-date text-center">
+                    <div class="w-12 rounded-xl bg-white border-2 border-blue-200 shadow-sm py-1">
+                        <p class="text-lg font-black text-slate-800 leading-none">${valid ? d.getDate() : '?'}</p>
+                        <p class="text-[10px] font-black text-clinic uppercase">${valid ? d.toLocaleDateString('en-GB', { month: 'short' }) : ''}</p>
                     </div>
-                    <div class="flex-grow border-l border-slate-200 pl-4">
-                        <p class="text-slate-700 text-sm whitespace-pre-wrap">${escapeHtml(entry.notes || '')}</p>
-                        ${entry.teeth && entry.teeth.length ? `<p class="text-xs font-bold text-slate-500 mt-2">Teeth: ${entry.teeth.join(', ')}${entry.procedure ? ' · ' + escapeHtml(entry.procedure) : ''}</p>` : (entry.procedure ? `<p class="text-xs font-bold text-slate-500 mt-2">${escapeHtml(entry.procedure)}</p>` : '')}
+                    <p class="text-[10px] font-bold text-slate-400 mt-0.5">${valid ? d.getFullYear() : escapeHtml(entry.date || '')}</p>
+                </div>
+                <div class="flex-grow min-w-0 flex gap-3 border border-slate-200 rounded-xl p-4 bg-slate-50">
+                    <div class="flex-grow min-w-0">
+                        ${entry.procedure || (entry.teeth && entry.teeth.length) ? `<div class="flex flex-wrap items-center gap-1.5 mb-1.5">${entry.procedure ? `<span class="proc-chip">${escapeHtml(entry.procedure)}</span>` : ''}${entry.teeth && entry.teeth.length ? `<span class="text-xs font-bold text-slate-500"><i class="fa-solid fa-tooth text-[10px]"></i> ${entry.teeth.map(t => escapeHtml(t)).join(', ')}</span>` : ''}</div>` : ''}
+                        <p class="text-slate-700 text-sm whitespace-pre-wrap break-words">${escapeHtml(entry.notes || '')}</p>
                         <div class="flex gap-2 mt-3">
-                            <span class="bg-green-100 text-green-700 font-black text-sm px-3 py-1.5 rounded-lg">${Number(entry.paid || 0).toLocaleString()}</span>
-                            ${(entry.remaining && entry.remaining > 0) ? `<span class="bg-red-100 text-red-600 font-black text-sm px-3 py-1.5 rounded-lg">${Number(entry.remaining).toLocaleString()}</span>` : ''}
+                            <span class="bg-green-100 text-green-700 font-black text-xs px-2.5 py-1 rounded-lg"><i class="fa-solid fa-check"></i> Paid ${Number(entry.paid || 0).toLocaleString()}</span>
+                            ${(entry.remaining && entry.remaining > 0) ? `<span class="bg-red-100 text-red-600 font-black text-xs px-2.5 py-1 rounded-lg"><i class="fa-solid fa-hourglass-half"></i> Remaining ${Number(entry.remaining).toLocaleString()}</span>` : ''}
                         </div>
                         ${entry.photos && entry.photos.length ? `<div class="flex flex-wrap gap-2 mt-3">${entry.photos.map(ph => `<a href="${ph.url}" target="_blank"><img src="${ph.url}" class="w-14 h-14 object-cover rounded-lg border border-slate-200 hover:opacity-80 transition-opacity"></a>`).join('')}</div>` : ''}
                     </div>
@@ -1082,7 +1289,8 @@
                         <button onclick="window.deleteCaseEntry('${entry.id}')" class="text-slate-300 hover:text-red-500 transition-colors" title="Delete entry"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
                 </div>
-            `).join('');
+                </div>`;
+            }).join('');
         };
 
         // Palmer notation: each quadrant grouped visually (Upper/Lower Right/Left boxes) rather than
@@ -1915,6 +2123,51 @@
             window.setVisitsDate(toLocalIso(d));
         };
 
+        // 14-day bar chart ending on the chosen day. Single series, so no legend: the title names it.
+        // Each bar is a button (keyboard + tap) with a hover/focus tooltip; tapping opens that day.
+        function renderVisitsChart(selectedIso, countByDate) {
+            const end = new Date(selectedIso + 'T00:00:00');
+            const days = [];
+            for (let i = 13; i >= 0; i--) {
+                const d = new Date(end);
+                d.setDate(end.getDate() - i);
+                const iso = toLocalIso(d);
+                days.push({ iso, d, n: countByDate[iso] || 0 });
+            }
+            const max = Math.max(1, ...days.map(x => x.n));
+            const total = days.reduce((sum, x) => sum + x.n, 0);
+            document.getElementById('vchart-total').textContent = `${total} visit${total === 1 ? '' : 's'} total`;
+
+            const chart = document.getElementById('vchart');
+            chart.innerHTML = days.map(({ iso, d, n }) => {
+                const label = `${d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}: ${n} patient${n === 1 ? '' : 's'}`;
+                const height = n ? Math.max(6, Math.round((n / max) * 100)) : 0;
+                return `<button type="button" role="listitem" class="vchart-col ${iso === selectedIso ? 'is-selected' : ''}" data-iso="${iso}" data-tip="${label}" aria-label="${label}">
+                    <span class="vchart-bar" style="height:${height}%"></span></button>`;
+            }).join('') + `<div id="vchart-tip" class="vchart-tip hidden bg-slate-800 text-white text-[11px] font-bold px-2 py-1 rounded-md shadow-lg"></div>`;
+
+            document.getElementById('vchart-labels').innerHTML = days.map(({ iso, d }) =>
+                `<span class="text-center text-[10px] font-bold ${iso === selectedIso ? 'text-clinic' : 'text-slate-400'}">${d.getDate()}</span>`).join('');
+
+            const tip = document.getElementById('vchart-tip');
+            chart.querySelectorAll('.vchart-col').forEach(col => {
+                const show = () => {
+                    tip.textContent = col.dataset.tip;
+                    tip.classList.remove('hidden');
+                    const cRect = chart.getBoundingClientRect(), bRect = col.getBoundingClientRect();
+                    const half = tip.offsetWidth / 2;
+                    const x = Math.min(Math.max(bRect.left - cRect.left + bRect.width / 2, half), cRect.width - half);
+                    tip.style.left = x + 'px';
+                };
+                const hide = () => tip.classList.add('hidden');
+                col.addEventListener('mouseenter', show);
+                col.addEventListener('focus', show);
+                col.addEventListener('mouseleave', hide);
+                col.addEventListener('blur', hide);
+                col.addEventListener('click', () => window.setVisitsDate(col.dataset.iso));
+            });
+        }
+
         window.openPatientFromVisits = function(patientId) {
             window.openPatientDetail(patientId);
             window.returnToVisitsDate = window.visitsDate; // set after openPatientDetail
@@ -1955,8 +2208,19 @@
                 }).join('')
                 : '';
 
+            renderVisitsChart(iso, visitCountByDate);
+
             let totalPaid = 0, totalRemaining = 0;
-            groups.forEach(g => g.entries.forEach(e => { totalPaid += Number(e.paid || 0); totalRemaining += Number(e.remaining || 0); }));
+            const procCounts = {};
+            groups.forEach(g => g.entries.forEach(e => {
+                totalPaid += Number(e.paid || 0);
+                totalRemaining += Number(e.remaining || 0);
+                const key = e.procedure || 'Other';
+                procCounts[key] = (procCounts[key] || 0) + 1;
+            }));
+            document.getElementById('visits-procedures').innerHTML = Object.entries(procCounts)
+                .sort((a, b) => b[1] - a[1])
+                .map(([name, n]) => `<span class="proc-chip text-xs py-1 px-2.5">${escapeHtml(name)} <span class="opacity-70">×${n}</span></span>`).join('');
 
             document.getElementById('visits-summary').innerHTML = `
                 <div class="bg-white border border-slate-200 rounded-xl p-3 text-center shadow-sm">
@@ -1980,8 +2244,9 @@
 
             list.innerHTML = groups.map(({ patient: p, entries }) => `
                 <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-                    <button onclick="window.openPatientFromVisits('${p.id}')" class="w-full text-left flex justify-between items-start gap-2 group">
-                        <div class="min-w-0">
+                    <button onclick="window.openPatientFromVisits('${p.id}')" class="w-full text-left flex justify-between items-center gap-2 group">
+                        ${avatarHtml(p, 'w-10 h-10 text-sm')}
+                        <div class="min-w-0 flex-grow">
                             <p class="font-black text-slate-800 group-hover:text-clinic transition-colors">${escapeHtml(p.name)}</p>
                             <p class="text-xs text-slate-500 font-bold mt-0.5">${p.patientId ? 'ID: ' + escapeHtml(p.patientId) : 'No ID'}${p.phone ? ' · ' + escapeHtml(p.phone) : ''}</p>
                         </div>
@@ -1991,7 +2256,7 @@
                         ${entries.map(e => `
                             <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
                                 <div class="flex flex-wrap items-center gap-1.5">
-                                    ${e.procedure ? `<span class="bg-indigo-100 text-indigo-700 text-xs font-black px-2 py-0.5 rounded-md">${escapeHtml(e.procedure)}</span>` : ''}
+                                    ${e.procedure ? `<span class="proc-chip">${escapeHtml(e.procedure)}</span>` : ''}
                                     ${e.teeth && e.teeth.length ? `<span class="text-xs font-bold text-slate-500">Teeth: ${e.teeth.map(t => escapeHtml(t)).join(', ')}</span>` : ''}
                                 </div>
                                 ${e.notes ? `<p class="text-slate-700 text-sm whitespace-pre-wrap mt-1.5">${escapeHtml(e.notes)}</p>` : (!e.procedure ? '<p class="text-slate-400 text-sm mt-1">No notes</p>' : '')}
