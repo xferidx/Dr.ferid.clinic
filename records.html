@@ -57,6 +57,8 @@
         html.dark .text-red-600 { color: #f87171 !important; }
         html.dark .text-green-500 { color: #4ade80 !important; }
         html.dark .text-green-600 { color: #4ade80 !important; }
+        html.dark .bg-indigo-100 { background-color: #1e1b4b !important; }
+        html.dark .text-indigo-700 { color: #a5b4fc !important; }
         html.dark .text-green-700 { color: #4ade80 !important; }
 
         /* Pinned-patient cards keep a fixed light-blue background in both modes, so their text
@@ -116,6 +118,7 @@
                     <input type="text" id="records-search-input" oninput="window.searchPatients()" placeholder="Search by name or ID..." class="w-full pl-11 pr-4 py-3 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-clinic bg-white font-bold text-slate-800 shadow-sm">
                 </div>
                 <button onclick="window.openAddPatientForm()" class="bg-clinic text-white font-bold px-5 py-3 rounded-xl hover:bg-clinic-dark transition-colors shadow-md whitespace-nowrap"><i class="fa-solid fa-plus mr-1"></i> Add Patient</button>
+                <button onclick="window.openVisitsByDate()" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold px-5 py-3 rounded-xl transition-colors shadow-md whitespace-nowrap"><i class="fa-regular fa-calendar-days mr-1"></i> Visits by Date</button>
                 <button onclick="window.openEndoFollowups()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-5 py-3 rounded-xl transition-colors shadow-md whitespace-nowrap"><i class="fa-solid fa-tooth mr-1"></i> Endo Follow-Ups</button>
                 <button onclick="window.openFaqsModal()" class="bg-teal-500 hover:bg-teal-600 text-white font-bold px-5 py-3 rounded-xl transition-colors shadow-md whitespace-nowrap"><i class="fa-solid fa-comment-dots mr-1"></i> Chatbot FAQs</button>
             </div>
@@ -133,12 +136,12 @@
             <div id="recent-visits-section">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-                        <p class="text-xs font-black text-slate-400 uppercase tracking-wide mb-1">Today</p>
+                        <div class="flex justify-between items-center mb-1"><p class="text-xs font-black text-slate-400 uppercase tracking-wide">Today</p><button onclick="window.openVisitsByDate(0)" class="text-[11px] font-bold text-clinic hover:underline">Details</button></div>
                         <p id="today-date-label" class="text-sm font-bold text-slate-600 mb-3"></p>
                         <div id="today-visits-list" class="space-y-2"></div>
                     </div>
                     <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-                        <p class="text-xs font-black text-slate-400 uppercase tracking-wide mb-1">Yesterday</p>
+                        <div class="flex justify-between items-center mb-1"><p class="text-xs font-black text-slate-400 uppercase tracking-wide">Yesterday</p><button onclick="window.openVisitsByDate(1)" class="text-[11px] font-bold text-clinic hover:underline">Details</button></div>
                         <p id="yesterday-date-label" class="text-sm font-bold text-slate-600 mb-3"></p>
                         <div id="yesterday-visits-list" class="space-y-2"></div>
                     </div>
@@ -147,6 +150,26 @@
 
             <!-- Search results (shown instead of recent-visits while searching) -->
             <div id="records-list-step" class="hidden space-y-3"></div>
+
+            <!-- Visits by date: pick any day and see who came and what was done -->
+            <div id="visits-by-date-step" class="hidden space-y-4">
+                <button onclick="window.backToPatientList()" class="text-sm font-bold text-slate-500 hover:text-clinic flex items-center gap-1"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <h3 class="text-lg font-black text-slate-800 flex items-center gap-2"><i class="fa-regular fa-calendar-days text-indigo-500"></i> Visits by Date</h3>
+                        <button onclick="window.setVisitsDate(window.localIsoOffset(0))" class="text-xs font-bold text-clinic hover:bg-clinic-light px-3 py-1.5 rounded-lg border border-clinic/20 transition-colors">Today</button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.shiftVisitsDate(-1)" class="w-11 h-11 flex-shrink-0 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors" title="Previous day" aria-label="Previous day"><i class="fa-solid fa-chevron-left"></i></button>
+                        <input type="date" id="visits-date-input" onchange="window.setVisitsDate(this.value)" class="flex-grow min-w-0 px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-clinic bg-white font-bold text-slate-800 text-center">
+                        <button onclick="window.shiftVisitsDate(1)" class="w-11 h-11 flex-shrink-0 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors" title="Next day" aria-label="Next day"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                    <p id="visits-date-label" class="text-center text-sm font-bold text-slate-500"></p>
+                    <div id="visits-recent-days" class="flex gap-1.5 overflow-x-auto pb-1"></div>
+                </div>
+                <div id="visits-summary" class="grid grid-cols-3 gap-2"></div>
+                <div id="visits-by-date-list" class="space-y-3"></div>
+            </div>
 
             <!-- Endo follow-up list -->
             <div id="endo-followup-step" class="hidden space-y-4">
@@ -621,10 +644,13 @@
                 snapshot.forEach(docSnap => {
                     window.allPatients.push({ id: docSnap.id, ...docSnap.data() });
                 });
-                if (document.getElementById('records-list-step').classList.contains('hidden')) {
-                    renderRecentVisits();
-                } else {
+                const isOpen = (id) => !document.getElementById(id).classList.contains('hidden');
+                if (isOpen('visits-by-date-step')) {
+                    window.renderVisitsByDate();
+                } else if (isOpen('records-list-step')) {
                     window.searchPatients();
+                } else if (!isOpen('records-detail-step') && !isOpen('records-add-step') && !isOpen('endo-followup-step')) {
+                    renderRecentVisits();
                 }
                 if (window.currentDetailPatientId) window.refreshDetailView();
                 maybeMigratePinnedPatients();
@@ -727,11 +753,17 @@
         };
 
         // Recent-visits dashboard: today / yesterday / 2 days ago, based on case entry dates
+        // Local calendar date as YYYY-MM-DD. (toISOString() is UTC: in Iraq, UTC+3, it returned
+        // yesterday's date between midnight and 3am, so "Today" showed the wrong visits.)
+        function toLocalIso(d) {
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
         function isoDateOffset(daysAgo) {
             const d = new Date();
             d.setDate(d.getDate() - daysAgo);
-            return d.toISOString().split('T')[0];
+            return toLocalIso(d);
         }
+        window.localIsoOffset = isoDateOffset;
 
         function friendlyDateLabel(iso) {
             const d = new Date(iso + 'T00:00:00');
@@ -890,7 +922,14 @@
         }
 
         window.backToPatientList = function() {
+            const cameFromVisits = window.returnToVisitsDate &&
+                !document.getElementById('records-detail-step').classList.contains('hidden');
             window.currentDetailPatientId = null;
+            if (cameFromVisits) {
+                window.openVisitsByDate(window.returnToVisitsDate);
+                return;
+            }
+            window.returnToVisitsDate = null;
             document.getElementById('records-add-step').classList.add('hidden');
             document.getElementById('records-detail-step').classList.add('hidden');
             document.getElementById('records-search-input').value = '';
@@ -914,7 +953,10 @@
             document.getElementById('records-add-step').classList.add('hidden');
             document.getElementById('records-detail-step').classList.add('hidden');
             document.getElementById('endo-followup-step').classList.add('hidden');
+            document.getElementById('visits-by-date-step').classList.add('hidden');
             document.getElementById(stepId).classList.remove('hidden');
+            // "Back" only returns to the date view when going straight from it into a patient.
+            if (stepId !== 'records-detail-step') window.returnToVisitsDate = null;
         }
 
 
@@ -1592,7 +1634,7 @@
 
             document.getElementById('entry-modal-title').textContent = existingEntry ? 'Edit Case Entry' : 'New Case Entry';
             document.getElementById('entry-modal-patient-name').textContent = p ? p.name + (p.patientId ? ' · ID ' + p.patientId : '') : '';
-            document.getElementById('new-entry-date').value = existingEntry ? existingEntry.date : new Date().toISOString().split('T')[0];
+            document.getElementById('new-entry-date').value = existingEntry ? existingEntry.date : toLocalIso(new Date());
             document.getElementById('new-entry-notes').value = existingEntry ? stripCanalBlock(existingEntry.notes || '') : '';
             document.getElementById('new-entry-paid').value = existingEntry && existingEntry.paid ? existingEntry.paid : '';
             document.getElementById('new-entry-remaining').value = existingEntry && existingEntry.remaining ? existingEntry.remaining : '';
@@ -1833,17 +1875,147 @@
             window.open(url, '_blank');
         };
 
+        // ===================== Visits by Date =====================
+        // Every case-history entry carries its visit date, so any day's patients & work can be
+        // rebuilt from data we already have — no extra database reads or writes needed.
+        window.visitsDate = null;
+        window.returnToVisitsDate = null;
+
+        function longDateLabel(iso) {
+            const d = new Date(iso + 'T00:00:00');
+            if (isNaN(d)) return '';
+            const rel = iso === isoDateOffset(0) ? 'Today · ' : iso === isoDateOffset(1) ? 'Yesterday · ' : '';
+            return rel + d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        }
+
+        // openVisitsByDate()            -> keeps the last chosen day (or today)
+        // openVisitsByDate(1)           -> N days ago
+        // openVisitsByDate('2026-11-20') -> that exact day
+        window.openVisitsByDate = function(dateOrDaysAgo) {
+            let iso = window.visitsDate || isoDateOffset(0);
+            if (typeof dateOrDaysAgo === 'number') iso = isoDateOffset(dateOrDaysAgo);
+            else if (typeof dateOrDaysAgo === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateOrDaysAgo)) iso = dateOrDaysAgo;
+            window.currentDetailPatientId = null;
+            window.returnToVisitsDate = null;
+            document.getElementById('records-search-input').value = '';
+            recordsShowStep('visits-by-date-step');
+            window.setVisitsDate(iso);
+        };
+
+        window.setVisitsDate = function(iso) {
+            if (!iso) return;
+            window.visitsDate = iso;
+            document.getElementById('visits-date-input').value = iso;
+            window.renderVisitsByDate();
+        };
+
+        window.shiftVisitsDate = function(days) {
+            const d = new Date((window.visitsDate || isoDateOffset(0)) + 'T00:00:00');
+            d.setDate(d.getDate() + days);
+            window.setVisitsDate(toLocalIso(d));
+        };
+
+        window.openPatientFromVisits = function(patientId) {
+            window.openPatientDetail(patientId);
+            window.returnToVisitsDate = window.visitsDate; // set after openPatientDetail
+        };
+
+        function formatAmount(n) {
+            return Number(n || 0).toLocaleString();
+        }
+
+        window.renderVisitsByDate = function() {
+            const iso = window.visitsDate || isoDateOffset(0);
+            document.getElementById('visits-date-label').textContent = longDateLabel(iso);
+
+            // Group that day's entries by patient (a patient can have several entries in one day).
+            const groups = [];
+            const visitCountByDate = {};
+            window.allPatients.forEach(p => {
+                const dayEntries = [];
+                const datesForPatient = new Set();
+                (p.caseHistory || []).forEach(e => {
+                    if (!e.date) return;
+                    datesForPatient.add(e.date);
+                    if (e.date === iso) dayEntries.push(e);
+                });
+                datesForPatient.forEach(d => { visitCountByDate[d] = (visitCountByDate[d] || 0) + 1; });
+                if (dayEntries.length) groups.push({ patient: p, entries: dayEntries });
+            });
+            groups.sort((a, b) => (a.patient.name || '').localeCompare(b.patient.name || ''));
+
+            // Quick-jump chips: the most recent days that actually had visits.
+            const recentDays = Object.keys(visitCountByDate).filter(d => d <= isoDateOffset(0)).sort().reverse().slice(0, 10);
+            document.getElementById('visits-recent-days').innerHTML = recentDays.length
+                ? `<span class="text-[11px] font-bold text-slate-400 self-center whitespace-nowrap pr-1">Recent:</span>` + recentDays.map(d => {
+                    const dd = new Date(d + 'T00:00:00');
+                    const label = dd.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+                    const active = d === iso;
+                    return `<button onclick="window.setVisitsDate('${d}')" class="flex-shrink-0 text-xs font-bold px-2.5 py-1 rounded-full border transition-colors ${active ? 'bg-clinic text-white border-clinic' : 'bg-white text-slate-600 border-slate-200 hover:border-clinic hover:text-clinic'}">${label} <span class="${active ? 'text-white/80' : 'text-slate-400'}">(${visitCountByDate[d]})</span></button>`;
+                }).join('')
+                : '';
+
+            let totalPaid = 0, totalRemaining = 0;
+            groups.forEach(g => g.entries.forEach(e => { totalPaid += Number(e.paid || 0); totalRemaining += Number(e.remaining || 0); }));
+
+            document.getElementById('visits-summary').innerHTML = `
+                <div class="bg-white border border-slate-200 rounded-xl p-3 text-center shadow-sm">
+                    <p class="text-2xl font-black text-slate-800">${groups.length}</p>
+                    <p class="text-[11px] font-bold text-slate-500 uppercase">Patients</p>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-xl p-3 text-center shadow-sm">
+                    <p class="text-lg sm:text-2xl font-black text-green-600 truncate">${formatAmount(totalPaid)}</p>
+                    <p class="text-[11px] font-bold text-slate-500 uppercase">Paid</p>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-xl p-3 text-center shadow-sm">
+                    <p class="text-lg sm:text-2xl font-black ${totalRemaining > 0 ? 'text-red-600' : 'text-slate-400'} truncate">${formatAmount(totalRemaining)}</p>
+                    <p class="text-[11px] font-bold text-slate-500 uppercase">Remaining</p>
+                </div>`;
+
+            const list = document.getElementById('visits-by-date-list');
+            if (groups.length === 0) {
+                list.innerHTML = `<div class="text-center text-slate-400 font-bold py-10 bg-white border-2 border-dashed border-slate-200 rounded-2xl"><i class="fa-regular fa-calendar-xmark text-3xl mb-2 block"></i>No visits recorded on this day.</div>`;
+                return;
+            }
+
+            list.innerHTML = groups.map(({ patient: p, entries }) => `
+                <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                    <button onclick="window.openPatientFromVisits('${p.id}')" class="w-full text-left flex justify-between items-start gap-2 group">
+                        <div class="min-w-0">
+                            <p class="font-black text-slate-800 group-hover:text-clinic transition-colors">${escapeHtml(p.name)}</p>
+                            <p class="text-xs text-slate-500 font-bold mt-0.5">${p.patientId ? 'ID: ' + escapeHtml(p.patientId) : 'No ID'}${p.phone ? ' · ' + escapeHtml(p.phone) : ''}</p>
+                        </div>
+                        <span class="text-xs font-bold text-clinic flex-shrink-0 mt-1">Open <i class="fa-solid fa-chevron-right text-[10px]"></i></span>
+                    </button>
+                    <div class="mt-3 space-y-2">
+                        ${entries.map(e => `
+                            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                                <div class="flex flex-wrap items-center gap-1.5">
+                                    ${e.procedure ? `<span class="bg-indigo-100 text-indigo-700 text-xs font-black px-2 py-0.5 rounded-md">${escapeHtml(e.procedure)}</span>` : ''}
+                                    ${e.teeth && e.teeth.length ? `<span class="text-xs font-bold text-slate-500">Teeth: ${e.teeth.map(t => escapeHtml(t)).join(', ')}</span>` : ''}
+                                </div>
+                                ${e.notes ? `<p class="text-slate-700 text-sm whitespace-pre-wrap mt-1.5">${escapeHtml(e.notes)}</p>` : (!e.procedure ? '<p class="text-slate-400 text-sm mt-1">No notes</p>' : '')}
+                                <div class="flex gap-2 mt-2">
+                                    <span class="bg-green-100 text-green-700 font-black text-xs px-2.5 py-1 rounded-lg">Paid ${formatAmount(e.paid)}</span>
+                                    ${Number(e.remaining) > 0 ? `<span class="bg-red-100 text-red-600 font-black text-xs px-2.5 py-1 rounded-lg">Remaining ${formatAmount(e.remaining)}</span>` : ''}
+                                </div>
+                            </div>`).join('')}
+                    </div>
+                </div>
+            `).join('');
+        };
+
         // Finds patients needing an Endo follow-up: their most recent Instrumentation/Obturation
         // entry was 4-30 days ago (the most recent 3 days are excluded — too soon for a "don't
         // forget" nudge), not already dismissed, oldest visit first, capped at 30.
         window.openEndoFollowups = function() {
             const oldCutoff = new Date();
             oldCutoff.setDate(oldCutoff.getDate() - 30);
-            const oldCutoffIso = oldCutoff.toISOString().split('T')[0];
+            const oldCutoffIso = toLocalIso(oldCutoff);
 
             const recentCutoff = new Date();
             recentCutoff.setDate(recentCutoff.getDate() - 3);
-            const recentCutoffIso = recentCutoff.toISOString().split('T')[0];
+            const recentCutoffIso = toLocalIso(recentCutoff);
 
             const results = [];
             window.allPatients.forEach(p => {
