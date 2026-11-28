@@ -185,7 +185,7 @@
                 <input type="text" id="records-search-input" oninput="window.searchPatients()" placeholder="Search patients by name or ID..." class="w-full pl-11 pr-4 py-3.5 rounded-2xl border-2 border-slate-200 focus:outline-none focus:border-clinic bg-white font-bold text-slate-800 shadow-sm">
             </div>
 
-            <div id="action-tiles" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div id="action-tiles" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                 <button onclick="window.openAddPatientForm()" class="action-tile lift bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm flex items-center gap-3">
                     <span class="tile-icon w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md flex-shrink-0"><i class="fa-solid fa-user-plus"></i></span>
                     <span class="min-w-0"><span class="block font-black text-slate-800 text-sm leading-tight">Add Patient</span><span class="block text-[11px] font-bold text-slate-400">New record</span></span>
@@ -193,6 +193,10 @@
                 <button onclick="window.openVisitsByDate()" class="action-tile lift bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm flex items-center gap-3">
                     <span class="tile-icon w-11 h-11 rounded-xl bg-indigo-500 text-white flex items-center justify-center shadow-md flex-shrink-0"><i class="fa-solid fa-chart-column"></i></span>
                     <span class="min-w-0"><span class="block font-black text-slate-800 text-sm leading-tight">Statistics</span><span class="block text-[11px] font-bold text-slate-400">Visits by day</span></span>
+                </button>
+                <button onclick="window.openDebts()" class="action-tile lift bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm flex items-center gap-3">
+                    <span class="tile-icon w-11 h-11 rounded-xl bg-rose-500 text-white flex items-center justify-center shadow-md flex-shrink-0"><i class="fa-solid fa-hand-holding-dollar"></i></span>
+                    <span class="min-w-0"><span class="block font-black text-slate-800 text-sm leading-tight">Debts</span><span id="tile-debts-sub" class="block text-[11px] font-bold text-slate-400">Patients who owe</span></span>
                 </button>
                 <button onclick="window.openEndoFollowups()" class="action-tile lift bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm flex items-center gap-3">
                     <span class="tile-icon w-11 h-11 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-md flex-shrink-0"><i class="fa-solid fa-tooth"></i></span>
@@ -277,6 +281,22 @@
                 <div id="visits-by-date-list" class="space-y-3"></div>
             </div>
 
+            <!-- Debts: patients who owe money, largest first -->
+            <div id="debts-step" class="hidden space-y-4">
+                <button onclick="window.backToPatientList()" class="text-sm font-bold text-slate-500 hover:text-clinic flex items-center gap-1"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                <div class="flex items-end justify-between gap-3">
+                    <div>
+                        <h3 class="text-lg font-black text-slate-800 flex items-center gap-2"><span class="w-9 h-9 rounded-xl bg-rose-500 text-white flex items-center justify-center text-sm"><i class="fa-solid fa-hand-holding-dollar"></i></span> Debts</h3>
+                        <p id="debts-subtitle" class="text-sm text-slate-500 font-bold mt-1"></p>
+                    </div>
+                    <div id="debts-total" class="hidden text-right">
+                        <p class="text-[11px] font-bold text-slate-400 uppercase">Total owed</p>
+                        <p id="debts-total-value" class="text-xl font-black text-red-600"></p>
+                    </div>
+                </div>
+                <div id="debts-list" class="space-y-2"></div>
+            </div>
+
             <!-- Endo follow-up list -->
             <div id="endo-followup-step" class="hidden space-y-4">
                 <button onclick="window.backToPatientList()" class="text-sm font-bold text-slate-500 hover:text-clinic flex items-center gap-1"><i class="fa-solid fa-arrow-left"></i> Back</button>
@@ -334,6 +354,20 @@
                             <div id="phone-edit-row" class="hidden mt-2 flex gap-2 max-w-xs">
                                 <input type="tel" id="edit-phone-input" class="flex-grow px-3 py-2 rounded-lg border-2 border-slate-200 focus:outline-none focus:border-clinic bg-white font-bold text-slate-800 text-sm" placeholder="07xxxxxxxxx">
                                 <button onclick="window.savePatientPhone()" class="bg-clinic text-white font-bold px-4 py-2 rounded-lg text-sm hover:bg-clinic-dark transition-colors">Save</button>
+                            </div>
+
+                            <div class="flex items-center gap-2 mt-1">
+                                <p id="detail-patient-debt" class="text-sm font-bold text-slate-500"></p>
+                                <button onclick="window.toggleDebtEdit()" class="text-xs font-bold text-clinic hover:underline">Edit</button>
+                            </div>
+                            <p id="detail-patient-debt-note" class="hidden text-xs font-bold text-slate-400 mt-0.5"></p>
+                            <div id="debt-edit-row" class="hidden mt-2 space-y-2 max-w-xs">
+                                <input type="number" id="edit-debt-input" min="0" inputmode="numeric" class="w-full px-3 py-2 rounded-lg border-2 border-red-200 focus:outline-none focus:border-red-400 bg-red-50 font-black text-red-600 text-sm" placeholder="Debt amount (0 = none)">
+                                <input type="text" id="edit-debt-note" maxlength="120" class="w-full px-3 py-2 rounded-lg border-2 border-slate-200 focus:outline-none focus:border-clinic bg-white font-bold text-slate-800 text-sm" placeholder="Note (optional), e.g. crown balance">
+                                <div class="flex gap-2">
+                                    <button onclick="window.savePatientDebt()" class="flex-1 bg-clinic text-white font-bold px-4 py-2 rounded-lg text-sm hover:bg-clinic-dark transition-colors">Save</button>
+                                    <button onclick="window.clearPatientDebt()" class="flex-1 bg-green-600 text-white font-bold px-4 py-2 rounded-lg text-sm hover:bg-green-700 transition-colors"><i class="fa-solid fa-check"></i> Paid off</button>
+                                </div>
                             </div>
                         </div>
                         <div class="flex flex-col gap-1 flex-shrink-0">
@@ -721,11 +755,31 @@
 
 
 
+        // ===== Doctor-only finance totals =====
+        // Daily/overall money totals are shown only to the doctor's login. The email is stored as
+        // a SHA-256 fingerprint because this page's source is public on GitHub. To add another
+        // owner login, append the hash of the lowercase email to this list.
+        // NOTE: this only hides totals in the UI. Staff can still see per-entry amounts (by design).
+        const OWNER_EMAIL_HASHES = ['53b426bc31eee4509e0595924345c00e52d272a4f5d80764ab4eed36b4b95e0e'];
+        window.isOwner = false;
+        async function isOwnerAccount(user) {
+            try {
+                const email = String(user && user.email || '').trim().toLowerCase();
+                if (!email || !(window.crypto && crypto.subtle)) return false;
+                const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(email));
+                const hex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+                return OWNER_EMAIL_HASHES.includes(hex);
+            } catch (e) {
+                return false;
+            }
+        }
+
         // This page is staff-only: no anonymous fallback like the main site.
         function initRecordsAuth() {
             if (!auth) return;
-            onAuthStateChanged(auth, (user) => {
+            onAuthStateChanged(auth, async (user) => {
                 if (user && !user.isAnonymous) {
+                    window.isOwner = await isOwnerAccount(user);
                     document.getElementById('records-login-section').classList.add('hidden');
                     document.getElementById('records-main-section').classList.remove('hidden');
                     document.getElementById('records-logout-btn').classList.remove('hidden');
@@ -757,9 +811,11 @@
                 const isOpen = (id) => !document.getElementById(id).classList.contains('hidden');
                 if (isOpen('visits-by-date-step')) {
                     window.renderVisitsByDate();
+                } else if (isOpen('debts-step')) {
+                    window.renderDebts();
                 } else if (isOpen('records-list-step')) {
                     window.searchPatients();
-                } else if (!isOpen('records-detail-step') && !isOpen('records-add-step') && !isOpen('endo-followup-step')) {
+                } else if (!isOpen('records-detail-step') && !isOpen('records-add-step') && !isOpen('endo-followup-step') && !isOpen('debts-step')) {
                     renderRecentVisits();
                 }
                 if (window.currentDetailPatientId) window.refreshDetailView();
@@ -933,10 +989,14 @@
                     <p class="text-[11px] font-bold text-blue-100 flex items-center gap-1.5"><i class="${icon}"></i> ${label}</p>
                     <p class="text-xl sm:text-2xl font-black leading-tight truncate">${value}</p>
                 </div>`;
+            const debtorCount = window.allPatients.filter(p => patientDebt(p) > 0).length;
+            document.getElementById('tile-debts-sub').textContent = debtorCount ? `${debtorCount} patient${debtorCount === 1 ? '' : 's'} owe` : 'No debts';
             document.getElementById('dash-kpis').innerHTML =
                 kpi('fa-solid fa-users', window.allPatients.length.toLocaleString(), 'Patients') +
                 kpi('fa-solid fa-user-check', todayPatients, 'Seen today') +
-                kpi('fa-solid fa-coins', todayPaid.toLocaleString(), 'Collected today') +
+                (window.isOwner
+                    ? kpi('fa-solid fa-coins', todayPaid.toLocaleString(), 'Collected today')
+                    : kpi('fa-solid fa-hand-holding-dollar', window.allPatients.filter(p => patientDebt(p) > 0).length, 'Patients with debt')) +
                 kpi('fa-regular fa-calendar', monthVisits, 'Visits this month');
         }
 
@@ -980,7 +1040,7 @@
                             <span class="block font-bold text-slate-800 text-sm truncate">${escapeHtml(p.name)}</span>
                             <span class="block text-[11px] text-slate-500 font-bold">${p.patientId ? 'ID: ' + escapeHtml(p.patientId) : ''}</span>
                         </span>
-                        <span class="flex flex-wrap justify-end gap-1 max-w-[50%]">${procChips(entries)}</span>
+                        <span class="flex flex-wrap justify-end gap-1 max-w-[50%]">${debtBadge(p)}${procChips(entries)}</span>
                     </button>`).join('');
             }
 
@@ -1092,7 +1152,7 @@
                     <button onclick="window.openPatientDetail('${p.id}')" class="text-left flex-grow min-w-0 flex items-center gap-3">
                         ${avatarHtml(p, 'w-11 h-11 text-sm')}
                         <span class="min-w-0">
-                            <span class="block font-black text-slate-800 truncate">${escapeHtml(p.name)}</span>
+                            <span class="block font-black text-slate-800 truncate">${escapeHtml(p.name)} ${debtBadge(p)}</span>
                             <span class="block text-xs text-slate-500 font-bold mt-0.5">${p.patientId ? 'ID: ' + escapeHtml(p.patientId) : 'No ID'} ${p.phone ? ' · ' + escapeHtml(p.phone) : ''}</span>
                             ${lastVisitIso(p) ? `<span class="block text-[11px] text-slate-400 font-bold mt-0.5"><i class="fa-regular fa-clock"></i> Last visit ${shortDate(lastVisitIso(p))}</span>` : ''}
                         </span>
@@ -1108,6 +1168,10 @@
             window.currentDetailPatientId = null;
             if (cameFromVisits) {
                 window.openVisitsByDate(window.returnToVisitsDate);
+                return;
+            }
+            if (window.returnToDebts && !document.getElementById('records-detail-step').classList.contains('hidden')) {
+                window.openDebts();
                 return;
             }
             window.returnToVisitsDate = null;
@@ -1136,10 +1200,11 @@
             document.getElementById('records-add-step').classList.add('hidden');
             document.getElementById('records-detail-step').classList.add('hidden');
             document.getElementById('endo-followup-step').classList.add('hidden');
+            document.getElementById('debts-step').classList.add('hidden');
             document.getElementById('visits-by-date-step').classList.add('hidden');
             document.getElementById(stepId).classList.remove('hidden');
             // "Back" only returns to the date view when going straight from it into a patient.
-            if (stepId !== 'records-detail-step') window.returnToVisitsDate = null;
+            if (stepId !== 'records-detail-step') { window.returnToVisitsDate = null; window.returnToDebts = false; }
         }
 
 
@@ -1214,6 +1279,15 @@
             document.getElementById('detail-patient-name').textContent = p.name || '';
             document.getElementById('detail-patient-id').textContent = p.patientId ? 'ID: ' + p.patientId : 'No ID assigned';
             document.getElementById('detail-patient-phone').textContent = p.phone ? 'Phone: ' + p.phone : 'No phone on file';
+
+            const debtEl = document.getElementById('detail-patient-debt');
+            const debt = patientDebt(p);
+            debtEl.innerHTML = debt > 0
+                ? `<span class="text-red-600 font-black"><i class="fa-solid fa-hand-holding-dollar"></i> Debt: ${formatAmount(debt)}</span>`
+                : 'No debt';
+            const debtNoteEl = document.getElementById('detail-patient-debt-note');
+            debtNoteEl.innerHTML = debt > 0 && p.debtNote ? `<i class="fa-regular fa-note-sticky"></i> ${escapeHtml(p.debtNote)}` : '';
+            debtNoteEl.classList.toggle('hidden', !(debt > 0 && p.debtNote));
 
             const avatarEl = document.getElementById('detail-avatar');
             avatarEl.className = `avatar ${avatarClass(p.id || p.name)} w-14 h-14 text-xl`;
@@ -2232,6 +2306,93 @@
             });
         }
 
+        // ===================== Debts =====================
+        // Stored on the patient (not per entry): one current amount + optional note, cleared when paid.
+        function patientDebt(p) { return Math.max(0, Number(p && p.debt) || 0); }
+        function debtBadge(p) {
+            const d = patientDebt(p);
+            return d > 0 ? `<span class="inline-flex items-center gap-1 bg-red-100 text-red-600 text-[11px] font-black px-2 py-0.5 rounded-md whitespace-nowrap"><i class="fa-solid fa-hand-holding-dollar"></i> ${formatAmount(d)}</span>` : '';
+        }
+        window.patientDebt = patientDebt;
+        window.debtBadge = debtBadge;
+
+        window.returnToDebts = false;
+        window.openDebts = function() {
+            window.currentDetailPatientId = null;
+            document.getElementById('records-search-input').value = '';
+            recordsShowStep('debts-step');
+            window.renderDebts();
+        };
+
+        window.renderDebts = function() {
+            const debtors = window.allPatients.filter(p => patientDebt(p) > 0)
+                .sort((a, b) => patientDebt(b) - patientDebt(a));
+            const total = debtors.reduce((sum, p) => sum + patientDebt(p), 0);
+            document.getElementById('debts-subtitle').textContent =
+                debtors.length ? `${debtors.length} patient${debtors.length === 1 ? '' : 's'} owe money · largest first` : 'Nobody owes money right now';
+            document.getElementById('debts-total').classList.toggle('hidden', !window.isOwner || !debtors.length);
+            document.getElementById('debts-total-value').textContent = formatAmount(total);
+            const list = document.getElementById('debts-list');
+            if (!debtors.length) {
+                list.innerHTML = `<div class="text-center text-slate-400 font-bold py-10 bg-white border-2 border-dashed border-slate-200 rounded-2xl"><i class="fa-solid fa-circle-check text-3xl mb-2 block text-green-500"></i>No debts recorded.</div>`;
+                return;
+            }
+            list.innerHTML = debtors.map(p => `
+                <button onclick="window.openPatientFromDebts('${p.id}')" class="lift w-full text-left bg-white border border-slate-200 hover:border-clinic rounded-2xl p-3 sm:p-4 shadow-sm flex items-center gap-3">
+                    ${avatarHtml(p, 'w-11 h-11 text-sm')}
+                    <span class="min-w-0 flex-grow">
+                        <span class="block font-black text-slate-800 truncate">${escapeHtml(p.name)}</span>
+                        <span class="block text-xs text-slate-500 font-bold">${p.patientId ? 'ID: ' + escapeHtml(p.patientId) : 'No ID'}${p.phone ? ' · ' + escapeHtml(p.phone) : ''}</span>
+                        ${p.debtNote ? `<span class="block text-xs text-slate-400 font-bold mt-0.5 truncate"><i class="fa-regular fa-note-sticky"></i> ${escapeHtml(p.debtNote)}</span>` : ''}
+                    </span>
+                    <span class="text-right flex-shrink-0">
+                        <span class="block text-lg font-black text-red-600">${formatAmount(patientDebt(p))}</span>
+                        ${p.debtUpdatedOn ? `<span class="block text-[10px] font-bold text-slate-400">since ${escapeHtml(shortDate(p.debtUpdatedOn))}</span>` : ''}
+                    </span>
+                </button>`).join('');
+        };
+
+        window.openPatientFromDebts = function(patientId) {
+            window.openPatientDetail(patientId);
+            window.returnToDebts = true; // set after openPatientDetail
+        };
+
+        window.toggleDebtEdit = function() {
+            const row = document.getElementById('debt-edit-row');
+            const p = window.allPatients.find(x => x.id === window.currentDetailPatientId);
+            if (row.classList.contains('hidden') && p) {
+                document.getElementById('edit-debt-input').value = patientDebt(p) || '';
+                document.getElementById('edit-debt-note').value = p.debtNote || '';
+            }
+            row.classList.toggle('hidden');
+            if (!row.classList.contains('hidden')) document.getElementById('edit-debt-input').focus();
+        };
+
+        async function writeDebt(amount, note) {
+            const p = window.allPatients.find(x => x.id === window.currentDetailPatientId);
+            if (!p || !db) return;
+            try {
+                const patientRef = doc(db, 'artifacts', appId, 'public', 'data', 'patient_records', p.id);
+                await setDoc(patientRef, {
+                    debt: amount,
+                    debtNote: amount > 0 ? note : '',
+                    debtUpdatedOn: amount > 0 ? (patientDebt(p) > 0 && p.debtUpdatedOn ? p.debtUpdatedOn : toLocalIso(new Date())) : '',
+                    updatedAt: serverTimestamp()
+                }, { merge: true });
+                document.getElementById('debt-edit-row').classList.add('hidden');
+            } catch (e) {
+                console.error(e);
+                window.showMessage('Save Failed', 'Could not save the debt. Please try again.', 'error');
+            }
+        }
+
+        window.savePatientDebt = function() {
+            const amount = Math.max(0, Math.round(parseFloat(document.getElementById('edit-debt-input').value) || 0));
+            const note = document.getElementById('edit-debt-note').value.trim().slice(0, 120);
+            return writeDebt(amount, note);
+        };
+        window.clearPatientDebt = function() { return writeDebt(0, ''); };
+
         window.openPatientFromVisits = function(patientId) {
             window.openPatientDetail(patientId);
             window.returnToVisitsDate = window.visitsDate; // set after openPatientDetail
@@ -2274,11 +2435,10 @@
 
             renderVisitsChart(iso, visitCountByDate);
 
-            let totalPaid = 0, totalRemaining = 0;
+            let totalPaid = 0;
             const procCounts = {};
             groups.forEach(g => g.entries.forEach(e => {
                 totalPaid += Number(e.paid || 0);
-                totalRemaining += Number(e.remaining || 0);
                 const procs = window.entryProcs(e);
                 (procs.length ? procs : ['Other']).forEach(key => { procCounts[key] = (procCounts[key] || 0) + 1; });
             }));
@@ -2286,19 +2446,20 @@
                 .sort((a, b) => b[1] - a[1])
                 .map(([name, n]) => `<span class="proc-chip text-xs py-1 px-2.5">${escapeHtml(name)} <span class="opacity-70">×${n}</span></span>`).join('');
 
-            document.getElementById('visits-summary').innerHTML = `
+            // "Remaining" is just payment due for work in progress, so it isn't summarised here.
+            // The day's collected total is doctor-only.
+            const debtors = groups.filter(g => patientDebt(g.patient) > 0).length;
+            const tile = (value, label, cls) => `
                 <div class="bg-white border border-slate-200 rounded-xl p-3 text-center shadow-sm">
-                    <p class="text-2xl font-black text-slate-800">${groups.length}</p>
-                    <p class="text-[11px] font-bold text-slate-500 uppercase">Patients</p>
-                </div>
-                <div class="bg-white border border-slate-200 rounded-xl p-3 text-center shadow-sm">
-                    <p class="text-lg sm:text-2xl font-black text-green-600 truncate">${formatAmount(totalPaid)}</p>
-                    <p class="text-[11px] font-bold text-slate-500 uppercase">Paid</p>
-                </div>
-                <div class="bg-white border border-slate-200 rounded-xl p-3 text-center shadow-sm">
-                    <p class="text-lg sm:text-2xl font-black ${totalRemaining > 0 ? 'text-red-600' : 'text-slate-400'} truncate">${formatAmount(totalRemaining)}</p>
-                    <p class="text-[11px] font-bold text-slate-500 uppercase">Remaining</p>
+                    <p class="text-lg sm:text-2xl font-black ${cls} truncate">${value}</p>
+                    <p class="text-[11px] font-bold text-slate-500 uppercase">${label}</p>
                 </div>`;
+            const summary = document.getElementById('visits-summary');
+            const tiles = [tile(groups.length, 'Patients', 'text-slate-800')];
+            if (window.isOwner) tiles.push(tile(formatAmount(totalPaid), 'Collected', 'text-green-600'));
+            tiles.push(tile(debtors, 'With debt', debtors ? 'text-red-600' : 'text-slate-400'));
+            summary.className = `grid grid-cols-${tiles.length} gap-2`;
+            summary.innerHTML = tiles.join('');
 
             const list = document.getElementById('visits-by-date-list');
             if (groups.length === 0) {
