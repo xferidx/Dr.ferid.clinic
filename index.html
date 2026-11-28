@@ -544,9 +544,9 @@
                     <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
                         <h4 class="font-bold text-slate-800 mb-6 flex items-center gap-2"><i class="fa-solid fa-person-walking text-clinic text-xl"></i> تحديث صالة الانتظار</h4>
                         <div class="flex items-center justify-center gap-6 mb-6">
-                            <button type="button" aria-label="إنقاص العدد 5" onclick="changeWaitingCount(-5)" class="w-16 h-16 rounded-2xl bg-red-50 hover:bg-red-100 text-red-600 text-2xl font-black flex items-center justify-center transition-colors shadow-sm border border-red-100">−5</button>
+                            <button type="button" aria-label="إنقاص العدد" onclick="changeWaitingCount(-1)" class="w-16 h-16 rounded-2xl bg-red-50 hover:bg-red-100 text-red-600 text-2xl font-black flex items-center justify-center transition-colors shadow-sm border border-red-100">−</button>
                             <input type="number" id="sec-waiting-input" value="0" min="0" inputmode="numeric" aria-label="عدد المرضى في الانتظار" class="w-32 px-2 py-4 rounded-2xl border-2 border-slate-200 text-center text-4xl font-black focus:outline-none focus:border-clinic text-slate-800 bg-slate-50">
-                            <button type="button" aria-label="زيادة العدد 5" onclick="changeWaitingCount(5)" class="w-16 h-16 rounded-2xl bg-green-50 hover:bg-green-100 text-green-600 text-2xl font-black flex items-center justify-center transition-colors shadow-sm border border-green-100">+5</button>
+                            <button type="button" aria-label="زيادة العدد" onclick="changeWaitingCount(1)" class="w-16 h-16 rounded-2xl bg-green-50 hover:bg-green-100 text-green-600 text-2xl font-black flex items-center justify-center transition-colors shadow-sm border border-green-100">+</button>
                         </div>
                         <button type="button" onclick="saveWaitingCount()" class="w-full bg-clinic text-white font-bold text-lg py-4 rounded-xl hover:bg-clinic-dark transition-colors shadow-md">نشر العدد للمرضى</button>
                     </div>
