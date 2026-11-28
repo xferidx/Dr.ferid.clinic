@@ -433,6 +433,8 @@
                         <option value="Rx">Rx (Prescription)</option>
                         <option value="Orthodontics">Orthodontics</option>
                     </select>
+                    <div id="extra-procedures" class="space-y-2 mt-2"></div>
+                    <button type="button" id="add-procedure-btn" onclick="window.addProcedureRow()" class="mt-2 w-full border-2 border-dashed border-slate-300 rounded-xl py-2.5 text-slate-500 font-bold text-sm hover:border-clinic hover:text-clinic transition-colors flex items-center justify-center gap-2"><i class="fa-solid fa-plus"></i> Add another procedure</button>
                 </div>
 
                 <div>
@@ -894,7 +896,7 @@
             return `<span class="avatar ${avatarClass(p.id || p.name)} ${sizeClasses || 'w-9 h-9 text-xs'}" aria-hidden="true">${initialsOf(p.name)}</span>`;
         }
         function procChips(entries) {
-            const procs = [...new Set(entries.map(e => e.procedure).filter(Boolean))];
+            const procs = [...new Set(entries.flatMap(e => window.entryProcs(e)))];
             return procs.map(pr => `<span class="proc-chip">${escapeHtml(pr)}</span>`).join(' ');
         }
         function lastVisitIso(p) {
@@ -1276,7 +1278,7 @@
                 </div>
                 <div class="flex-grow min-w-0 flex gap-3 border border-slate-200 rounded-xl p-4 bg-slate-50">
                     <div class="flex-grow min-w-0">
-                        ${entry.procedure || (entry.teeth && entry.teeth.length) ? `<div class="flex flex-wrap items-center gap-1.5 mb-1.5">${entry.procedure ? `<span class="proc-chip">${escapeHtml(entry.procedure)}</span>` : ''}${entry.teeth && entry.teeth.length ? `<span class="text-xs font-bold text-slate-500"><i class="fa-solid fa-tooth text-[10px]"></i> ${entry.teeth.map(t => escapeHtml(t)).join(', ')}</span>` : ''}</div>` : ''}
+                        ${window.entryProcs(entry).length || (entry.teeth && entry.teeth.length) ? `<div class="flex flex-wrap items-center gap-1.5 mb-1.5">${window.entryProcs(entry).map(pr => `<span class="proc-chip">${escapeHtml(pr)}</span>`).join('')}${entry.teeth && entry.teeth.length ? `<span class="text-xs font-bold text-slate-500"><i class="fa-solid fa-tooth text-[10px]"></i> ${entry.teeth.map(t => escapeHtml(t)).join(', ')}</span>` : ''}</div>` : ''}
                         <p class="text-slate-700 text-sm whitespace-pre-wrap break-words">${escapeHtml(entry.notes || '')}</p>
                         <div class="flex gap-2 mt-3">
                             <span class="bg-green-100 text-green-700 font-black text-xs px-2.5 py-1 rounded-lg"><i class="fa-solid fa-check"></i> Paid ${Number(entry.paid || 0).toLocaleString()}</span>
@@ -1443,7 +1445,7 @@
         // procedure is Instrumentation or Obturation. Preserves already-typed values when teeth
         // are added/removed rather than wiping the whole section on every toggle.
         window.renderCanalDetails = function() {
-            const procedure = document.getElementById('new-entry-procedure').value;
+            const procedure = endoProcOf(getFormProcedures());
             const section = document.getElementById('canal-details-section');
             const list = document.getElementById('canal-details-list');
             const isEndoPhase = procedure === 'Instrumentation' || procedure === 'Obturation';
@@ -1573,6 +1575,60 @@
             });
         }
 
+        // ===== Multiple procedures per entry =====
+        // The first dropdown is the original #new-entry-procedure; extra ones are added with "+".
+        // Saved as `procedures` (all) + `procedure` (the first, so older code/data keep working).
+        const MAX_PROCEDURES = 3;
+        const ENDO_PROCS = ['Instrumentation', 'Obturation'];
+
+        function getFormProcedures() {
+            const values = [document.getElementById('new-entry-procedure').value,
+                ...Array.from(document.querySelectorAll('#extra-procedures select')).map(sel => sel.value)];
+            return [...new Set(values.filter(Boolean))];
+        }
+        const endoProcOf = (procs) => procs.find(pr => ENDO_PROCS.includes(pr)) || '';
+
+        // Works for old entries (only `procedure`) and new ones (`procedures`).
+        window.entryProcs = function(e) {
+            if (!e) return [];
+            if (Array.isArray(e.procedures) && e.procedures.length) return e.procedures;
+            return e.procedure ? [e.procedure] : [];
+        };
+
+        function updateAddProcedureBtn() {
+            const count = 1 + document.querySelectorAll('#extra-procedures select').length;
+            document.getElementById('add-procedure-btn').classList.toggle('hidden', count >= MAX_PROCEDURES);
+        }
+
+        window.addProcedureRow = function(value) {
+            const container = document.getElementById('extra-procedures');
+            if (1 + container.children.length >= MAX_PROCEDURES) return;
+            const row = document.createElement('div');
+            row.className = 'flex gap-2';
+            const select = document.createElement('select');
+            select.className = document.getElementById('new-entry-procedure').className;
+            select.innerHTML = document.getElementById('new-entry-procedure').innerHTML;
+            select.value = value || '';
+            select.addEventListener('change', () => window.onProcedureChange());
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.title = 'Remove this procedure';
+            remove.className = 'w-12 flex-shrink-0 rounded-xl border-2 border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-300 transition-colors';
+            remove.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+            remove.addEventListener('click', () => { row.remove(); updateAddProcedureBtn(); window.onProcedureChange(); });
+            row.append(select, remove);
+            container.appendChild(row);
+            updateAddProcedureBtn();
+            if (!value) select.focus();
+        };
+
+        function setFormProcedures(procs) {
+            document.getElementById('new-entry-procedure').value = procs[0] || '';
+            document.getElementById('extra-procedures').innerHTML = '';
+            procs.slice(1, MAX_PROCEDURES).forEach(pr => window.addProcedureRow(pr));
+            updateAddProcedureBtn();
+        }
+
         // Runs whenever the Procedure dropdown changes — shows/hides and populates whichever
         // section is relevant (canal details for Endo phases, materials for Filling).
         window.onProcedureChange = function() {
@@ -1589,13 +1645,14 @@
         }
 
         window.renderFillingMaterialsFields = function() {
-            const procedure = document.getElementById('new-entry-procedure').value;
             const section = document.getElementById('filling-materials-section');
-            if (procedure !== 'Filling') {
+            if (!getFormProcedures().includes('Filling')) {
                 section.classList.add('hidden');
                 return;
             }
+            const alreadyShown = !section.classList.contains('hidden');
             section.classList.remove('hidden');
+            if (alreadyShown) return; // keep the materials already picked when another dropdown changes
             populateMaterialSelect('filling-bond-select', window.fillingMaterials.bond, undefined, true);
             populateMaterialSelect('filling-composite-select', window.fillingMaterials.composite, undefined, false);
             populateMaterialSelect('filling-flowable-select', window.fillingMaterials.flowable, undefined, true);
@@ -1846,7 +1903,8 @@
             document.getElementById('new-entry-notes').value = existingEntry ? stripCanalBlock(existingEntry.notes || '') : '';
             document.getElementById('new-entry-paid').value = existingEntry && existingEntry.paid ? existingEntry.paid : '';
             document.getElementById('new-entry-remaining').value = existingEntry && existingEntry.remaining ? existingEntry.remaining : '';
-            document.getElementById('new-entry-procedure').value = existingEntry ? (existingEntry.procedure || '') : '';
+            setFormProcedures(existingEntry ? window.entryProcs(existingEntry) : []);
+            document.getElementById('filling-materials-section').classList.add('hidden');
             setSelectedTeethVisual(existingEntry ? existingEntry.teeth : []);
             document.getElementById('canal-details-list').innerHTML = '';
             window.renderCanalDetails();
@@ -1879,22 +1937,28 @@
             const rawNotes = document.getElementById('new-entry-notes').value.trim();
             const paid = parseFloat(document.getElementById('new-entry-paid').value) || 0;
             const remaining = parseFloat(document.getElementById('new-entry-remaining').value) || 0;
-            const procedure = document.getElementById('new-entry-procedure').value;
+            const procedures = getFormProcedures();
+            const procedure = procedures[0] || '';
+            const endoProc = endoProcOf(procedures);
+            const hasFilling = procedures.includes('Filling');
             const quadrantOrder = { UR: 0, UL: 1, LR: 2, LL: 3 };
             const teeth = Array.from(window.selectedTeeth).sort((a, b) => {
                 const qa = a.slice(0, 2), qb = b.slice(0, 2);
                 if (qa !== qb) return quadrantOrder[qa] - quadrantOrder[qb];
                 return parseInt(a.slice(2), 10) - parseInt(b.slice(2), 10);
             });
-            const canalDetails = (procedure === 'Instrumentation' || procedure === 'Obturation') ? collectCanalDetails() : {};
-            const fillingMaterials = procedure === 'Filling' ? collectFillingMaterials() : {};
+            const canalDetails = endoProc ? collectCanalDetails() : {};
+            const fillingMaterials = hasFilling ? collectFillingMaterials() : {};
 
             // Strip any previously auto-generated code from what's typed, then prepend a fresh
             // one built from the current values — keeps edits from ever duplicating it.
             const cleanTypedNotes = stripCanalBlock(rawNotes);
-            let generatedCode = '';
-            if (procedure === 'Instrumentation' || procedure === 'Obturation') generatedCode = buildCanalCode(canalDetails, procedure);
-            else if (procedure === 'Filling') generatedCode = buildFillingCode(fillingMaterials);
+            // Both codes go on separate lines of the same auto-generated paragraph (single \n),
+            // so stripCanalBlock still removes them together on the next edit.
+            const generatedCode = [
+                endoProc ? buildCanalCode(canalDetails, endoProc) : '',
+                hasFilling ? buildFillingCode(fillingMaterials) : ''
+            ].filter(Boolean).join('\n');
             const notes = mergeGeneratedCode(generatedCode, cleanTypedNotes);
 
             if (!date) {
@@ -1912,10 +1976,10 @@
                     // Spreading ...e first preserves any older fields (like photos from before this
                     // feature was removed) that aren't explicitly touched here.
                     updatedHistory = (p.caseHistory || []).map(e =>
-                        e.id === window.editingEntryId ? { ...e, date, notes, paid, remaining, teeth, procedure, canalDetails, fillingMaterials } : e
+                        e.id === window.editingEntryId ? { ...e, date, notes, paid, remaining, teeth, procedure, procedures, canalDetails, fillingMaterials } : e
                     );
                 } else {
-                    updatedHistory = [...(p.caseHistory || []), { id: entryId, date, notes, paid, remaining, teeth, procedure, canalDetails, fillingMaterials }];
+                    updatedHistory = [...(p.caseHistory || []), { id: entryId, date, notes, paid, remaining, teeth, procedure, procedures, canalDetails, fillingMaterials }];
                 }
 
                 const patientRef = doc(db, 'artifacts', appId, 'public', 'data', 'patient_records', p.id);
@@ -2215,8 +2279,8 @@
             groups.forEach(g => g.entries.forEach(e => {
                 totalPaid += Number(e.paid || 0);
                 totalRemaining += Number(e.remaining || 0);
-                const key = e.procedure || 'Other';
-                procCounts[key] = (procCounts[key] || 0) + 1;
+                const procs = window.entryProcs(e);
+                (procs.length ? procs : ['Other']).forEach(key => { procCounts[key] = (procCounts[key] || 0) + 1; });
             }));
             document.getElementById('visits-procedures').innerHTML = Object.entries(procCounts)
                 .sort((a, b) => b[1] - a[1])
@@ -2256,10 +2320,10 @@
                         ${entries.map(e => `
                             <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
                                 <div class="flex flex-wrap items-center gap-1.5">
-                                    ${e.procedure ? `<span class="proc-chip">${escapeHtml(e.procedure)}</span>` : ''}
+                                    ${window.entryProcs(e).map(pr => `<span class="proc-chip">${escapeHtml(pr)}</span>`).join(' ')}
                                     ${e.teeth && e.teeth.length ? `<span class="text-xs font-bold text-slate-500">Teeth: ${e.teeth.map(t => escapeHtml(t)).join(', ')}</span>` : ''}
                                 </div>
-                                ${e.notes ? `<p class="text-slate-700 text-sm whitespace-pre-wrap mt-1.5">${escapeHtml(e.notes)}</p>` : (!e.procedure ? '<p class="text-slate-400 text-sm mt-1">No notes</p>' : '')}
+                                ${e.notes ? `<p class="text-slate-700 text-sm whitespace-pre-wrap mt-1.5">${escapeHtml(e.notes)}</p>` : (!window.entryProcs(e).length ? '<p class="text-slate-400 text-sm mt-1">No notes</p>' : '')}
                                 <div class="flex gap-2 mt-2">
                                     <span class="bg-green-100 text-green-700 font-black text-xs px-2.5 py-1 rounded-lg">Paid ${formatAmount(e.paid)}</span>
                                     ${Number(e.remaining) > 0 ? `<span class="bg-red-100 text-red-600 font-black text-xs px-2.5 py-1 rounded-lg">Remaining ${formatAmount(e.remaining)}</span>` : ''}
@@ -2285,7 +2349,7 @@
             const results = [];
             window.allPatients.forEach(p => {
                 (p.caseHistory || []).forEach(e => {
-                    if ((e.procedure === 'Instrumentation' || e.procedure === 'Obturation') &&
+                    if (endoProcOf(window.entryProcs(e)) &&
                         e.date >= oldCutoffIso && e.date <= recentCutoffIso && !e.reminderDismissed) {
                         results.push({ patient: p, entry: e });
                     }
@@ -2305,7 +2369,7 @@
                         </label>
                         <button onclick="window.openPatientDetail('${r.patient.id}')" class="text-left flex-grow min-w-0">
                             <p class="font-black text-slate-800 text-sm truncate">${escapeHtml(r.patient.name)}</p>
-                            <p class="text-[11px] text-slate-500 font-bold">${r.patient.patientId ? 'ID: ' + escapeHtml(r.patient.patientId) : ''} · ${escapeHtml(r.entry.procedure)} on ${r.entry.date}</p>
+                            <p class="text-[11px] text-slate-500 font-bold">${r.patient.patientId ? 'ID: ' + escapeHtml(r.patient.patientId) : ''} · ${escapeHtml(endoProcOf(window.entryProcs(r.entry)))} on ${r.entry.date}</p>
                         </button>
                         <button onclick="window.sendEndoReminder('${r.patient.id}')" class="bg-green-500 hover:bg-green-600 text-white font-bold px-3 py-2 rounded-lg text-sm flex-shrink-0" title="Send WhatsApp reminder"><i class="fa-brands fa-whatsapp"></i></button>
                     </div>
@@ -2397,7 +2461,7 @@
             let totalPaid = 0;
             const rows = entries.map(e => {
                 totalPaid += Number(e.paid || 0);
-                const treatment = [e.teeth && e.teeth.length ? 'Teeth: ' + e.teeth.join(', ') : '', e.procedure || ''].filter(Boolean).join(' · ') || '—';
+                const treatment = [e.teeth && e.teeth.length ? 'Teeth: ' + e.teeth.join(', ') : '', window.entryProcs(e).join(' + ')].filter(Boolean).join(' · ') || '—';
                 return `<tr>
                     <td>${escapeHtml(e.date || '')}</td>
                     <td>${escapeHtml(treatment)}</td>

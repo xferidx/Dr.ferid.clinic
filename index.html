@@ -82,6 +82,15 @@
             theme: {
                 extend: {
                     fontFamily: { sans: ['Tajawal', 'sans-serif'] },
+                    // Every text size one step larger than Tailwind's defaults — Arabic at
+                    // 11–12px was hard to read on phones.
+                    fontSize: {
+                        xs: ['0.8125rem', { lineHeight: '1.25rem' }],   // 13px (default 12)
+                        sm: ['0.9375rem', { lineHeight: '1.45rem' }],   // 15px (default 14)
+                        base: ['1.0625rem', { lineHeight: '1.7rem' }],  // 17px (default 16)
+                        lg: ['1.1875rem', { lineHeight: '1.8rem' }],    // 19px (default 18)
+                        xl: ['1.3125rem', { lineHeight: '1.9rem' }],    // 21px (default 20)
+                    },
                     colors: {
                         clinic: { light: '#dbeafe', DEFAULT: '#2563eb', dark: '#1e40af' },
                         gold: { light: '#fef08a', DEFAULT: '#eab308', dark: '#a16207' }
@@ -117,7 +126,7 @@
         .ba-handle { position: absolute; top: 50%; left: calc(100% - var(--pos)); transform: translate(-50%, -50%); width: 44px; height: 44px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #2563eb; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 10; pointer-events: none; }
         .ba-range { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: ew-resize; z-index: 20; touch-action: pan-y; }
         .ba-range:focus-visible ~ .ba-handle { outline: 3px solid #60a5fa; outline-offset: 3px; }
-        .ba-tag { position: absolute; top: 1rem; z-index: 15; pointer-events: none; font-size: .75rem; font-weight: 700; padding: .25rem .5rem; border-radius: .375rem; color: white; }
+        .ba-tag { position: absolute; top: 1rem; z-index: 15; pointer-events: none; font-size: .875rem; font-weight: 700; padding: .25rem .5rem; border-radius: .375rem; color: white; }
 
         /* ===== Dark Mode ===== */
         html.dark body { background-color: #0f172a; color: #cbd5e1; }
@@ -169,13 +178,15 @@
         html.dark :focus-visible { outline-color: #93c5fd; }
         /* Must come after the generic dark overrides above so the selection highlight always wins,
            even though the buttons keep their old bg-white/border-slate-* classes alongside it. */
+        .status-btn[aria-checked="true"] { border-color: #2563eb !important; background-color: #dbeafe !important; color: #1e3a8a !important; box-shadow: 0 4px 14px -4px rgba(37,99,235,.45); }
+        .status-btn[aria-checked="true"] .text-slate-400 { color: #1e40af !important; }
         html.dark .selected-btn { background-color: #2563eb !important; border-color: #2563eb !important; color: white !important; }
         .date-btn.selected-btn span { color: #fff !important; }
     </style>
 </head>
 <body class="text-slate-800 antialiased min-h-screen flex flex-col">
 
-    <div id="sponsor-bar" class="bg-slate-100 border-b border-slate-200 py-1.5 px-2 flex items-center justify-center gap-2 text-[11px] font-bold" dir="rtl">
+    <div id="sponsor-bar" class="bg-slate-100 border-b border-slate-200 py-1.5 px-2 flex items-center justify-center gap-2 text-xs font-bold" dir="rtl">
         <span class="text-slate-400 font-semibold whitespace-nowrap">هذا الموقع برعاية</span>
         <a href="https://xferidx.github.io/Shamsiastore/#home" target="_blank" rel="noopener sponsored" class="w-[8.5rem] h-7 flex items-center justify-center gap-1.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 whitespace-nowrap transition-colors">
             <i class="fa-solid fa-solar-panel"></i> سوق الطاقة الشمسية
@@ -193,7 +204,7 @@
                 </div>
                 <div class="min-w-0">
                     <h1 class="text-sm sm:text-lg font-extrabold text-slate-800 tracking-tight leading-tight truncate">عيادة د. فريد مؤيد السعيد</h1>
-                    <p class="text-clinic text-[11px] font-bold leading-tight truncate">لصحة وتجميل الأسنان</p>
+                    <p class="text-clinic text-xs font-bold leading-tight truncate">لصحة وتجميل الأسنان</p>
                 </div>
             </div>
             <div class="flex items-center gap-1 flex-shrink-0">
@@ -237,12 +248,15 @@
         <section class="glass-panel rounded-2xl px-3 py-2.5 flex items-center gap-3" aria-live="polite">
             <div class="bg-amber-100 text-amber-600 w-9 h-9 flex-shrink-0 rounded-full flex items-center justify-center text-sm relative" aria-hidden="true">
                 <i class="fa-solid fa-users"></i>
-                <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full animate-ping"></span>
-                <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
+                <span id="status-dot-ping" class="status-dot absolute -top-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full animate-ping"></span>
+                <span id="status-dot" class="status-dot absolute -top-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
             </div>
             <div class="flex-1 min-w-0">
-                <h2 class="text-sm font-bold text-slate-800 leading-tight">المرضى في الانتظار الآن</h2>
-                <p id="waiting-last-updated" class="text-[11px] text-slate-400 leading-tight truncate">--</p>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <h2 class="text-sm font-bold text-slate-800 leading-tight">المرضى في الانتظار الآن</h2>
+                    <span id="clinic-status-pill" class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-black bg-green-100 text-green-700 leading-tight"><i class="fa-solid fa-circle text-[7px]"></i> <span id="clinic-status-text">مفتوحة الآن</span></span>
+                </div>
+                <p id="waiting-last-updated" class="text-xs text-slate-400 leading-tight truncate">--</p>
             </div>
             <span id="public-waiting-count" class="flex-shrink-0 min-w-[3rem] text-center text-2xl font-black text-clinic bg-slate-50 border border-slate-100 rounded-xl px-3 py-0.5 transition-transform">0</span>
         </section>
@@ -251,11 +265,11 @@
         <section class="grid grid-cols-3 md:grid-cols-6 gap-2" aria-label="تواصل معنا">
             <a href="tel:+9647818653825" aria-label="اتصال بالرقم 07818653825" class="bg-white hover:bg-clinic-light text-clinic shadow-sm rounded-xl py-2.5 px-1 flex flex-col items-center gap-1 border border-slate-100 transition-colors">
                 <span class="bg-blue-50 w-9 h-9 rounded-full flex items-center justify-center"><i class="fa-solid fa-phone-volume text-base"></i></span>
-                <span class="text-[11px] font-black leading-none" dir="ltr">07818653825</span>
+                <span class="text-xs font-black leading-none" dir="ltr">07818653825</span>
             </a>
             <a href="tel:+9647758939998" aria-label="اتصال بالرقم 07758939998" class="bg-white hover:bg-clinic-light text-clinic shadow-sm rounded-xl py-2.5 px-1 flex flex-col items-center gap-1 border border-slate-100 transition-colors">
                 <span class="bg-blue-50 w-9 h-9 rounded-full flex items-center justify-center"><i class="fa-solid fa-phone text-base"></i></span>
-                <span class="text-[11px] font-black leading-none" dir="ltr">07758939998</span>
+                <span class="text-xs font-black leading-none" dir="ltr">07758939998</span>
             </a>
             <a href="https://wa.me/9647818653825" target="_blank" rel="noopener" class="bg-white hover:bg-green-50 text-green-600 shadow-sm rounded-xl py-2.5 px-1 flex flex-col items-center gap-1 border border-slate-100 transition-colors">
                 <span class="bg-green-50 w-9 h-9 rounded-full flex items-center justify-center"><i class="fa-brands fa-whatsapp text-lg"></i></span>
@@ -288,14 +302,14 @@
                     <div class="bg-white/10 border border-white/20 rounded-xl p-2.5 flex items-center gap-2">
                         <span class="w-8 h-8 flex-shrink-0 rounded-full bg-white flex items-center justify-center text-green-700"><i class="fa-solid fa-landmark text-sm"></i></span>
                         <div class="min-w-0">
-                            <p class="text-[10px] text-indigo-200 font-bold leading-tight">متاح لموظفي</p>
+                            <p class="text-[12px] text-indigo-200 font-bold leading-tight">متاح لموظفي</p>
                             <h3 class="text-xs sm:text-sm font-black text-white leading-tight whitespace-nowrap">مصرف الرافدين</h3>
                         </div>
                     </div>
                     <div class="bg-white/10 border border-white/20 rounded-xl p-2.5 flex items-center gap-2">
                         <span class="w-8 h-8 flex-shrink-0 rounded-full bg-white flex items-center justify-center text-blue-700"><i class="fa-solid fa-building-columns text-sm"></i></span>
                         <div class="min-w-0">
-                            <p class="text-[10px] text-indigo-200 font-bold leading-tight">متاح لموظفي</p>
+                            <p class="text-[12px] text-indigo-200 font-bold leading-tight">متاح لموظفي</p>
                             <h3 class="text-xs sm:text-sm font-black text-white leading-tight whitespace-nowrap">مصرف الرشيد</h3>
                         </div>
                     </div>
@@ -326,7 +340,7 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1.5"><i class="fa-solid fa-stethoscope ml-1 text-clinic"></i> الغرض من الزيارة <span class="text-red-500">*</span> <span class="text-[11px] text-slate-400 font-normal">(يمكن اختيار أكثر من خيار)</span></label>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5"><i class="fa-solid fa-stethoscope ml-1 text-clinic"></i> الغرض من الزيارة <span class="text-red-500">*</span> <span class="text-xs text-slate-400 font-normal">(يمكن اختيار أكثر من خيار)</span></label>
                     <div class="flex flex-wrap gap-1.5" id="reasons-container" role="group" aria-label="الغرض من الزيارة">
                         <button type="button" class="reason-btn px-3 py-1.5 rounded-full border border-slate-200 text-xs font-bold text-slate-600 bg-white hover:bg-slate-100 transition-all" data-value="ألم أسنان">ألم أسنان</button>
                         <button type="button" class="reason-btn px-3 py-1.5 rounded-full border border-slate-200 text-xs font-bold text-slate-600 bg-white hover:bg-slate-100 transition-all" data-value="قلع / جراحة">قلع / جراحة</button>
@@ -343,14 +357,14 @@
                 <div>
                     <div class="flex items-baseline justify-between mb-1.5">
                         <label class="text-xs font-bold text-slate-700"><i class="fa-regular fa-calendar-days ml-1 text-clinic"></i> اختر اليوم <span class="text-red-500">*</span></label>
-                        <span class="text-[11px] text-slate-400 font-bold">الجمعة عطلة</span>
+                        <span class="text-xs text-slate-400 font-bold">الجمعة عطلة</span>
                     </div>
                     <div class="flex overflow-x-auto gap-2 pb-1 hide-scrollbar" id="dates-container" role="group" aria-label="اختر اليوم"></div>
                 </div>
                 <div>
                     <div class="flex items-baseline justify-between mb-1.5">
                         <label class="text-xs font-bold text-slate-700"><i class="fa-regular fa-clock ml-1 text-clinic"></i> اختر الوقت <span class="text-red-500">*</span></label>
-                        <span class="text-[11px] font-bold text-clinic">المدة 30 دقيقة</span>
+                        <span class="text-xs font-bold text-clinic">المدة 30 دقيقة</span>
                     </div>
                     <div id="times-empty-state" class="text-xs text-slate-500 py-3 px-3 border border-dashed border-slate-300 rounded-xl text-center bg-white">
                         <i class="fa-solid fa-arrow-up ml-1 text-slate-300"></i> اختر اليوم أولاً لعرض الأوقات المتاحة
@@ -369,7 +383,7 @@
         <section class="glass-panel rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200">
             <div class="flex items-center justify-between mb-3">
                 <h2 class="text-lg font-black text-slate-800">تغيير يصنع الفارق</h2>
-                <span class="text-clinic font-bold text-[11px] bg-clinic-light px-2 py-0.5 rounded-full">نتائج حقيقية</span>
+                <span class="text-clinic font-bold text-xs bg-clinic-light px-2 py-0.5 rounded-full">نتائج حقيقية</span>
             </div>
             <div class="max-w-2xl mx-auto">
                 <div class="ba-slider shadow-md" id="ba-slider">
@@ -381,7 +395,7 @@
                     <input type="range" id="ba-range" class="ba-range" min="0" max="100" value="50" aria-label="اسحب للمقارنة بين قبل وبعد العلاج">
                     <div class="ba-handle" aria-hidden="true"><i class="fa-solid fa-left-right"></i></div>
                 </div>
-                <p class="text-center text-[11px] text-slate-400 font-bold mt-2"><i class="fa-solid fa-hand-pointer ml-1"></i> اسحب لمشاهدة الفرق</p>
+                <p class="text-center text-xs text-slate-400 font-bold mt-2"><i class="fa-solid fa-hand-pointer ml-1"></i> اسحب لمشاهدة الفرق</p>
             </div>
         </section>
 
@@ -394,10 +408,10 @@
                     </div>
                     <div>
                         <h2 class="text-lg font-black text-slate-800 leading-tight">يوميات العيادة</h2>
-                        <p class="text-slate-500 text-[11px]">اسحب لمشاهدة المزيد</p>
+                        <p class="text-slate-500 text-xs">اسحب لمشاهدة المزيد</p>
                     </div>
                 </div>
-                <a href="https://www.instagram.com/dr.ferid.clinic/" target="_blank" rel="noopener" class="text-xs font-bold text-pink-600 hover:underline whitespace-nowrap">عرض الكل <i class="fa-solid fa-arrow-left text-[10px]"></i></a>
+                <a href="https://www.instagram.com/dr.ferid.clinic/" target="_blank" rel="noopener" class="text-xs font-bold text-pink-600 hover:underline whitespace-nowrap">عرض الكل <i class="fa-solid fa-arrow-left text-[12px]"></i></a>
             </div>
             <div class="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-1 hide-scrollbar" dir="ltr">
                 <div class="snap-center flex-shrink-0 w-[85%] sm:w-[48%] bg-slate-50 rounded-xl overflow-hidden border border-slate-200"><iframe src="https://www.instagram.com/p/DYt1yTiivbF/embed/captioned/" class="w-full h-[470px] bg-white" frameborder="0" scrolling="no" loading="lazy" title="منشور انستغرام من عيادة د. فريد"></iframe></div>
@@ -446,7 +460,7 @@
 
         <!-- Medical Partnerships -->
         <section class="text-center py-2">
-            <h3 class="text-[11px] font-bold text-slate-400 mb-3">شركاء النجاح في تقديم الرعاية</h3>
+            <h3 class="text-xs font-bold text-slate-400 mb-3">شركاء النجاح في تقديم الرعاية</h3>
             <div class="flex flex-wrap justify-center items-center gap-x-6 gap-y-3 opacity-70 hover:opacity-100 transition-opacity">
                 <a href="https://biomin.co.uk/about/queen-mary-university-london" target="_blank" rel="noopener" class="flex items-center gap-1.5 font-black text-lg text-slate-600 hover:text-clinic transition-colors">
                     <i class="fa-solid fa-shield-halved text-clinic"></i> BioMin
@@ -455,7 +469,7 @@
                     <div class="text-xl font-black tracking-tighter text-slate-800 group-hover:text-clinic transition-colors flex items-center gap-1">
                         <span class="text-red-500">+</span>edelwhite
                     </div>
-                    <span class="text-[9px] tracking-widest text-slate-500 uppercase">Swiss Dental Care</span>
+                    <span class="text-xs tracking-widest text-slate-500 uppercase">Swiss Dental Care</span>
                 </a>
                 <a href="http://www.dardoor.net" target="_blank" rel="noopener" class="flex items-center gap-1.5 font-black text-sm text-slate-600 hover:text-clinic transition-colors">
                     <i class="fa-solid fa-building text-sky-500"></i> سوق عقارات العراق
@@ -518,6 +532,15 @@
             <div class="p-6 overflow-y-auto">
                 <div id="sec-dashboard-step" class="space-y-6">
                     <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                        <h4 class="font-bold text-slate-800 mb-1 flex items-center gap-2"><i class="fa-solid fa-door-open text-clinic text-xl"></i> حالة العيادة</h4>
+                        <p class="text-xs text-slate-500 font-bold mb-4">تظهر للزوار بجانب عدد المرضى في الانتظار</p>
+                        <div id="clinic-status-buttons" class="grid grid-cols-3 gap-2" role="radiogroup" aria-label="حالة العيادة">
+                            <button type="button" data-status="open" role="radio" class="status-btn py-3 px-1 rounded-xl border-2 border-slate-200 bg-white font-black text-slate-700 transition-colors flex flex-col items-center justify-center gap-1 leading-tight"><i class="fa-solid fa-door-open text-2xl text-green-600"></i>مفتوحة</button>
+                            <button type="button" data-status="closed" role="radio" class="status-btn py-3 px-1 rounded-xl border-2 border-slate-200 bg-white font-black text-slate-700 transition-colors flex flex-col items-center justify-center gap-1 leading-tight"><i class="fa-solid fa-door-closed text-2xl text-red-600"></i>مغلقة</button>
+                            <button type="button" data-status="auto" role="radio" class="status-btn py-3 px-1 rounded-xl border-2 border-slate-200 bg-white font-black text-slate-700 transition-colors flex flex-col items-center justify-center gap-1 leading-tight"><i class="fa-solid fa-clock text-2xl text-clinic"></i>تلقائي<span class="text-xs font-bold text-slate-400">حسب الدوام</span></button>
+                        </div>
+                    </div>
+                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
                         <h4 class="font-bold text-slate-800 mb-6 flex items-center gap-2"><i class="fa-solid fa-person-walking text-clinic text-xl"></i> تحديث صالة الانتظار</h4>
                         <div class="flex items-center justify-center gap-6 mb-6">
                             <button type="button" aria-label="إنقاص العدد" onclick="changeWaitingCount(-1)" class="w-16 h-16 rounded-2xl bg-red-50 hover:bg-red-100 text-red-600 text-3xl font-black flex items-center justify-center transition-colors shadow-sm border border-red-100">-</button>
@@ -568,7 +591,7 @@
                 <div class="bg-white/20 p-2 rounded-full"><i class="fa-solid fa-tooth text-lg"></i></div>
                 <div>
                     <p class="font-black text-sm">مساعد عيادة د. فريد</p>
-                    <p class="text-[10px] text-white/80">اسألني عن الأسعار والخدمات</p>
+                    <p class="text-[12px] text-white/80">اسألني عن الأسعار والخدمات</p>
                 </div>
             </div>
             <button type="button" onclick="window.toggleChatWidget()" aria-label="إغلاق المحادثة" class="hover:bg-white/20 p-1.5 rounded-full transition-colors"><i class="fa-solid fa-xmark"></i></button>
@@ -799,6 +822,7 @@
                 if (!snapshot.exists()) return;
                 const data = snapshot.data();
                 setWaitingCountUI(data.count || 0, true);
+                setClinicStatus(data.status);
                 // updatedAt is null on the local pending write; only use the resolved server time.
                 if (data.updatedAt && typeof data.updatedAt.toDate === 'function') {
                     window.lastWaitingUpdate = data.updatedAt.toDate();
@@ -929,6 +953,66 @@
         }
         setInterval(refreshLastUpdatedText, 30000);
 
+        // ===================== Open / closed status =====================
+        // Staff choose open / closed / auto in the admin panel; stored on the same public
+        // waiting_room doc (already readable by visitors, writable by staff — no rules change).
+        // "auto" (the default) follows the posted hours: Sat–Thu, 17:00–21:30 Baghdad time.
+        const OPEN_MINUTES = 17 * 60, CLOSE_MINUTES = 21 * 60 + 30;
+
+        function isWithinOpeningHours(date = new Date()) {
+            // Always judge by Baghdad time, even for visitors abroad.
+            const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', {
+                timeZone: 'Asia/Baghdad', weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+            }).formatToParts(date).map((x) => [x.type, x.value]));
+            if (parts.weekday === 'Fri') return false;
+            const minutes = parseInt(parts.hour, 10) * 60 + parseInt(parts.minute, 10);
+            return minutes >= OPEN_MINUTES && minutes < CLOSE_MINUTES;
+        }
+
+        const readStatus = () => { try { return localStorage.getItem('clinicStatus') || 'auto'; } catch (_) { return 'auto'; } };
+        window.clinicStatus = readStatus();
+
+        function setClinicStatus(status) {
+            window.clinicStatus = ['open', 'closed', 'auto'].includes(status) ? status : 'auto';
+            try { localStorage.setItem('clinicStatus', window.clinicStatus); } catch (_) {}
+            renderClinicStatus();
+        }
+
+        function renderClinicStatus() {
+            const s = window.clinicStatus;
+            const isOpen = s === 'open' ? true : s === 'closed' ? false : isWithinOpeningHours();
+            const pill = $('clinic-status-pill');
+            if (pill) {
+                pill.classList.toggle('bg-green-100', isOpen);
+                pill.classList.toggle('text-green-700', isOpen);
+                pill.classList.toggle('bg-red-100', !isOpen);
+                pill.classList.toggle('text-red-600', !isOpen);
+                $('clinic-status-text').textContent = isOpen ? 'مفتوحة الآن' : 'مغلقة الآن';
+            }
+            document.querySelectorAll('.status-dot').forEach((dot) => {
+                dot.classList.toggle('bg-green-500', isOpen);
+                dot.classList.toggle('bg-red-500', !isOpen);
+            });
+            document.querySelectorAll('#clinic-status-buttons .status-btn').forEach((btn) => {
+                btn.setAttribute('aria-checked', String(btn.dataset.status === s));
+            });
+        }
+        setInterval(renderClinicStatus, 60000); // "auto" flips at opening/closing time
+
+        $('clinic-status-buttons').addEventListener('click', async (e) => {
+            const btn = e.target.closest('.status-btn');
+            if (!btn || !window.isStaffLoggedIn() || !db) return;
+            const previous = window.clinicStatus;
+            setClinicStatus(btn.dataset.status); // instant feedback
+            try {
+                await setDoc(waitingRef(), { status: btn.dataset.status, statusUpdatedAt: serverTimestamp() }, { merge: true });
+            } catch (err) {
+                console.error(err);
+                setClinicStatus(previous);
+                window.showMessage('فشل التحديث', 'تعذّر تغيير حالة العيادة. تحقق من الاتصال وحاول مجدداً.', 'error');
+            }
+        });
+
         function setWaitingCountUI(count, animate) {
             const changed = count !== window.currentWaitingCount;
             window.currentWaitingCount = count;
@@ -1011,7 +1095,7 @@
                 btn.dataset.iso = iso;
                 btn.setAttribute('aria-pressed', 'false');
                 btn.setAttribute('aria-label', `${f.dayName} ${f.dayNum} ${f.month}`);
-                btn.innerHTML = `<span class="text-[11px] font-bold text-slate-500 leading-tight">${label}</span><span class="text-lg font-black text-slate-800 leading-tight">${f.dayNum}</span><span class="text-[10px] font-bold text-clinic leading-tight">${f.month}</span>`;
+                btn.innerHTML = `<span class="text-xs font-bold text-slate-500 leading-tight">${label}</span><span class="text-lg font-black text-slate-800 leading-tight">${f.dayNum}</span><span class="text-[12px] font-bold text-clinic leading-tight">${f.month}</span>`;
                 btn.addEventListener('click', () => {
                     selectButton('.date-btn', btn);
                     window.selectedDate = iso;
@@ -1350,7 +1434,7 @@
                                     <a href="tel:${escapeHtml(phone)}" class="hover:text-clinic" dir="ltr"><i class="fa-solid fa-phone ml-1"></i>${escapeHtml(phone)}</a>
                                     <a href="https://wa.me/${escapeHtml(intl)}" target="_blank" rel="noopener" class="text-green-600 hover:underline"><i class="fa-brands fa-whatsapp ml-1"></i>واتساب</a>
                                 </div>
-                                <div class="flex flex-wrap gap-1 mt-2">${reasons.map((r) => `<span class="bg-blue-50 text-clinic px-2 py-1 rounded-md text-[10px] font-bold border border-blue-100">${escapeHtml(r)}</span>`).join('')}</div>
+                                <div class="flex flex-wrap gap-1 mt-2">${reasons.map((r) => `<span class="bg-blue-50 text-clinic px-2 py-1 rounded-md text-[12px] font-bold border border-blue-100">${escapeHtml(r)}</span>`).join('')}</div>
                             </div>
                             <div class="flex flex-col gap-2 items-end flex-shrink-0">
                                 <span class="bg-clinic text-white font-bold px-3 py-1 rounded-lg text-sm whitespace-nowrap"><i class="fa-regular fa-clock ml-1"></i>${escapeHtml(slotLabel(time))}</span>
@@ -1358,7 +1442,7 @@
                             </div>
                         </div>`;
                 }).join('');
-                const badge = date === todayIso ? '<span class="bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-full mr-2">اليوم</span>' : '';
+                const badge = date === todayIso ? '<span class="bg-green-500 text-white text-[12px] px-2 py-0.5 rounded-full mr-2">اليوم</span>' : '';
                 return `
                     <div>
                         <div class="bg-slate-800 text-white p-3 rounded-t-xl font-bold text-sm mt-6 shadow-md flex items-center justify-between">
@@ -1557,6 +1641,7 @@
             window.initBeforeAfterSlider();
             window.syncDarkModeIcon();
             setWaitingCountUI(window.currentWaitingCount, false);
+            renderClinicStatus();
             loadFirebase()
                 .then(() => { initCloudSync(); initChatbot(); })
                 .catch((e) => { console.error('Firebase failed to load:', e); setBookingsUnavailable(); });
